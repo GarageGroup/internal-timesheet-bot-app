@@ -1,0 +1,60 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.9/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.9",
+  "version": "1.0.1",
+  "showLoadingIndicator": true,
+  "id": "fd5e67db-27ef-4852-80e5-c85278ee310c",
+  "packageName": "ru.ggroupp.internal.timesheetbot",
+  "developer": {
+    "name": "GGroupp",
+    "websiteUrl": "https://www.microsoft.com",
+    "privacyUrl": "https://www.teams.com/privacy",
+    "termsOfUseUrl": "https://www.teams.com/termsofuser",
+    "mpnId": "5458095"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "GGroupp.Timesheets",
+    "full": "GGroupp.Timesheets"
+  },
+  "description": {
+    "short": "Бот учета рабочего времени",
+    "full": "Бот учета рабочего времени"
+  },
+  "accentColor": "#FFFFFF",
+  "staticTabs": [
+    {
+      "entityId": "conversations",
+      "scopes": [
+        "personal"
+      ]
+    },
+    {
+      "entityId": "about",
+      "scopes": [
+        "personal"
+      ]
+    }
+  ],
+  "bots": [
+    {
+      "botId": "fd5e67db-27ef-4852-80e5-c85278ee310c",
+      "scopes": [
+        "personal"
+      ],
+      "supportsFiles": false,
+      "isNotificationOnly": false
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [],
+  "devicePermissions": [
+    "notifications"
+  ]
+}

@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RootNamespace>GGroupp.Internal.Timesheet.Bot</RootNamespace>
+    <AssemblyName>GGroupp.Internal.Timesheet.Bot.Application</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'TimeSheet.Bot.Application' " />
+  <ItemGroup>
+    <PackageReference Include="GGroupp.Infra.Http.HttpClient.Dependency" Version="1.0.0" />
+    <PackageReference Include="GGroupp.Infra.Http.SocketsHandlerProvider" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Bot.Builder.Dialogs" Version="4.14.1" />
+    <PackageReference Include="Microsoft.Bot.Builder.Integration.AspNet.Core" Version="4.13.2" />
+    <PackageReference Include="PrimeFuncPack.Core" Version="1.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>
