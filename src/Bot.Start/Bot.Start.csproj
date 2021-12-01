@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <RootNamespace>GGroupp.Internal.Timesheet</RootNamespace>
+    <AssemblyName>GGroupp.Internal.Timesheet.Flow.Bot.Start</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PrimeFuncPack.Core" Version="1.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src-bot-builder\ActivityExtensions\ActivityExtensions.csproj" />
+    <ProjectReference Include="..\..\src-bot-builder\Core\Core.csproj" />
+  </ItemGroup>
+
+</Project>

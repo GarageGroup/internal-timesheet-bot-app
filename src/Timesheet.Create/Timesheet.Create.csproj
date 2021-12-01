@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <RootNamespace>GGroupp.Internal.Timesheet</RootNamespace>
+    <AssemblyName>GGroupp.Internal.Timesheet.Flow.Timesheet.Create</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EarlyFuncPack.Core.AsyncPipeline" Version="0.0.1" />
+    <PackageReference Include="GGroupp.Internal.Timesheet.ProjectSet.Search.InOut" Version="1.1.0" />
+    <PackageReference Include="GGroupp.Internal.Timesheet.Timesheet.Create.InOut" Version="1.1.0" />
+    <PackageReference Include="PrimeFuncPack.Core" Version="1.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src-bot-builder\ActivityExtensions\ActivityExtensions.csproj" />
+    <ProjectReference Include="..\..\src-bot-builder\EarlyChatFlow\EarlyChatFlow.csproj" />
+  </ItemGroup>
+
+</Project>

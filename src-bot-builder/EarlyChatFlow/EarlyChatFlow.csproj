@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RootNamespace>GGroupp.Infra.Bot.Builder</RootNamespace>
+    <AssemblyName>GGroupp.Infra.Bot.Builder.EarlyChatFlow</AssemblyName>
+    <Version>0.0.1-build.8</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PrimeFuncPack.Core.Unit" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
+  </ItemGroup>
+
+</Project>
