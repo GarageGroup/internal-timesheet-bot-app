@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GGroupp.Infra.Bot.Builder;
-using Microsoft.Extensions.Logging;
 
 namespace GGroupp.Internal.Timesheet;
 
@@ -18,23 +17,21 @@ internal static class ProjectFindFlowStep
 
     internal static ChatFlow<TimesheetCreateFlowStateJson> FindProject(
         this ChatFlow<TimesheetCreateFlowStateJson> chatFlow,
-        IProjectSetSearchFunc projectSetSearchFunc,
-        ILogger logger)
+        IProjectSetSearchFunc projectSetSearchFunc)
         =>
         chatFlow.SendText(
             _ => "Нужно выбрать проект. Введите часть названия для поиска")
         .AwaitLookupValue(
-            (_, search, token) => projectSetSearchFunc.SearchProjectsAsync(logger, search, token),
+            (_, search, token) => projectSetSearchFunc.SearchProjectsAsync(search, token),
             (flowState, projectValue) => flowState with
             {
-                ProjectType = ParseProjectType(projectValue),
+                ProjectType = projectValue.ParseProjectType(),
                 ProjectId = projectValue.Id,
                 ProjectName = projectValue.Name
             });
 
-    private static ValueTask<Result<LookupValueSetSeachOut, Failure<Unit>>> SearchProjectsAsync(
+    private static ValueTask<Result<LookupValueSetSeachOut, ChatFlowStepFailure>> SearchProjectsAsync(
         this IProjectSetSearchFunc projectSetSearchFunc,
-        ILogger logger,
         LookupValueSetSeachIn seachInput,
         CancellationToken cancellationToken)
         =>
@@ -47,12 +44,10 @@ internal static class ProjectFindFlowStep
         .PipeValue(
             projectSetSearchFunc.InvokeAsync)
         .MapFailure(
-            logger.LogFailure)
-        .MapFailure(
-            CreateProjectSetSearchUIFailure)
+            MapToStepFailure)
         .Filter(
             @out => @out.Projects.Any(),
-            _ => Failure.Create("Ничего не найдено. Попробуйте уточнить запрос"))
+            _ => ChatFlowStepFailure.FromUI("Ничего не найдено. Попробуйте уточнить запрос"))
         .MapSuccess(
             @out => new LookupValueSetSeachOut(
                 items: @out.Projects.Select(MapProjectItem).ToArray(),
@@ -68,28 +63,13 @@ internal static class ProjectFindFlowStep
                 new(ProjectTypeFieldName, item.Type.ToString("G"))
             });
 
-    private static TimesheetCreateFlowProjectType ParseProjectType(this LookupValue lookupValue)
+    private static TimesheetProjectType ParseProjectType(this LookupValue lookupValue)
         =>
-        Pipeline.Pipe(
-            lookupValue.Extensions)
-        .GetValueOrAbsent(
-            ProjectTypeFieldName)
-        .Map(
-            Enum.Parse<ProjectTypeSearchOut>)
-        .Map(
-            MapProjectType)
-        .OrDefault();
+        lookupValue.Extensions.GetValueOrAbsent(ProjectTypeFieldName).Map(Enum.Parse<TimesheetProjectType>).OrDefault();
 
-    private static TimesheetCreateFlowProjectType MapProjectType(ProjectTypeSearchOut projectType)
+    private static ChatFlowStepFailure MapToStepFailure(Failure<ProjectSetSearchFailureCode> failure)
         =>
-        projectType switch
-        {
-            ProjectTypeSearchOut.Lead => TimesheetCreateFlowProjectType.Lead,
-            ProjectTypeSearchOut.Opportunity => TimesheetCreateFlowProjectType.Opportunity,
-            _ => TimesheetCreateFlowProjectType.Project
-        };
-
-    private static Failure<Unit> CreateProjectSetSearchUIFailure(Unit _)
-        =>
-        Failure.Create("При поиске проектов произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее");
+        new(
+            uiMessage: "При поиске проектов произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее",
+            logMessage: failure.FailureMessage);
 }

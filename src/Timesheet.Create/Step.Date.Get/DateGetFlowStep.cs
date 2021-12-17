@@ -18,11 +18,11 @@ internal static class DateGetFlowStep
                 Date = date
             });
 
-    private static Result<DateOnly, Failure<Unit>> ParseDateOrFailure(string? text)
+    private static Result<DateOnly, ChatFlowStepFailure> ParseDateOrFailure(string? text)
         =>
         DateOnly.TryParseExact(text, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) switch
         {
             true => date,
-            _ => Failure.Create("Не удалось распознать дату")
+            _ => ChatFlowStepFailure.FromUI("Не удалось распознать дату")
         };
 }

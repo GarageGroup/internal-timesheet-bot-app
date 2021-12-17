@@ -10,7 +10,7 @@ internal sealed record class TimesheetCreateFlowStateJson
 
     public Guid ProjectId { get; init; }
 
-    public TimesheetCreateFlowProjectType ProjectType { get; init; }
+    public TimesheetProjectType ProjectType { get; init; }
 
     public string? ProjectName { get; init; }
 

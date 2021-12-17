@@ -21,20 +21,20 @@ internal static class HourValueGetFlowStep
                 ValueHours = value
             });
 
-    private static Result<decimal, Failure<Unit>> ParseHourValueOrFailure(this string? text)
+    private static Result<decimal, ChatFlowStepFailure> ParseHourValueOrFailure(this string? text)
         =>
         decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out var value) switch
         {
             true => value,
-            _ => Failure.Create("Не удалось распознать десятичное число")
+            _ => ChatFlowStepFailure.FromUI("Не удалось распознать десятичное число")
         };
 
-    private static Result<decimal, Failure<Unit>> ValidateValueOrFailure(decimal value)
+    private static Result<decimal, ChatFlowStepFailure> ValidateValueOrFailure(decimal value)
         =>
         value switch
         {
-            <= 0 => Failure.Create("Значение должно быть больше нуля"),
-            > MaxValue => Failure.Create(Invariant($"Значение должно быть меньше {MaxValue}")),
-            _ => Result.Success(value)
+            <= 0 => ChatFlowStepFailure.FromUI("Значение должно быть больше нуля"),
+            > MaxValue => ChatFlowStepFailure.FromUI(Invariant($"Значение должно быть меньше {MaxValue}")),
+            _ => value
         };
 }

@@ -11,12 +11,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="GGroupp.Infra.Bot.Builder.ActivityExtensions" Version="1.0.0" />
+    <PackageReference Include="GGroupp.Infra.Bot.Builder.Core" Version="1.0.0" />
     <PackageReference Include="PrimeFuncPack.Core" Version="1.1.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src-bot-builder\ActivityExtensions\ActivityExtensions.csproj" />
-    <ProjectReference Include="..\..\src-bot-builder\Core\Core.csproj" />
   </ItemGroup>
 
 </Project>

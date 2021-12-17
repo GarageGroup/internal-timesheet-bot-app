@@ -18,7 +18,7 @@ partial class TimesheetCreateChatFlow
             return default;
         }
 
-        var chatFlow = ChatFlow.Create(context.TurnContext, context.ConversationState, "TimesheetCreate");
+        var chatFlow = context.CreateChatFlow("TimesheetCreate");
         if (await chatFlow.IsStartedAsync(cancellationToken).ConfigureAwait(false))
         {
             return chatFlow;

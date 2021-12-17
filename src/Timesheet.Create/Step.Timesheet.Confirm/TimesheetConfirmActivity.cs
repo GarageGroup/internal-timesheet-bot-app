@@ -12,9 +12,11 @@ internal static class TimesheetConfirmActivity
 {
     private const string QuestionText = "Списать время?";
 
-    private const string ActionCreateText = "Создать";
+    private const string ActionCreateText = "Списать";
 
     private const string ActionCancelText = "Отменить";
+
+    private const string CanceledText = "Списание времени было отменено";
 
     private static readonly Guid ActionCreateId, ActionCancelId;
 
@@ -27,16 +29,16 @@ internal static class TimesheetConfirmActivity
         RussianCultureInfo = CultureInfo.GetCultureInfo("ru-RU");
     }
 
-    internal static ConfirmationResultCode GetConfifrmationResult(this ITurnContext context)
+    internal static ChatFlowJump<TimesheetCreateFlowStateJson> GetConfirmationResult(this IChatFlowContext<TimesheetCreateFlowStateJson> context)
         =>
         context.Activity.GetCardActionValueOrAbsent().Fold(
             actionId => actionId switch
             {
-                _ when actionId == ActionCreateId => ConfirmationResultCode.Confirmed,
-                _ when actionId == ActionCancelId => ConfirmationResultCode.Canceled,
-                _ => ConfirmationResultCode.Unknown
+                _ when actionId == ActionCreateId => ChatFlowJump.Next(context.FlowState),
+                _ when actionId == ActionCancelId => ChatFlowBreakState.From(uiMessage: CanceledText, logMessage: default),
+                _ => context.RepeatSameStateJump<TimesheetCreateFlowStateJson>()
             },
-            () => ConfirmationResultCode.Unknown);
+            context.RepeatSameStateJump<TimesheetCreateFlowStateJson>);
 
     internal static IActivity CreateActivity(IChatFlowContext<TimesheetCreateFlowStateJson> context)
         =>

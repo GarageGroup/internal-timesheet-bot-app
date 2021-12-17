@@ -14,14 +14,14 @@
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'Application' " />
 
   <ItemGroup>
+    <PackageReference Include="GGroupp.Infra.Bot.Builder.Integration.AspNet.Core" Version="1.1.0" />
     <PackageReference Include="GGroupp.Infra.Dataverse.Api" Version="2.3.1" />
     <PackageReference Include="GGroupp.Infra.Http.SocketsHandlerProvider" Version="2.1.0" />
-    <PackageReference Include="GGroupp.Internal.Timesheet.ProjectSet.Search.Api" Version="1.1.0" />
-    <PackageReference Include="GGroupp.Internal.Timesheet.Timesheet.Create.Api" Version="1.1.0" />
+    <PackageReference Include="GGroupp.Internal.Timesheet.ProjectSet.Search.Api" Version="1.2.0" />
+    <PackageReference Include="GGroupp.Internal.Timesheet.Timesheet.Create.Api" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src-bot-builder\Integration.AspNet.Core\Integration.AspNet.Core.csproj" />
     <ProjectReference Include="..\Timesheet.Create\Timesheet.Create.csproj" />
     <ProjectReference Include="..\Bot.Start\Bot.Start.csproj" />
   </ItemGroup>

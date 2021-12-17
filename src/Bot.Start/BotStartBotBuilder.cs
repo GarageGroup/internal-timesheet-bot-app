@@ -13,7 +13,7 @@ public static class BotStartBotBuilder
     private static ValueTask<TurnState> InvokeAsync(IBotContext context, CancellationToken token)
         =>
         context.RecognizeCommandOrAbsent().FoldValueAsync(
-            ctx => ctx.InvokeFlowAsync(token),
+            ctx => ctx.InvokeAsync(token),
             CreateCompletedStateValueTask);
 
     private static ValueTask<TurnState> CreateCompletedStateValueTask()

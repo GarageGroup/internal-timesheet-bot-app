@@ -39,11 +39,7 @@ public static class BotStartBotBuilder
         .PipeValue(
             TimesheetCreateChatFlow.InternalRecoginzeOrFailureAsync)
         .MapSuccessValue(
-            (provider, token) => provider.InternalInvokeFlowAsync(
-                projectSetSearchFunc: projectSetSearchFunc,
-                timesheetCreateFunc: timesheetCreateFunc,
-                logger: botContext.LoggerFactory.CreateLogger(nameof(TimesheetCreateChatFlow)),
-                cancellationToken: token))
+            (chatFlow, token) => chatFlow.CreateTimesheet(projectSetSearchFunc,timesheetCreateFunc).GetTurnStateValueAsync(token))
         .Fold(
             Pipeline.Pipe,
             _ => TurnState.Completed);
