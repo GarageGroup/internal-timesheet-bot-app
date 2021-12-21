@@ -15,7 +15,6 @@
     <PackageReference Include="GGroupp.Infra.Bot.Builder.Core" Version="1.0.0" />
     <PackageReference Include="GGroupp.Platform.Azure.AzureUser.Get.InOut" Version="1.0.0" />
     <PackageReference Include="GGroupp.Platform.Dataverse.DataverseUser.Get.InOut" Version="1.0.0" />
-    <PackageReference Include="Microsoft.Bot.Builder.Dialogs" Version="4.15.0" />
     <PackageReference Include="PrimeFuncPack.Core" Version="1.1.1" />
   </ItemGroup>
 
@@ -24,11 +23,15 @@
     <None Remove="Configuration\" />
     <None Remove="Json\" />
     <None Remove="UserStateProvider\" />
+    <None Remove="Activity\" />
+    <None Remove="Flow\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Middleware\" />
     <Folder Include="Configuration\" />
-    <Folder Include="Json\" />
+    <Folder Include="FlowState\" />
     <Folder Include="UserStateProvider\" />
+    <Folder Include="ActivityExtensions\" />
+    <Folder Include="Flow\" />
   </ItemGroup>
 </Project>

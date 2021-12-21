@@ -2,7 +2,6 @@
 using GGroupp.Infra.Bot.Builder;
 using GGroupp.Platform;
 using Microsoft.Bot.Builder;
-using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Extensions.Logging;
 
 namespace GGroupp.Internal.Timesheet;
@@ -14,6 +13,7 @@ using IUserAuthorizeMiddleware = IAsyncValueFunc<ITurnContext, TurnState>;
 
 internal sealed partial class UserAuthorizeMiddleware : IUserAuthorizeMiddleware
 {
+
     private readonly IAzureUserGetFunc azureUserGetFunc;
     private readonly IDataverseUserGetFunc dataverseUserGetFunc;
     private readonly IUserStateProvider userStateProvider;
@@ -34,7 +34,7 @@ internal sealed partial class UserAuthorizeMiddleware : IUserAuthorizeMiddleware
         this.userAuthorizeConfigurationProvider = userAuthorizeConfigurationProvider;
     }
 
-    private OAuthPromptSettings GetOAuthSettings(string text)
+    private OAuthCardOptionJson GetOAuthSettings(string text)
     {
         var configuration = userAuthorizeConfigurationProvider.Invoke();
 
@@ -43,17 +43,18 @@ internal sealed partial class UserAuthorizeMiddleware : IUserAuthorizeMiddleware
             ConnectionName = configuration.OAuthConnectionName,
             Text = text,
             Title = "Вход",
-            Timeout = configuration.OAuthTimeoutMilliseconds
+            Timeout = configuration.OAuthTimeout
         };
     }
 
-    private static FlowStateJson CreateFlowState(OAuthPromptSettings settings)
+    private static FlowStateJson CreateFlowState(OAuthCardOptionJson option, CallerInfoJson? callerInfo)
     {
         var now = DateTimeOffset.Now;
         return new()
         {
-            ExpirationDate = settings.Timeout.HasValue ? now.AddMilliseconds(settings.Timeout.Value) : now,
-            Settings = settings
+            ExpirationDate = option.Timeout.HasValue ? now.Add(option.Timeout.Value) : now,
+            Option = option,
+            CallerInfo = callerInfo
         };
     }
 }

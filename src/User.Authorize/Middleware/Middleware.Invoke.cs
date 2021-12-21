@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using GGroupp.Infra.Bot.Builder;
 using GGroupp.Platform;
 using Microsoft.Bot.Builder;
-using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Teams;
 using Microsoft.Bot.Connector;
+using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Extensions.Logging;
 
 namespace GGroupp.Internal.Timesheet;
@@ -21,80 +22,71 @@ partial class UserAuthorizeMiddleware
             return TurnState.Completed;
         }
 
-        if (context.Activity.ChannelId is Channels.Msteams)
+        if (context.Activity.IsTeams())
         {
-            var member = await TeamsInfo.GetMemberAsync(context, context.Activity.From.Id, token).ConfigureAwait(false);
-            if (member is not null)
-            {
-                var azureUserId = Guid.Parse(member.AadObjectId);
-                return await AuthorizeInDataverseAsync(context, azureUserId, token).ConfigureAwait(false);
-            }
+            var teamsResult = await context.GetTeamsAuthorizationResultAsync(dataverseUserGetFunc, logger, token).ConfigureAwait(false);
+            return await teamsResult.FoldValueAsync(ToSuccessStateAsync, ToFailureStateAsync).ConfigureAwait(false);
         }
 
         var flowState = await userStateProvider.GetFlowStateAsync(context, token).ConfigureAwait(false);
-        if (flowState.Settings is not null)
+        if (flowState.Option is not null)
         {
-            var result = await OAuthPrompt.RecognizeTokenAsync(flowState.Settings, context, token).ConfigureAwait(false);
-            /*if (result.Succeeded is false)
+            var result = await context.RecognizeTokenAsync(flowState.Option.Value, flowState.CallerInfo, token).ConfigureAwait(false);
+            if (result.IsFailure)
             {
-                var retrySettings = GetOAuthSettings("Не удалось авторизавоться. Повторите попытку");
-                await OAuthPrompt.SendOAuthCardAsync(retrySettings, context.Context, null, token).ConfigureAwait(false);
+                var retrySettings = flowState.Option.Value with
+                {
+                    Text = "Не удалось авторизавоться. Повторите попытку"
+                };
+                _ = await context.SendOAuthActivityAsync(retrySettings, token).ConfigureAwait(false);
 
-                return ChatFlowStepResult.RetryAndAwait<string>();
+                return TurnState.Awaiting;
             }
 
-            return result.Value.Token ?? string.Empty;*/
+            var azureResult = await azureUserGetFunc.InvokeAsync(new(result.SuccessOrThrow().Token), token).ConfigureAwait(false);
+            return await azureResult.FoldValueAsync(ToDataverseAuthStateAsync, GetFailureStateAsync).ConfigureAwait(false);
         }
 
-        
-        if (flowState.Settings is null)
+        var option = GetOAuthSettings("Войдите в свою учетную запись");
+        _ = await context.SendOAuthActivityAsync(option, token).ConfigureAwait(false);
+
+        var callerInfo = CreateCallerInfo(context);
+        var state = CreateFlowState(option, callerInfo);
+
+        _ = await userStateProvider.SaveFlowStateAsync(context, state, token).ConfigureAwait(false);
+        return TurnState.Awaiting;
+
+        async ValueTask<TurnState> ToSuccessStateAsync(UserDataJson userData)
         {
-            var settings = GetOAuthSettings("Войдите в свою учетную запись");
-            var state = CreateFlowState(settings);
-
-            await OAuthPrompt.SendOAuthCardAsync(settings, context, default, token).ConfigureAwait(false);
-            await userStateProvider.SaveFlowStateAsync(context, state, token).ConfigureAwait(false);
-
-            return TurnState.Awaiting;
-        }
-    }
-
-    private async ValueTask<TurnState> AuthorizeInDataverseAsync(ITurnContext context, Guid azureUserId, CancellationToken token)
-    {
-        var dataverseResult = await dataverseUserGetFunc.InvokeAsync(new(azureUserId), token).ConfigureAwait(false);
-        return await dataverseResult.FoldValueAsync(GetSuccessStateAsync, GetFailureStateAsync).ConfigureAwait(false);
-
-        async ValueTask<TurnState> GetSuccessStateAsync(DataverseUserGetOut user)
-        {
-            var userData = new UserDataJson
-            {
-                ActiveDirectoryId = azureUserId,
-                DataverseUserId = user.SystemUserId,
-                DataverseUserFirstName = user.FirstName,
-                DataverseUserLastName = user.LastName,
-                DataverseUserFullName = user.FullName
-            };
-
             await userStateProvider.SaveUserDataAsync(context, userData, token).ConfigureAwait(false);
             return TurnState.Completed;
         }
 
-        async ValueTask<TurnState> GetFailureStateAsync(Failure<DataverseUserGetFailureCode> failure)
+        async ValueTask<TurnState> ToFailureStateAsync(FlowFailure failure)
         {
-            var failureMessage = failure.FailureMessage;
-            logger.LogError("An unexpected failure: {failureMessage}", failureMessage);
-            var failureActivity = MessageFactory.Text(CreateFailureMessage(failure.FailureCode));
+            if (string.IsNullOrEmpty(failure.UserMessage) is false)
+            {
+                var failureActivity = MessageFactory.Text(failure.UserMessage);
+                _ = await context.SendActivityAsync(failureActivity, token).ConfigureAwait(false);
+            }
 
-            _ = await context.SendActivityAsync(failureActivity, token).ConfigureAwait(false);
             _ = await userStateProvider.ClearAsync(context, token).ConfigureAwait(false);
-
             return TurnState.Interrupted;
         }
+    }
 
-        static string CreateFailureMessage(DataverseUserGetFailureCode failureCode)
-            =>
-            failureCode is DataverseUserGetFailureCode.NotFound
-            ? "Пользователь не найден. Возомжно у вас нет прав для доступа в систему"
-            : "Возникла непредвиденная ошибка при попытке получить данные пользователя. Возможно сервер временно не доступен. Повторите попытку позже";
+    private static CallerInfoJson? CreateCallerInfo(ITurnContext turnContext)
+    {
+        if (turnContext.TurnState.Get<ClaimsIdentity>(BotAdapter.BotIdentityKey) is ClaimsIdentity botIdentity
+            && SkillValidation.IsSkillClaim(botIdentity.Claims))
+        {
+            return new()
+            {
+                CallerServiceUrl = turnContext.Activity.ServiceUrl,
+                Scope = JwtTokenValidation.GetAppIdFromClaims(botIdentity.Claims),
+            };
+        }
+
+        return default;
     }
 }
