@@ -1,92 +1,110 @@
 ﻿using System;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using GGroupp.Infra.Bot.Builder;
-using GGroupp.Platform;
 using Microsoft.Bot.Builder;
-using Microsoft.Bot.Builder.Teams;
-using Microsoft.Bot.Connector;
-using Microsoft.Bot.Connector.Authentication;
-using Microsoft.Extensions.Logging;
+using Microsoft.Bot.Schema;
 
 namespace GGroupp.Internal.Timesheet;
 
 partial class UserAuthorizeMiddleware
 {
-    public async ValueTask<TurnState> InvokeAsync(ITurnContext context, CancellationToken token = default)
+    public async ValueTask<Unit> InvokeAsync(ITurnContext turnContext, CancellationToken token = default)
     {
-        var userData = await userStateProvider.GetUserDataAsync(context, token).ConfigureAwait(false);
-        if (userData is not null)
+        if (await IsAlreadyAuthorizedAsync(token).ConfigureAwait(false))
         {
-            return TurnState.Completed;
+            return await botFlow.NextAsync(token).ConfigureAwait(false);
         }
 
-        if (context.Activity.IsTeams())
+        var flowContext = CreateFlowContext(turnContext);
+
+        if (turnContext.IsTeamsChannel())
         {
-            var teamsResult = await context.GetTeamsAuthorizationResultAsync(dataverseUserGetFunc, logger, token).ConfigureAwait(false);
-            return await teamsResult.FoldValueAsync(ToSuccessStateAsync, ToFailureStateAsync).ConfigureAwait(false);
+            return await AuthorizeInTeamsAsync(flowContext, token).ConfigureAwait(false);
         }
 
-        var flowState = await userStateProvider.GetFlowStateAsync(context, token).ConfigureAwait(false);
-        if (flowState.Option is not null)
-        {
-            var result = await context.RecognizeTokenAsync(flowState.Option.Value, flowState.CallerInfo, token).ConfigureAwait(false);
-            if (result.IsFailure)
-            {
-                var retrySettings = flowState.Option.Value with
-                {
-                    Text = "Не удалось авторизавоться. Повторите попытку"
-                };
-                _ = await context.SendOAuthActivityAsync(retrySettings, token).ConfigureAwait(false);
-
-                return TurnState.Awaiting;
-            }
-
-            var azureResult = await azureUserGetFunc.InvokeAsync(new(result.SuccessOrThrow().Token), token).ConfigureAwait(false);
-            return await azureResult.FoldValueAsync(ToDataverseAuthStateAsync, GetFailureStateAsync).ConfigureAwait(false);
-        }
-
-        var option = GetOAuthSettings("Войдите в свою учетную запись");
-        _ = await context.SendOAuthActivityAsync(option, token).ConfigureAwait(false);
-
-        var callerInfo = CreateCallerInfo(context);
-        var state = CreateFlowState(option, callerInfo);
-
-        _ = await userStateProvider.SaveFlowStateAsync(context, state, token).ConfigureAwait(false);
-        return TurnState.Awaiting;
-
-        async ValueTask<TurnState> ToSuccessStateAsync(UserDataJson userData)
-        {
-            await userStateProvider.SaveUserDataAsync(context, userData, token).ConfigureAwait(false);
-            return TurnState.Completed;
-        }
-
-        async ValueTask<TurnState> ToFailureStateAsync(FlowFailure failure)
-        {
-            if (string.IsNullOrEmpty(failure.UserMessage) is false)
-            {
-                var failureActivity = MessageFactory.Text(failure.UserMessage);
-                _ = await context.SendActivityAsync(failureActivity, token).ConfigureAwait(false);
-            }
-
-            _ = await userStateProvider.ClearAsync(context, token).ConfigureAwait(false);
-            return TurnState.Interrupted;
-        }
+        return await AuthorizeInNotTeamsAsync(flowContext, token).ConfigureAwait(false);
     }
 
-    private static CallerInfoJson? CreateCallerInfo(ITurnContext turnContext)
+    private async ValueTask<bool> IsAlreadyAuthorizedAsync(CancellationToken cancellationToken)
     {
-        if (turnContext.TurnState.Get<ClaimsIdentity>(BotAdapter.BotIdentityKey) is ClaimsIdentity botIdentity
-            && SkillValidation.IsSkillClaim(botIdentity.Claims))
+        var currentUser = await botUserProvider.GetCurrentUserAsync(cancellationToken).ConfigureAwait(false);
+        if (currentUser is not null)
         {
-            return new()
+            if (currentUser.GetDataverseUserIdOrAbsent().IsPresent)
             {
-                CallerServiceUrl = turnContext.Activity.ServiceUrl,
-                Scope = JwtTokenValidation.GetAppIdFromClaims(botIdentity.Claims),
-            };
+                return true;
+            }
+
+            _ = await botUserProvider.SetCurrentUserAsync(default, cancellationToken).ConfigureAwait(false);
         }
 
-        return default;
+        return false;
+    }
+
+    private async ValueTask<Unit> AuthorizeInTeamsAsync(IOAuthFlowContext flowContext, CancellationToken cancellationToken)
+    {
+        var teamsResult = await flowContext.AuthorizeInTeamsAsync(dataverseUserGetFunc, cancellationToken).ConfigureAwait(false);
+        return await teamsResult.FoldValueAsync(NextForTeamsAsync, SendFailureAsync).ConfigureAwait(false);
+
+        async ValueTask<Unit> NextForTeamsAsync(BotUser botUser)
+        {
+            _ = await botUserProvider.SetCurrentUserAsync(botUser, cancellationToken).ConfigureAwait(false);
+            return await botFlow.NextAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        ValueTask<Unit> SendFailureAsync(FlowFailure failure)
+            =>
+            flowContext.SendFailureAsync(failure, cancellationToken);
+    }
+
+    private async ValueTask<Unit> AuthorizeInNotTeamsAsync(IOAuthFlowContext flowContext, CancellationToken cancellationToken)
+    {
+        var sourceActivity = await sourceActivityAccessor.GetAsync(flowContext, default, cancellationToken).ConfigureAwait(false);
+        if (sourceActivity is not null)
+        {
+            var tokenResult = await flowContext.RecognizeTokenOrFailureAsync(connectionName, cancellationToken).ConfigureAwait(false);
+            var sendFailureResult = await tokenResult.MapFailureValueAsync(SendFailureAsync).ConfigureAwait(false);
+
+            return await sendFailureResult.FoldValueAsync(AzureAuthAsync, SendOAuthCardOrBreakAsync).ConfigureAwait(false);
+        }
+
+        await sourceActivityAccessor.SetAsync(flowContext, flowContext.Activity, cancellationToken).ConfigureAwait(false);
+        return await SendOAuthCardOrBreakAsync(default).ConfigureAwait(false);
+
+        async ValueTask<Unit> AzureAuthAsync(TokenResponse tokenResponse)
+        {
+            var azureResult = await flowContext.AuthorizeInAzureAsync(
+                azureUserGetFunc, dataverseUserGetFunc, tokenResponse, cancellationToken).ConfigureAwait(false);
+
+            return await azureResult.FoldValueAsync(NextAsync, BreakAsync).ConfigureAwait(false);
+        }
+
+        async ValueTask<Unit> NextAsync(BotUser botUser)
+        {
+            var activity = MessageFactory.Text($"Привет, {botUser.GetUserName()}! Авторизация прошла успешно!");
+            _ = await flowContext.SendActivityAsync(activity, cancellationToken).ConfigureAwait(false);
+
+            _ = await botUserProvider.SetCurrentUserAsync(botUser, cancellationToken).ConfigureAwait(false);
+
+            await sourceActivityAccessor.DeleteAsync(flowContext, cancellationToken).ConfigureAwait(false);
+            return await botFlow.NextAsync(sourceActivity, cancellationToken).ConfigureAwait(false);
+        }
+
+        async ValueTask<Unit> SendOAuthCardOrBreakAsync(Unit _)
+        {
+            var sendResult = await flowContext.SendOAuthCardOrFailureAsync(connectionName, cancellationToken).ConfigureAwait(false);
+            return await sendResult.FoldValueAsync(ValueTask.FromResult, BreakAsync).ConfigureAwait(false);
+        }
+
+        async ValueTask<Unit> BreakAsync(FlowFailure flowFailure)
+        {
+            await sourceActivityAccessor.DeleteAsync(flowContext, cancellationToken).ConfigureAwait(false);
+            return await SendFailureAsync(flowFailure).ConfigureAwait(false);
+        }
+
+        ValueTask<Unit> SendFailureAsync(FlowFailure failure)
+            =>
+            flowContext.SendFailureAsync(failure, cancellationToken);
     }
 }

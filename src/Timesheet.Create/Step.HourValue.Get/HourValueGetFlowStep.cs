@@ -26,15 +26,15 @@ internal static class HourValueGetFlowStep
         decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out var value) switch
         {
             true => value,
-            _ => ChatFlowStepFailure.FromUI("Не удалось распознать десятичное число")
+            _ => ChatFlowStepFailure.From("Не удалось распознать десятичное число")
         };
 
     private static Result<decimal, ChatFlowStepFailure> ValidateValueOrFailure(decimal value)
         =>
         value switch
         {
-            <= 0 => ChatFlowStepFailure.FromUI("Значение должно быть больше нуля"),
-            > MaxValue => ChatFlowStepFailure.FromUI(Invariant($"Значение должно быть меньше {MaxValue}")),
+            <= 0 => ChatFlowStepFailure.From("Значение должно быть больше нуля"),
+            > MaxValue => ChatFlowStepFailure.From(Invariant($"Значение должно быть меньше {MaxValue}")),
             _ => value
         };
 }

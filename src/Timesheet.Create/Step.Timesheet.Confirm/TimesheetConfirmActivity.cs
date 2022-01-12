@@ -35,7 +35,7 @@ internal static class TimesheetConfirmActivity
             actionId => actionId switch
             {
                 _ when actionId == ActionCreateId => ChatFlowJump.Next(context.FlowState),
-                _ when actionId == ActionCancelId => ChatFlowBreakState.From(uiMessage: CanceledText, logMessage: default),
+                _ when actionId == ActionCancelId => ChatFlowBreakState.From(CanceledText),
                 _ => context.RepeatSameStateJump<TimesheetCreateFlowStateJson>()
             },
             context.RepeatSameStateJump<TimesheetCreateFlowStateJson>);

@@ -2,18 +2,16 @@
 using System.Threading;
 using System.Threading.Tasks;
 using GGroupp.Infra.Bot.Builder;
-using Microsoft.Bot.Connector;
-using Microsoft.Bot.Schema;
 
 namespace GGroupp.Internal.Timesheet;
 
 partial class TimesheetCreateChatFlow
 {
     internal static async ValueTask<Result<ChatFlow, Unit>> InternalRecoginzeOrFailureAsync(
-        this IBotContext context, CancellationToken cancellationToken)
+        this IBotContext context, string commandName, CancellationToken cancellationToken)
     {
         var activity = context.TurnContext.Activity;
-        if (activity.IsMessageType() is false)
+        if (activity.IsNotMessageType())
         {
             return default;
         }
@@ -24,24 +22,6 @@ partial class TimesheetCreateChatFlow
             return chatFlow;
         }
 
-        var channelId = activity.ChannelId;
-        var text = activity.RemoveRecipientMention().OrEmpty();
-
-        if (channelId is Channels.Telegram)
-        {
-            if ((text.Length > 1 is false) || (text.StartsWith('/') is false))
-            {
-                return default;
-            }
-
-            text = text.Remove(1);
-        }
-
-        if (string.Equals("Списать время", text, StringComparison.InvariantCultureIgnoreCase))
-        {
-            return chatFlow;
-        }
-
-        return default;
+        return activity.RecognizeCommandOrAbsnet(commandName).ToResult().MapSuccess(_ => chatFlow);
     }
 }

@@ -14,33 +14,38 @@ internal static class TimesheetCreateFlowStep
         ITimesheetCreateFunc timesheetCreateFunc)
         =>
         chatFlow.ForwardValue(
-            timesheetCreateFunc.CreateTimesheetAsync)
+            (context, token) => context.CreateTimesheetAsync(timesheetCreateFunc, token))
         .SendText(
             _ => "Списание времени создано успешно");
 
     private static ValueTask<ChatFlowJump<Unit>> CreateTimesheetAsync(
-        this ITimesheetCreateFunc timesheetCreateFunc,
-        IChatFlowContext<TimesheetCreateFlowStateJson> context,
+        this IChatFlowContext<TimesheetCreateFlowStateJson> context,
+        ITimesheetCreateFunc timesheetCreateFunc,
         CancellationToken cancellationToken)
         =>
         AsyncPipeline.Pipe(
             context.FlowState, cancellationToken)
         .Pipe(
-            state => new TimesheetCreateIn(
-                ownerId: default,
-                date: state.Date,
-                projectId: state.ProjectId,
-                projectType: state.ProjectType,
-                duration: state.ValueHours,
-                description: state.Description))
+            flowState => new TimesheetCreateIn(
+                date: flowState.Date,
+                projectId: flowState.ProjectId,
+                projectType: flowState.ProjectType,
+                duration: flowState.ValueHours,
+                description: flowState.Description))
         .PipeValue(
             timesheetCreateFunc.InvokeAsync)
         .Map(
             Unit.From,
-            failure => ChatFlowBreakState.From(
-                uiMessage: "При создании списания времени произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее",
-                logMessage: failure.FailureMessage))
+            ToUnexpectedBreakState)
         .Fold(
             ChatFlowJump.Next,
             ChatFlowJump.Break<Unit>);
+
+    private static ChatFlowBreakState ToUnexpectedBreakState<TFailureCode>(
+        Failure<TFailureCode> failure)
+        where TFailureCode : struct
+        =>
+        ChatFlowBreakState.From(
+            userMessage: "При создании списания времени произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее",
+            logMessage: failure.FailureMessage);
 }

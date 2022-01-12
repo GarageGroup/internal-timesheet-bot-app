@@ -1,16 +1,10 @@
-﻿using System;
-
-namespace GGroupp.Internal.Timesheet;
+﻿namespace GGroupp.Internal.Timesheet;
 
 public sealed record class UserAuthorizeConfiguration
 {
-    public UserAuthorizeConfiguration(string oAuthConnectionName, TimeSpan? oAuthTimeout)
-    {
+    public UserAuthorizeConfiguration(string oAuthConnectionName)
+        =>
         OAuthConnectionName = oAuthConnectionName ?? string.Empty;
-        OAuthTimeout = oAuthTimeout;
-    }
 
     public string OAuthConnectionName { get; }
-
-    public TimeSpan? OAuthTimeout { get; }
 }

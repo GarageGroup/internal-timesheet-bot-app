@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using GGroupp.Infra.Bot.Builder;
-using Microsoft.Bot.Builder;
 using Microsoft.Extensions.Hosting;
 using static GGroupp.Internal.Timesheet.BotDependency;
 
@@ -13,7 +12,7 @@ internal static class BotApplication
         Host.CreateDefaultBuilder(args)
         .ConfigureSocketsHttpHandlerProvider()
         .ConfigureBotBuilder(
-            () => new MemoryStorage())
+            ResolveCosmosStorage)
         .ConfigureBotWebHostDefaults(
             ConfigureGTimesheetBot)
         .Build()
@@ -22,8 +21,18 @@ internal static class BotApplication
     private static IBotBuilder ConfigureGTimesheetBot(IBotBuilder bot)
         =>
         bot
-        .UseBotStart()
+        .UseUserLogOut(
+            _ => new("logout"))
+        .UseConversationCancel(
+            _ => new("cancel", successText: "Операция была отменена"))
+        .UseAuthorization(
+            GetAzureUserGetApi,
+            GetDataverseUserGetApi,
+            GetUserAuthorizeConfigurationProvider)
+        .UseBotInfoGet(
+            _ => new("info", helloText: "Привет! Это G-Timesheet бот!"))
         .UseTimesheetCreate(
-            ResolveProjectSetSearchApi,
-            ResolveTimesheetCreateApi);
+            _ => new("newtimesheet"),
+            GetProjectSetSearchApi,
+            GetTimesheetCreateApi);
 }

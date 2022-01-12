@@ -47,7 +47,7 @@ internal static class ProjectFindFlowStep
             MapToStepFailure)
         .Filter(
             @out => @out.Projects.Any(),
-            _ => ChatFlowStepFailure.FromUI("Ничего не найдено. Попробуйте уточнить запрос"))
+            _ => ChatFlowStepFailure.From("Ничего не найдено. Попробуйте уточнить запрос"))
         .MapSuccess(
             @out => new LookupValueSetSeachOut(
                 items: @out.Projects.Select(MapProjectItem).ToArray(),
@@ -70,6 +70,6 @@ internal static class ProjectFindFlowStep
     private static ChatFlowStepFailure MapToStepFailure(Failure<ProjectSetSearchFailureCode> failure)
         =>
         new(
-            uiMessage: "При поиске проектов произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее",
+            userMessage: "При поиске проектов произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее",
             logMessage: failure.FailureMessage);
 }

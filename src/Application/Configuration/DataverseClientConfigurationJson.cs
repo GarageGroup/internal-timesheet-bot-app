@@ -16,8 +16,8 @@ internal sealed record class DataverseClientConfigurationJson : IFunc<DataverseA
     DataverseApiClientConfiguration IFunc<DataverseApiClientConfiguration>.Invoke()
         =>
         new(
-            serviceUrl: DataverseApiServiceUrl.OrEmpty(),
-            authTenantId: DataverseApiAuthTenantId.OrEmpty(),
-            authClientId: DataverseApiAuthClientId.OrEmpty(),
-            authClientSecret: DataverseApiAuthClientSecret.OrEmpty());
+            serviceUrl: DataverseApiServiceUrl ?? string.Empty,
+            authTenantId: DataverseApiAuthTenantId ?? string.Empty,
+            authClientId: DataverseApiAuthClientId ?? string.Empty,
+            authClientSecret: DataverseApiAuthClientSecret ?? string.Empty);
 }
