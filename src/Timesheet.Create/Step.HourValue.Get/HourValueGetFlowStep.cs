@@ -33,8 +33,8 @@ internal static class HourValueGetFlowStep
         =>
         value switch
         {
-            <= 0 => ChatFlowStepFailure.From("Значение должно быть больше нуля"),
-            > MaxValue => ChatFlowStepFailure.From(Invariant($"Значение должно быть меньше {MaxValue}")),
+            not > 0 => ChatFlowStepFailure.From("Значение должно быть больше нуля"),
+            not <= MaxValue => ChatFlowStepFailure.From(Invariant($"Значение должно быть меньше {MaxValue}")),
             _ => value
         };
 }
