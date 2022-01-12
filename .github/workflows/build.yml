@@ -17,14 +17,14 @@ jobs:
       with:
         dotnet-version: 6.0.x
         include-prerelease: false  
-        
+
     # Add NuGet Sources
 
     - name: Add GGroupp NuGet Source
       run: dotnet nuget add source ${{ secrets.GGROUPP_NUGET_SOURCE_URL }} -n ggroupp -u ${{ secrets.GGROUPP_NUGET_SOURCE_USER_NAME }} -p ${{ secrets.GGROUPP_NUGET_SOURCE_USER_PASSWORD }} --store-password-in-clear-text
 
     # Application.csproj
-    
+
     - name: Restore Application.csproj
       run: dotnet restore ./src/*/Application.csproj
 
