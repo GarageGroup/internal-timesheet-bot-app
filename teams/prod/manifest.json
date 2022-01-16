@@ -3,7 +3,7 @@
   "manifestVersion": "1.9",
   "version": "1.0.0",
   "showLoadingIndicator": true,
-  "id": "98fe16a0-f7d1-4e7f-8828-c36b0ae137ef",
+  "id": "483609c9-dcfe-4e72-aca3-6257f9cac1a9",
   "packageName": "ru.ggroupp.internal.testtimesheetbot",
   "developer": {
     "name": "GGroupp",
@@ -41,7 +41,7 @@
   ],
   "bots": [
     {
-      "botId": "98fe16a0-f7d1-4e7f-8828-c36b0ae137ef",
+      "botId": "483609c9-dcfe-4e72-aca3-6257f9cac1a9",
       "scopes": [
         "personal"
       ],
