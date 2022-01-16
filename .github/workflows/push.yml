@@ -29,12 +29,6 @@ jobs:
         with:
           format: YYYY-MM-DDTHH:mm:ssZ
 
-      - name: Use current time
-        env:
-          TIME: "${{ steps.current-time.outputs.time }}"
-          F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
-        run: echo $TIME $F_TIME
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
