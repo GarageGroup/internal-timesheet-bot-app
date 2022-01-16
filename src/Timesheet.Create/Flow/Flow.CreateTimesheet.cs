@@ -14,7 +14,7 @@ partial class TimesheetCreateChatFlow
         ITimesheetCreateFunc timesheetCreateFunc)
         =>
         chatFlow.Start(
-            () => new TimesheetCreateFlowStateJson())
+            static () => new TimesheetCreateFlowStateJson())
         .FindProject(
             projectSetSearchFunc)
         .GetDate()
