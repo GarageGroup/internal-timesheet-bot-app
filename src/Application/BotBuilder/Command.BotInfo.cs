@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Threading;
 using GGroupp.Infra.Bot.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +14,10 @@ partial class GTimesheetBotBuilder
         =>
         botBuilder.UseBotInfo(commandName, GetBotInfoData);
 
+    private static readonly Lazy<TimeZoneInfo> lazyRussianStandardTimeZone
+        =
+        new(GetRussianStandardTimeZone, LazyThreadSafetyMode.ExecutionAndPublication);
+
     private static BotInfoData GetBotInfoData(IBotContext botContext)
         =>
         new(botContext.ServiceProvider.GetRequiredService<IConfiguration>().GetBotInfoData());
@@ -23,6 +29,21 @@ partial class GTimesheetBotBuilder
             new("Название", configuration.GetValue<string>("BotName")),
             new("Описание", configuration.GetValue<string>("BotDescription")),
             new("Версия сборки", configuration.GetValue<string>("BotBuildVersion")),
-            new("Время сборки", configuration.GetValue<DateTimeOffset?>("BotBuildDateTime")?.ToString("dd.MM.yyyy HH:mm:sszzz"))
+            new("Время сборки", configuration.GetValue<DateTimeOffset?>("BotBuildDateTime").ToRussianStandardTimeZoneString())
         };
+
+    private static string? ToRussianStandardTimeZoneString(this DateTimeOffset? dateTime)
+    {
+        if (dateTime is null)
+        {
+            return default;
+        }
+
+        var russianStandardTime = TimeZoneInfo.ConvertTime(dateTime.Value, lazyRussianStandardTimeZone.Value);
+        return russianStandardTime.ToString("dd.MM.yyyy HH:mm:ss ('GMT'z)", CultureInfo.InvariantCulture);
+    }
+
+    private static TimeZoneInfo GetRussianStandardTimeZone()
+        =>
+        TimeZoneInfo.FindSystemTimeZoneById("Russian Standard Time");
 }
