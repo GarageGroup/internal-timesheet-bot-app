@@ -6,5 +6,5 @@ partial class GTimesheetBotBuilder
 {
     internal static IBotBuilder UseGTimesheetBotStop(this IBotBuilder botBuilder, string commandName)
         =>
-        botBuilder.UseBotStop(commandName, () => new(successText: "Операция остановлена"));
+        botBuilder.UseBotStop(commandName, static () => new(successText: "Операция остановлена"));
 }
