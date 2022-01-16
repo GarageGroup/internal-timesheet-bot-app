@@ -9,15 +9,15 @@ using PrimeFuncPack;
 
 namespace GGroupp.Internal.Timesheet;
 
-partial class BotDependency
+partial class GTimesheetBotBuilder
 {
-    private static readonly Lazy<Dependency<IStorage>> lazyCosmosStorageDependency
-        =
-        new(CreateCosmosStorageDependency, LazyThreadSafetyMode.ExecutionAndPublication);
-
     internal static IStorage ResolveCosmosStorage(IServiceProvider serviceProvider)
         =>
         lazyCosmosStorageDependency.Value.Resolve(serviceProvider);
+
+    private static readonly Lazy<Dependency<IStorage>> lazyCosmosStorageDependency
+        =
+        new(CreateCosmosStorageDependency, LazyThreadSafetyMode.ExecutionAndPublication);
 
     private static Dependency<IStorage> CreateCosmosStorageDependency()
         =>

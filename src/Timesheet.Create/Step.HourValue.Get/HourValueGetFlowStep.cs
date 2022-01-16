@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using GGroupp.Infra.Bot.Builder;
 using static System.FormattableString;
 
@@ -15,26 +14,22 @@ internal static class HourValueGetFlowStep
         chatFlow.SendText(
             _ => "Введите время работы в часах")
         .AwaitValue(
-            text => ParseHourValueOrFailure(text).Forward(ValidateValueOrFailure),
+            text => text.ParseHourValueOrFailure().MapFailure(CreateUnexpectedValueFailure).Forward(ValidateValueOrFailure),
             (state, value) => state with
             {
                 ValueHours = value
             });
 
-    private static Result<decimal, ChatFlowStepFailure> ParseHourValueOrFailure(this string? text)
-        =>
-        decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out var value) switch
-        {
-            true => value,
-            _ => ChatFlowStepFailure.From("Не удалось распознать десятичное число")
-        };
-
-    private static Result<decimal, ChatFlowStepFailure> ValidateValueOrFailure(decimal value)
+    private static Result<decimal, BotFlowFailure> ValidateValueOrFailure(decimal value)
         =>
         value switch
         {
-            not > 0 => ChatFlowStepFailure.From("Значение должно быть больше нуля"),
-            not <= MaxValue => ChatFlowStepFailure.From(Invariant($"Значение должно быть меньше {MaxValue}")),
+            not > 0 => BotFlowFailure.From("Значение должно быть больше нуля"),
+            not <= MaxValue => BotFlowFailure.From(Invariant($"Значение должно быть меньше {MaxValue}")),
             _ => value
         };
+
+    private static BotFlowFailure CreateUnexpectedValueFailure(Unit _)
+        =>
+        BotFlowFailure.From("Не удалось распознать десятичное число");
 }

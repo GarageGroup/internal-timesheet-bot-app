@@ -30,7 +30,7 @@ internal static class ProjectFindFlowStep
                 ProjectName = projectValue.Name
             });
 
-    private static ValueTask<Result<LookupValueSetSeachOut, ChatFlowStepFailure>> SearchProjectsAsync(
+    private static ValueTask<Result<LookupValueSetSeachOut, BotFlowFailure>> SearchProjectsAsync(
         this IProjectSetSearchFunc projectSetSearchFunc,
         LookupValueSetSeachIn seachInput,
         CancellationToken cancellationToken)
@@ -44,10 +44,10 @@ internal static class ProjectFindFlowStep
         .PipeValue(
             projectSetSearchFunc.InvokeAsync)
         .MapFailure(
-            MapToStepFailure)
+            MapToFlowFailure)
         .Filter(
             @out => @out.Projects.Any(),
-            _ => ChatFlowStepFailure.From("Ничего не найдено. Попробуйте уточнить запрос"))
+            _ => BotFlowFailure.From("Ничего не найдено. Попробуйте уточнить запрос"))
         .MapSuccess(
             @out => new LookupValueSetSeachOut(
                 items: @out.Projects.Select(MapProjectItem).ToArray(),
@@ -67,7 +67,7 @@ internal static class ProjectFindFlowStep
         =>
         lookupValue.Extensions.GetValueOrAbsent(ProjectTypeFieldName).Map(Enum.Parse<TimesheetProjectType>).OrDefault();
 
-    private static ChatFlowStepFailure MapToStepFailure(Failure<ProjectSetSearchFailureCode> failure)
+    private static BotFlowFailure MapToFlowFailure(Failure<ProjectSetSearchFailureCode> failure)
         =>
         new(
             userMessage: "При поиске проектов произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее",

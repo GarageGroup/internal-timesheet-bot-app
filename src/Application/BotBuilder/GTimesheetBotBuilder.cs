@@ -8,7 +8,7 @@ using PrimeFuncPack;
 
 namespace GGroupp.Internal.Timesheet;
 
-internal static partial class BotDependency
+internal static partial class GTimesheetBotBuilder
 {
     private static Dependency<LoggerDelegatingHandler> CreateStandardHttpHandlerDependency(string loggerCategoryName)
         =>
@@ -20,7 +20,14 @@ internal static partial class BotDependency
         this Dependency<THttpHandler> dependency)
         where THttpHandler : HttpMessageHandler
         =>
-        dependency.With<IFunc<DataverseApiClientConfiguration>>(
-            sp => sp.GetRequiredService<IConfiguration>().Get<DataverseClientConfigurationJson>())
-        .UseDataverseApiClient();
+        dependency.UseDataverseApiClient(
+            sp => sp.GetRequiredService<IConfiguration>().GetDataverseApiClientConfiguration());
+
+    private static DataverseApiClientConfiguration GetDataverseApiClientConfiguration(this IConfiguration configuration)
+        =>
+        new(
+            serviceUrl: configuration.GetValue<string>("DataverseApiServiceUrl"),
+            authTenantId: configuration.GetValue<string>("DataverseApiAuthTenantId"),
+            authClientId: configuration.GetValue<string>("DataverseApiAuthClientId"),
+            authClientSecret: configuration.GetValue<string>("DataverseApiAuthClientSecret"));
 }

@@ -22,6 +22,6 @@ partial class TimesheetCreateChatFlow
             return chatFlow;
         }
 
-        return activity.RecognizeCommandOrAbsnet(commandName).ToResult().MapSuccess(_ => chatFlow);
+        return activity.RecognizeCommandOrAbsent(commandName).ToResult().MapSuccess(_ => chatFlow);
     }
 }

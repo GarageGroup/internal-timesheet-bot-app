@@ -1,0 +1,84 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.9/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.9",
+  "version": "1.0.0",
+  "showLoadingIndicator": true,
+  "id": "98fe16a0-f7d1-4e7f-8828-c36b0ae137ef",
+  "packageName": "ru.ggroupp.internal.testtimesheetbot",
+  "developer": {
+    "name": "GGroupp",
+    "websiteUrl": "http://ggroupp.ru",
+    "privacyUrl": "https://www.teams.com/privacy",
+    "termsOfUseUrl": "https://www.teams.com/termsofuser",
+    "mpnId": "5458095"
+  },
+  "icons": {
+    "color": "icon-color.png",
+    "outline": "icon-outline.png"
+  },
+  "name": {
+    "short": "Test G-Timesheet Bot",
+    "full": "Test G-Timesheet Bot"
+  },
+  "description": {
+    "short": "Бот учёта рабочего времени",
+    "full": "Бот учёта рабочего времени"
+  },
+  "accentColor": "#FFFFFF",
+  "staticTabs": [
+    {
+      "entityId": "conversations",
+      "scopes": [
+        "personal"
+      ]
+    },
+    {
+      "entityId": "about",
+      "scopes": [
+        "personal"
+      ]
+    }
+  ],
+  "bots": [
+    {
+      "botId": "98fe16a0-f7d1-4e7f-8828-c36b0ae137ef",
+      "scopes": [
+        "personal"
+      ],
+      "commandLists":[
+        {
+          "scopes":[
+            "personal"
+          ],
+          "commands":[
+            {
+              "title": "newtimesheet",
+              "description": "Списать время"
+            },
+            {
+              "title": "info",
+              "description": "Информация о боте"
+            },
+            {
+              "title": "stop",
+              "description": "Остановить операцию"
+            }
+          ]
+        }
+      ],
+      "supportsFiles": false,
+      "isNotificationOnly": false
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "token.botframework.com",
+    "*.ngrok.io"
+  ],
+  "devicePermissions": [
+    "notifications"
+  ]
+}

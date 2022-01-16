@@ -11,36 +11,36 @@ public static class TimesheetCreateBotBuilder
 {
     public static IBotBuilder UseTimesheetCreate(
         this IBotBuilder botBuilder,
-        Func<IBotContext, TimesheetCreateOption> optionResolver,
+        string commandName,
         Func<IBotContext, IProjectSetSearchFunc> projectSetSearchFuncResolver,
         Func<IBotContext, ITimesheetCreateFunc> timesheetCreateFuncResolver)
         =>
         InnerUseTimesheetCreate(
             botBuilder ?? throw new ArgumentNullException(nameof(botBuilder)),
-            optionResolver ?? throw new ArgumentNullException(nameof(optionResolver)),
+            commandName,
             projectSetSearchFuncResolver ?? throw new ArgumentNullException(nameof(projectSetSearchFuncResolver)),
             timesheetCreateFuncResolver ?? throw new ArgumentNullException(nameof(timesheetCreateFuncResolver)));
 
     private static IBotBuilder InnerUseTimesheetCreate(
         IBotBuilder botBuilder,
-        Func<IBotContext, TimesheetCreateOption> optionResolver,
+        string commandName,
         Func<IBotContext, IProjectSetSearchFunc> projectSetSearchFuncResolver,
         Func<IBotContext, ITimesheetCreateFunc> timesheetCreateFuncResolver)
         =>
         botBuilder.Use(
             (context, token) => context.InnerTimesheetCreateAsync(
-                optionResolver.Invoke(context),
+                commandName,
                 projectSetSearchFuncResolver.Invoke(context),
                 timesheetCreateFuncResolver.Invoke(context)));
 
     private static ValueTask<Unit> InnerTimesheetCreateAsync(
         this IBotContext botContext,
-        TimesheetCreateOption option,
+        string commandName,
         IProjectSetSearchFunc projectSetSearchFunc,
         ITimesheetCreateFunc timesheetCreateFunc)
         =>
         AsyncPipeline.Pipe(
-            option.CommandName)
+            commandName)
         .PipeValue(
             botContext.InternalRecoginzeOrFailureAsync)
         .MapSuccessValue(

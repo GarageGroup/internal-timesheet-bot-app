@@ -1,43 +1,28 @@
 ﻿using System;
-using System.Threading;
+using System.Collections.Generic;
 using GGroupp.Infra.Bot.Builder;
-using GGroupp.Platform;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using PrimeFuncPack;
 
 namespace GGroupp.Internal.Timesheet;
 
-using IAzureUserGetFunc = IAsyncValueFunc<AzureUserMeGetIn, Result<AzureUserGetOut, Failure<AzureUserGetFailureCode>>>;
-using IDataverseUserGetFunc = IAsyncValueFunc<DataverseUserGetIn, Result<DataverseUserGetOut, Failure<DataverseUserGetFailureCode>>>;
-
 partial class GTimesheetBotBuilder
 {
-    internal static IBotBuilder UseGTimesheetAuthorization(this IBotBuilder botBuilder)
+    internal static IBotBuilder UseGTimesheetBotInfo(this IBotBuilder botBuilder, string commandName)
         =>
-        botBuilder.UseDataverseAuthorization(
-            AuthorizationBotBuilder.ResolveStandardOption,
-            GetAzureUserGetApi,
-            GetDataverseUserGetApi);
+        botBuilder.UseBotInfo(commandName, GetBotInfoData);
 
-    private static IAzureUserGetFunc GetAzureUserGetApi(IBotContext botContext)
+    private static BotInfoData GetBotInfoData(IBotContext botContext)
         =>
-        azureUserGetApiDependency.Value.Resolve(botContext.ServiceProvider);
+        new(botContext.ServiceProvider.GetRequiredService<IConfiguration>().GetBotInfoData());
 
-    private static IDataverseUserGetFunc GetDataverseUserGetApi(IBotContext botContext)
+    private static IReadOnlyCollection<KeyValuePair<string, string?>> GetBotInfoData(this IConfiguration configuration)
         =>
-        CreateStandardHttpHandlerDependency("DataverseUserGetApi")
-        .CreateDataverseApiClient()
-        .UseUserGetApi()
-        .Resolve(botContext.ServiceProvider);
-
-    private static readonly Lazy<Dependency<IAzureUserGetFunc>> azureUserGetApiDependency
-        =
-        new(CreateAzureUserGetDependency, LazyThreadSafetyMode.ExecutionAndPublication);
-
-    private static Dependency<IAzureUserGetFunc> CreateAzureUserGetDependency()
-        =>
-        CreateStandardHttpHandlerDependency("AzureUserGetApi")
-        .UseAzureUserMeGetApi(
-            sp => sp.GetRequiredService<IConfiguration>().Get<AzureUserApiConfigurationJson>());
+        new KeyValuePair<string, string?>[]
+        {
+            new("Название", configuration.GetValue<string>("BotName")),
+            new("Описание", configuration.GetValue<string>("BotDescription")),
+            new("Версия сборки", configuration.GetValue<string>("BotBuildVersion")),
+            new("Время сборки", configuration.GetValue<DateTimeOffset?>("BotBuildDateTime")?.ToString("dd.MM.yyyy HH:mm:sszzz"))
+        };
 }
