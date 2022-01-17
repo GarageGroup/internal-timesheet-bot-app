@@ -10,7 +10,6 @@ namespace GGroupp.Internal.Timesheet;
 
 internal static partial class GTimesheetBotBuilder
 {
-
     private static Dependency<LoggerDelegatingHandler> CreateStandardHttpHandlerDependency(string loggerCategoryName)
         =>
         PrimaryHandler.UseStandardSocketsHttpHandler()

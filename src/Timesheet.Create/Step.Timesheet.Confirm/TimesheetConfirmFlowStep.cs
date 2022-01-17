@@ -4,7 +4,6 @@ namespace GGroupp.Internal.Timesheet;
 
 internal static class TimesheetConfirmFlowStep
 {
-
     internal static ChatFlow<TimesheetCreateFlowStateJson> ConfirmCreation(
         this ChatFlow<TimesheetCreateFlowStateJson> chatFlow)
         =>
