@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using GGroupp.Infra.Bot.Builder;
 
@@ -28,19 +29,21 @@ public static class TimesheetCreateBotBuilder
         Func<IBotContext, ITimesheetCreateFunc> timesheetCreateFuncResolver)
         =>
         botBuilder.Use(
-            (context, token) => context.InnerTimesheetCreateAsync(
+            (context, cancellationToken) => context.InnerTimesheetCreateAsync(
                 commandName,
                 projectSetSearchFuncResolver.Invoke(context),
-                timesheetCreateFuncResolver.Invoke(context)));
+                timesheetCreateFuncResolver.Invoke(context),
+                cancellationToken));
 
     private static ValueTask<Unit> InnerTimesheetCreateAsync(
         this IBotContext botContext,
         string commandName,
         IProjectSetSearchFunc projectSetSearchFunc,
-        ITimesheetCreateFunc timesheetCreateFunc)
+        ITimesheetCreateFunc timesheetCreateFunc,
+        CancellationToken cancellationToken)
         =>
         AsyncPipeline.Pipe(
-            commandName)
+            commandName, cancellationToken)
         .PipeValue(
             botContext.InternalRecoginzeOrFailureAsync)
         .MapSuccessValue(
