@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.9/MicrosoftTeams.schema.json",
   "manifestVersion": "1.9",
-  "version": "1.0.0",
+  "version": "1.1.6",
   "showLoadingIndicator": true,
   "id": "483609c9-dcfe-4e72-aca3-6257f9cac1a9",
   "packageName": "ru.ggroupp.internal.testtimesheetbot",
@@ -13,12 +13,12 @@
     "mpnId": "5458095"
   },
   "icons": {
-    "color": "icon-color.png",
-    "outline": "icon-outline.png"
+    "color": "gg-icon-color.png",
+    "outline": "gg-icon-outline.png"
   },
   "name": {
-    "short": "Test G-Timesheet Bot",
-    "full": "Test G-Timesheet Bot"
+    "short": "G-Timesheet Bot",
+    "full": "G-Timesheet Bot"
   },
   "description": {
     "short": "Бот учёта рабочего времени",
