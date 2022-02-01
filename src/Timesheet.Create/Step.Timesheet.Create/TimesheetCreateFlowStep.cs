@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using GGroupp.Infra.Bot.Builder;
+using Microsoft.Bot.Builder;
 
 namespace GGroupp.Internal.Timesheet;
 
@@ -16,7 +17,7 @@ internal static class TimesheetCreateFlowStep
         chatFlow.ForwardValue(
             (context, token) => context.CreateTimesheetAsync(timesheetCreateFunc, token))
         .SendText(
-            _ => "Списание времени создано успешно");
+            static _ => "Списание времени создано успешно");
 
     private static ValueTask<ChatFlowJump<Unit>> CreateTimesheetAsync(
         this IChatFlowContext<TimesheetCreateFlowStateJson> context,
@@ -31,21 +32,51 @@ internal static class TimesheetCreateFlowStep
                 projectId: flowState.ProjectId,
                 projectType: flowState.ProjectType,
                 duration: flowState.ValueHours,
-                description: flowState.Description))
+                description: flowState.Description,
+                channel: context.GetChannel()))
         .PipeValue(
             timesheetCreateFunc.InvokeAsync)
         .Map(
             Unit.From,
-            ToUnexpectedBreakState)
+            ToBreakState)
         .Fold(
             ChatFlowJump.Next,
             ChatFlowJump.Break<Unit>);
 
-    private static ChatFlowBreakState ToUnexpectedBreakState<TFailureCode>(
-        Failure<TFailureCode> failure)
-        where TFailureCode : struct
+    private static TimesheetChannel GetChannel(this ITurnContext turnContext)
+    {
+        if (turnContext.IsTelegramChannel())
+        {
+            return TimesheetChannel.Telegram;
+        }
+
+        if (turnContext.IsMsteamsChannel())
+        {
+            return TimesheetChannel.Teams;
+        }
+
+        if (turnContext.IsEmulatorChannel())
+        {
+            return TimesheetChannel.Emulator;
+        }
+
+        if (turnContext.IsWebchatChannel())
+        {
+            return TimesheetChannel.WebChat;
+        }
+
+        return default;
+    }
+
+    private static ChatFlowBreakState ToBreakState(Failure<TimesheetCreateFailureCode> failure)
         =>
-        ChatFlowBreakState.From(
-            userMessage: "При создании списания времени произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее",
-            logMessage: failure.FailureMessage);
+        (failure.FailureCode switch
+        {
+            TimesheetCreateFailureCode.NotAllowed
+                => "Не удалось создать списание времени. Данная операция не разрешена для вашей учетной записи. Обратитесь к администратору",
+            _
+                => "При создании списания времени произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее"
+        })
+        .Pipe(
+            message => ChatFlowBreakState.From(message, failure.FailureMessage));
 }

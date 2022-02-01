@@ -69,7 +69,15 @@ internal static class ProjectFindFlowStep
 
     private static BotFlowFailure MapToFlowFailure(Failure<ProjectSetSearchFailureCode> failure)
         =>
-        new(
-            userMessage: "При поиске проектов произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее",
-            logMessage: failure.FailureMessage);
+        (failure.FailureCode switch
+        {
+            ProjectSetSearchFailureCode.NotAllowed
+                => "При поиске проектов произошла ошибка. у вашей учетной записи не достаточно разрешений. Обратитесь к администратору приложения",
+            ProjectSetSearchFailureCode.TooManyRequests
+                => "Слишком много обращений к сервису. Поробуйте повторить попытку через несколько секунд",
+            _
+                => "При поиске проектов произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее"
+        })
+        .Pipe(
+            message => BotFlowFailure.From(message, failure.FailureMessage));
 }
