@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Text;
 using GGroupp.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
-using Microsoft.Bot.Connector;
 using Microsoft.Bot.Schema;
 
 namespace GGroupp.Internal.Timesheet;
@@ -31,7 +30,7 @@ internal static class TimesheetConfirmActivity
 
     internal static ChatFlowJump<TimesheetCreateFlowStateJson> GetConfirmationResult(this IChatFlowContext<TimesheetCreateFlowStateJson> context)
         =>
-        context.Activity.GetCardActionValueOrAbsent().Fold(
+        context.GetCardActionValueOrAbsent().Fold(
             actionId => actionId switch
             {
                 _ when actionId == ActionCreateId => ChatFlowJump.Next(context.FlowState),
@@ -42,28 +41,30 @@ internal static class TimesheetConfirmActivity
 
     internal static IActivity CreateActivity(IChatFlowContext<TimesheetCreateFlowStateJson> context)
         =>
-        context.Activity.IsCardSupported()
-        ? context.CreateCardSupportedConfirmationActivity()
-        : context.CreateSimpleConfirmationActivity();
+        context.IsCardSupported() switch
+        {
+            true => context.CreateCardSupportedConfirmationActivity(),
+            _ => context.CreateSimpleConfirmationActivity()
+        };
 
     private static IActivity CreateSimpleConfirmationActivity(this IChatFlowContext<TimesheetCreateFlowStateJson> context)
     {
-        var activity = context.Activity;
         var flowState = context.FlowState;
 
-        var summaryBuilder = activity.CreateSummaryTextBuilder(flowState);
+        var summaryBuilder = context.CreateSummaryTextBuilder(flowState);
         if (string.IsNullOrEmpty(flowState.Description) is false)
         {
-            summaryBuilder = summaryBuilder.AppendLine(activity).AppendRow(activity, "Описание", flowState.Description);
+            var description = context.EncodeText(flowState.Description);
+            summaryBuilder = summaryBuilder.AppendLine(context).AppendRow(context, "Описание", description);
         }
 
         var card = new HeroCard
         {
             Title = QuestionText,
-            Buttons = activity.CreateCardActions()
+            Buttons = context.CreateCardActions()
         };
 
-        return MessageFactory.Attachment(card.ToAttachment(), summaryBuilder.ToString().ToEncodedActivityText());
+        return MessageFactory.Attachment(card.ToAttachment(), summaryBuilder.ToString());
     }
 
     private static IActivity CreateCardSupportedConfirmationActivity(this IChatFlowContext<TimesheetCreateFlowStateJson> context)
@@ -71,14 +72,14 @@ internal static class TimesheetConfirmActivity
         new HeroCard
         {
             Title = QuestionText,
-            Subtitle = context.Activity.CreateSummaryTextBuilder(context.FlowState).ToString(),
+            Subtitle = context.CreateSummaryTextBuilder(context.FlowState).ToString(),
             Text = context.FlowState.Description,
-            Buttons = context.Activity.CreateCardActions()
+            Buttons = context.CreateCardActions()
         }
         .ToAttachment()
         .ToActivity();
 
-    private static CardAction[] CreateCardActions(this Activity activity)
+    private static CardAction[] CreateCardActions(this ITurnContext turnContext)
         =>
         new CardAction[]
         {
@@ -86,36 +87,36 @@ internal static class TimesheetConfirmActivity
             {
                 Title = ActionCreateText,
                 Text = ActionCreateText,
-                Value = activity.BuildCardActionValue(ActionCreateId)
+                Value = turnContext.BuildCardActionValue(ActionCreateId)
             },
             new(ActionTypes.PostBack)
             {
                 Title = ActionCancelText,
                 Text = ActionCancelText,
-                Value = activity.BuildCardActionValue(ActionCancelId)
+                Value = turnContext.BuildCardActionValue(ActionCancelId)
             }
         };
 
-    private static StringBuilder CreateSummaryTextBuilder(this Activity activity, TimesheetCreateFlowStateJson flowStateJson)
+    private static StringBuilder CreateSummaryTextBuilder(this ITurnContext turnContext, TimesheetCreateFlowStateJson flowStateJson)
         =>
         Pipeline.Pipe(
             new StringBuilder())
         .AppendRow(
-            activity, "Проект", flowStateJson.ProjectName)
+            turnContext, "Проект", turnContext.EncodeText(flowStateJson.ProjectName))
         .AppendLine(
-            activity)
+            turnContext)
         .AppendRow(
-            activity, "Дата", flowStateJson.Date.ToString("dd MMMM yyyy", RussianCultureInfo))
+            turnContext, "Дата", flowStateJson.Date.ToString("dd MMMM yyyy", RussianCultureInfo))
         .AppendLine(
-            activity)
+            turnContext)
         .AppendRow(
-            activity, "Время", flowStateJson.ValueHours.ToString("G", RussianCultureInfo));
+            turnContext, "Время", flowStateJson.ValueHours.ToString("G", RussianCultureInfo));
 
-    private static StringBuilder AppendRow(this StringBuilder builder, Activity activity, string fieldName, string? fieldValue)
+    private static StringBuilder AppendRow(this StringBuilder builder, ITurnContext turnContext, string fieldName, string? fieldValue)
     {
         if (string.IsNullOrEmpty(fieldName) is false)
         {
-            if (activity.ChannelId is Channels.Telegram)
+            if (turnContext.IsTelegramChannel())
             {
                 _ = builder.Append("**").Append(fieldName).Append(':').Append("**");
             }
@@ -133,8 +134,8 @@ internal static class TimesheetConfirmActivity
         return builder;
     }
 
-    private static StringBuilder AppendLine(this StringBuilder builder, Activity activity)
+    private static StringBuilder AppendLine(this StringBuilder builder, ITurnContext turnContext)
         =>
         builder.Append(
-            activity.ChannelId is Channels.Msteams ? "<br>" : "\n\r\n\r");
+            turnContext.IsMsteamsChannel() ? "<br>" : "\n\r\n\r");
 }

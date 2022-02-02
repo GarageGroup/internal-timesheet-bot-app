@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using GGroupp.Infra.Bot.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GGroupp.Internal.Timesheet;
 
@@ -25,6 +28,18 @@ partial class GTimesheetBotBuilder
         CreateStandardHttpHandlerDependency("TimesheetCreateApi")
         .UseDataverseImpersonation(botContext)
         .CreateDataverseApiClient()
-        .UseTimesheetCreateApi()
+        .UseTimesheetCreateApi(
+            sp => sp.GetRequiredService<IConfiguration>().GetTimesheetCreateApiConfiguration())
         .Resolve(botContext.ServiceProvider);
+
+    private static TimesheetCreateApiConfiguration GetTimesheetCreateApiConfiguration(this IConfiguration configuration)
+        =>
+        new(
+            channelCodes: new Dictionary<TimesheetChannel, int?>
+            {
+                [TimesheetChannel.Telegram] = configuration.GetValue<int?>("DataverseChannelCodes:Telegram"),
+                [TimesheetChannel.Teams] = configuration.GetValue<int?>("DataverseChannelCodes:Teams"),
+                [TimesheetChannel.WebChat] = configuration.GetValue<int?>("DataverseChannelCodes:WebChat"),
+                [TimesheetChannel.Emulator] = configuration.GetValue<int?>("DataverseChannelCodes:Emulator")
+            });
 }

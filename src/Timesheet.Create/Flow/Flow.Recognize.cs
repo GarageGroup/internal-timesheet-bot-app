@@ -10,8 +10,8 @@ partial class TimesheetCreateChatFlow
     internal static async ValueTask<Result<ChatFlow, Unit>> InternalRecoginzeOrFailureAsync(
         this IBotContext context, string commandName, CancellationToken cancellationToken)
     {
-        var activity = context.TurnContext.Activity;
-        if (activity.IsNotMessageType())
+        var turnContext = context.TurnContext;
+        if (turnContext.IsNotMessageType())
         {
             return default;
         }
@@ -22,6 +22,6 @@ partial class TimesheetCreateChatFlow
             return chatFlow;
         }
 
-        return activity.RecognizeCommandOrAbsent(commandName).ToResult().MapSuccess(_ => chatFlow);
+        return turnContext.RecognizeCommandOrAbsent(commandName).Fold(_ => chatFlow, Result.Absent<ChatFlow>);
     }
 }
