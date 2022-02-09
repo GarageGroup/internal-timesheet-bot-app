@@ -8,9 +8,9 @@ internal static class DescriptionGetFlowStep
         this ChatFlow<TimesheetCreateFlowStateJson> chatFlow)
         =>
         chatFlow.GetTextOrSkip(
-            _ => new(
+            static _ => new(
                 messageText: "Введите описание. Этот шаг можно пропустить"),
-            (state, description) => state with
+            static (state, description) => state with
             {
                 Description = description
             });

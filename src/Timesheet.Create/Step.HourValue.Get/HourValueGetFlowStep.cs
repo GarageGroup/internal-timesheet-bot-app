@@ -12,7 +12,7 @@ internal static class HourValueGetFlowStep
         this ChatFlow<TimesheetCreateFlowStateJson> chatFlow)
         =>
         chatFlow.SendText(
-            _ => "Введите время работы в часах")
+            static _ => "Введите время работы в часах")
         .AwaitValue(
             text => text.ParseHourValueOrFailure().MapFailure(CreateUnexpectedValueFailure).Forward(ValidateValueOrFailure),
             (state, value) => state with

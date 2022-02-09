@@ -9,18 +9,14 @@ internal static class DateGetFlowStep
         this ChatFlow<TimesheetCreateFlowStateJson> chatFlow)
         =>
         chatFlow.AwaitDate(
-            _ => GetAwaitDateOption(),
-            (state, date) => state with
+            static _ => new(
+                text: "Введите дату списания",
+                dateFormat: "dd.MM.yyyy",
+                confirmButtonText: "Выбрать",
+                invalidDateText: "Не удалось распознать дату",
+                DateOnly.FromDateTime(DateTime.Now)),
+            static (state, date) => state with
             {
                 Date = date
             });
-
-    private static AwaitDateOption GetAwaitDateOption()
-        =>
-        new(
-            text: "Введите дату списания",
-            dateFormat: "dd.MM.yyyy",
-            confirmButtonText: "Выбрать",
-            invalidDateText: "Не удалось распознать дату",
-            DateOnly.FromDateTime(DateTime.Now));
 }
