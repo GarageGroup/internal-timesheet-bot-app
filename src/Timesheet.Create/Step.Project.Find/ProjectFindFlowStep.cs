@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,8 +10,6 @@ using IProjectSetSearchFunc = IAsyncValueFunc<ProjectSetSearchIn, Result<Project
 
 internal static class ProjectFindFlowStep
 {
-    private const string ProjectTypeFieldName = nameof(ProjectItemSearchOut.Type);
-
     private const int MaxProjectsCount = 5;
 
     internal static ChatFlow<TimesheetCreateFlowStateJson> FindProject(
@@ -20,52 +17,40 @@ internal static class ProjectFindFlowStep
         IProjectSetSearchFunc projectSetSearchFunc)
         =>
         chatFlow.SendText(
-            _ => "Нужно выбрать проект. Введите часть названия для поиска")
+            static _ => "Нужно выбрать проект. Введите часть названия для поиска")
         .AwaitLookupValue(
             (_, search, token) => projectSetSearchFunc.SearchProjectsAsync(search, token),
-            (flowState, projectValue) => flowState with
+            static (flowState, projectValue) => flowState with
             {
-                ProjectType = projectValue.ParseProjectType(),
+                ProjectType = Enum.Parse<TimesheetProjectType>(projectValue.Data.OrEmpty()),
                 ProjectId = projectValue.Id,
                 ProjectName = projectValue.Name
             });
 
-    private static ValueTask<Result<LookupValueSetSeachOut, BotFlowFailure>> SearchProjectsAsync(
-        this IProjectSetSearchFunc projectSetSearchFunc,
-        LookupValueSetSeachIn seachInput,
-        CancellationToken cancellationToken)
+    private static ValueTask<Result<LookupValueSetOption, BotFlowFailure>> SearchProjectsAsync(
+        this IProjectSetSearchFunc projectSetSearchFunc, string seachText, CancellationToken cancellationToken)
         =>
         AsyncPipeline.Pipe(
-            seachInput, cancellationToken)
+            seachText, cancellationToken)
         .Pipe(
-            @in => new ProjectSetSearchIn(
-                searchText: @in.Text,
+            static text => new ProjectSetSearchIn(
+                searchText: text,
                 top: MaxProjectsCount))
         .PipeValue(
             projectSetSearchFunc.InvokeAsync)
         .MapFailure(
             MapToFlowFailure)
         .Filter(
-            @out => @out.Projects.Any(),
-            _ => BotFlowFailure.From("Ничего не найдено. Попробуйте уточнить запрос"))
+            static @out => @out.Projects.Any(),
+            static _ => BotFlowFailure.From("Ничего не найдено. Попробуйте уточнить запрос"))
         .MapSuccess(
-            @out => new LookupValueSetSeachOut(
+            static @out => new LookupValueSetOption(
                 items: @out.Projects.Select(MapProjectItem).ToArray(),
                 choiceText: "Выберите проект"));
 
     private static LookupValue MapProjectItem(ProjectItemSearchOut item)
         =>
-        new(
-            item.Id,
-            item.Name,
-            new KeyValuePair<string, string>[]
-            {
-                new(ProjectTypeFieldName, item.Type.ToString("G"))
-            });
-
-    private static TimesheetProjectType ParseProjectType(this LookupValue lookupValue)
-        =>
-        lookupValue.Extensions.GetValueOrAbsent(ProjectTypeFieldName).Map(Enum.Parse<TimesheetProjectType>).OrDefault();
+        new(item.Id, item.Name, item.Type.ToString("G"));
 
     private static BotFlowFailure MapToFlowFailure(Failure<ProjectSetSearchFailureCode> failure)
         =>
