@@ -1,24 +1,28 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GGroupp.Infra.Bot.Builder;
+using Microsoft.Extensions.Logging;
 
 namespace GGroupp.Internal.Timesheet;
 
+using IFavoriteProjectSetGetFunc = IAsyncValueFunc<FavoriteProjectSetGetIn, Result<FavoriteProjectSetGetOut, Failure<FavoriteProjectSetGetFailureCode>>>;
 using IProjectSetSearchFunc = IAsyncValueFunc<ProjectSetSearchIn, Result<ProjectSetSearchOut, Failure<ProjectSetSearchFailureCode>>>;
 
 internal static class ProjectFindFlowStep
 {
-    private const int MaxProjectsCount = 5;
+    private const int MaxProjectsCount = 6;
 
     internal static ChatFlow<TimesheetCreateFlowStateJson> FindProject(
         this ChatFlow<TimesheetCreateFlowStateJson> chatFlow,
+        IBotUserProvider botUserProvider,
+        IFavoriteProjectSetGetFunc favoriteProjectSetGetFunc,
         IProjectSetSearchFunc projectSetSearchFunc)
         =>
-        chatFlow.SendText(
-            static _ => "Нужно выбрать проект. Введите часть названия для поиска")
-        .AwaitLookupValue(
+        chatFlow.AwaitLookupValue(
+            (context, token) => ShowFavorieProjects(context, botUserProvider, favoriteProjectSetGetFunc, token),
             (_, search, token) => projectSetSearchFunc.SearchProjectsAsync(search, token),
             static (flowState, projectValue) => flowState with
             {
@@ -26,6 +30,28 @@ internal static class ProjectFindFlowStep
                 ProjectId = projectValue.Id,
                 ProjectName = projectValue.Name
             });
+
+    private static ValueTask<LookupValueSetOption> ShowFavorieProjects(
+        IChatFlowContext<TimesheetCreateFlowStateJson> context,
+        IBotUserProvider botUserProvider,
+        IFavoriteProjectSetGetFunc favoriteProjectSetGetFunc,
+        CancellationToken token)
+        =>
+        AsyncPipeline.Pipe(
+            default(Unit), token)
+        .Pipe(
+            botUserProvider.GetUserIdOrFailureAsync)
+        .MapSuccess(
+            static userId => new FavoriteProjectSetGetIn(
+                userId: userId, 
+                top: MaxProjectsCount))
+        .ForwardValue(
+            favoriteProjectSetGetFunc.InvokeAsync)
+        .Fold(
+            static @out => new(
+                items: @out.Projects.Select(MapFavorieProjectItem).ToArray(),
+                choiceText: "Выберите проект или введите часть названия для поиска"),
+            failure => MapSearchFailure(failure, context.Logger));
 
     private static ValueTask<Result<LookupValueSetOption, BotFlowFailure>> SearchProjectsAsync(
         this IProjectSetSearchFunc projectSetSearchFunc, string seachText, CancellationToken cancellationToken)
@@ -48,9 +74,43 @@ internal static class ProjectFindFlowStep
                 items: @out.Projects.Select(MapProjectItem).ToArray(),
                 choiceText: "Выберите проект"));
 
+    private static async Task<Result<Guid, Failure<FavoriteProjectSetGetFailureCode>>> GetUserIdOrFailureAsync(
+        this IBotUserProvider botUserProvider, Unit _, CancellationToken token)
+    {
+        var currentUser = await botUserProvider.GetCurrentUserAsync(token);
+        if (currentUser is null)
+        {
+            return CreateFailure("Bot user must be specified");
+        }
+
+        return currentUser.Claims.GetValueOrAbsent("DataverseSystemUserId").Fold(ParseOrFailure, CreateClaimMustBeSpecifiedFailure);
+
+        static Result<Guid, Failure<FavoriteProjectSetGetFailureCode>> ParseOrFailure(string value)
+            =>
+            Guid.TryParse(value, out var guid) ? guid : CreateFailure($"DataverseUserId Claim {value} is not a Guid");
+
+        static Result<Guid, Failure<FavoriteProjectSetGetFailureCode>> CreateClaimMustBeSpecifiedFailure()
+            =>
+            CreateFailure("Dataverse user claim must be specified");
+
+        static Failure<FavoriteProjectSetGetFailureCode> CreateFailure(string message)
+            =>
+            new(FavoriteProjectSetGetFailureCode.Unknown, message);
+    }
+
+    private static LookupValue MapFavorieProjectItem(FavoriteProjectItemGetOut item)
+        =>
+        new(item.Id, item.Name, item.Type.ToString("G"));
+
     private static LookupValue MapProjectItem(ProjectItemSearchOut item)
         =>
         new(item.Id, item.Name, item.Type.ToString("G"));
+
+    private static LookupValueSetOption MapSearchFailure(Failure<FavoriteProjectSetGetFailureCode> failure, ILogger logger)
+    {
+        logger.LogError("Favorite projects failure: {failureCode} {failureMessage}", failure.FailureCode, failure.FailureMessage);
+        return new(default, "Нужно выбрать проект. Введите часть названия для поиска");
+    }
 
     private static BotFlowFailure MapToFlowFailure(Failure<ProjectSetSearchFailureCode> failure)
         =>
