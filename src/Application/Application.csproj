@@ -8,13 +8,13 @@
     <InvariantGlobalization>false</InvariantGlobalization>
     <RootNamespace>GGroupp.Internal.Timesheet</RootNamespace>
     <AssemblyName>GGroupp.Internal.Timesheet.Bot.Application</AssemblyName>
-    <Version>1.3.0-preview.5</Version>
+    <Version>1.3.0-preview.6</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'Application' " />
 
   <ItemGroup>
-    <PackageReference Include="GGroupp.Infra.Bot.Builder.Authorization.Dataverse" Version="1.1.1" />
+    <PackageReference Include="GGroupp.Infra.Bot.Builder.Authorization.Dataverse" Version="1.1.2" />
     <PackageReference Include="GGroupp.Infra.Bot.Builder.Command.Info" Version="1.1.1" />
     <PackageReference Include="GGroupp.Infra.Bot.Builder.Command.Stop" Version="1.1.1" />
     <PackageReference Include="GGroupp.Infra.Bot.Builder.Integration.AspNet.Core" Version="1.4.0" />
