@@ -17,13 +17,13 @@ internal static class TimesheetConfirmFlowStep
             questionText: "Списать время?",
             confirmButtonText: "Списать",
             cancelButtonText: "Отменить",
-            cancelText: "Списание времени было отменен",
+            cancelText: "Списание времени было отменено",
             fieldValues: new KeyValuePair<string, string?>[]
             {
                 new(flowState.ProjectType.GetName(), flowState.ProjectName),
                 new("Дата", flowState.Date.ToStringRussianCulture()),
                 new("Время", flowState.ValueHours.ToStringRussianCulture() + "ч"),
-                new("Описание", flowState.Description)
+                new(string.Empty, flowState.Description)
             });
 
     private static string GetName(this TimesheetProjectType projectType)
