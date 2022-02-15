@@ -28,5 +28,6 @@ static class Program
         .UseGTimesheetBotStop("stop")
         .UseGTimesheetAuthorization()
         .UseGTimesheetBotInfo("info")
-        .UseGTimesheetCreate("newtimesheet");
+        .UseGTimesheetCreate("newts")
+        .UseGTimesheetSetGet("showts");
 }
