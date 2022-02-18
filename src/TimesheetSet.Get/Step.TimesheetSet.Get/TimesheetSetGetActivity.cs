@@ -22,24 +22,22 @@ internal static class TimesheetSetGetActivity
             return context.CreateAdaptiveCardActivity(context.FlowState.Timesheets);
         }
 
-
-        var text = new StringBuilder();
-        var isTelegram = context.IsTelegramChannel();
-
-        text.Append("**").Append(context.FlowState.Timesheets.Sum(x => x.Duration).ToString("#,##0.##") + "ч Всего списаний").Append(':').Append("**");
-
-        foreach (var timesheet in context.FlowState.Timesheets)
+        if (context.IsTelegramChannel())
         {
-            if (isTelegram)
+            var text = new StringBuilder();
+
+            text.Append("**").Append(context.FlowState.Timesheets.Sum(x => x.Duration).ToString("#,##0.##") + "ч Всего списаний").Append(':').Append("**");
+
+            foreach (var timesheet in context.FlowState.Timesheets)
             {
                 text.Append("\n\r---\n\r");
                 text.Append(context.CreateSummaryTextBuilder(timesheet));
             }
+
+            return MessageFactory.Text(text.ToString());
         }
 
-
-
-        return MessageFactory.Text(text.ToString());
+        return MessageFactory.Text("При поиске списаний произошла ошибка. Не опознан канал связи. Обратитесь к администратору");
     }
 
     internal static StringBuilder CreateSummaryTextBuilder(this ITurnContext turnContext, TimesheetSetItemGetOut timesheet)
@@ -69,38 +67,70 @@ internal static class TimesheetSetGetActivity
             ContentType = AdaptiveCard.ContentType,
             Content = new AdaptiveCard(context.GetAdaptiveSchemaVersion())
             {
-                Body = new List<AdaptiveElement>()
-                {
-                    new AdaptiveTextBlock
-                    {
-                        Text = "",
-                        Weight = AdaptiveTextWeight.Bolder,
-                        Size = AdaptiveTextSize.Medium
-                    },
-                    new AdaptiveFactSet
-                    {
-                        Facts = GetAdaptiveFacts(timesheets)
-                    }
-                }
+                Body = GetAdaptiveElements(timesheets)
             }
         }.ToActivity();
 
         return result;
     }
 
-    private static List<AdaptiveFact> GetAdaptiveFacts(IReadOnlyCollection<TimesheetSetItemGetOut> timesheets) { 
-        var result = new List<AdaptiveFact>();
+    private static List<AdaptiveElement> GetAdaptiveElements(IReadOnlyCollection<TimesheetSetItemGetOut> timesheets)
+    {
+        var adaptiveElements = new List<AdaptiveElement>
+        {
+            GetAdaptiveTimesheetRow(timesheets.Sum(x => x.Duration), "**", "Всего списаний", AdaptiveTextSize.ExtraLarge, AdaptiveSpacing.Default)
+        };
 
         foreach (var timesheet in timesheets)
         {
-            result.Add(new AdaptiveFact { Title = timesheet.Duration.ToString("#,##0.##") + "ч", Value = timesheet.ProjectName });
+            adaptiveElements.Add(GetAdaptiveTimesheetRow(timesheet.Duration, "**", timesheet.ProjectName, AdaptiveTextSize.Default, AdaptiveSpacing.Default));
 
-            if (string.IsNullOrEmpty(timesheet.Description) is false) {
-                result.Add(new AdaptiveFact { Title = "", Value = timesheet.Description });
+            if (string.IsNullOrEmpty(timesheet.Description) is not true)
+            {
+                adaptiveElements.Add(GetAdaptiveTimesheetRow(null, "_", timesheet.Description, AdaptiveTextSize.Default, AdaptiveSpacing.None, true));
             }
         }
 
-        return result;
+        return adaptiveElements;
+    }
+
+    private static AdaptiveColumnSet GetAdaptiveTimesheetRow(decimal? duration,
+        string style,
+        string description,
+        AdaptiveTextSize size,
+        AdaptiveSpacing spacing,
+        bool wrap = false)
+    {
+        var timeColumn = new AdaptiveColumn
+        {
+            Width = "55px"
+        };
+
+        var row = new AdaptiveColumnSet
+        {
+            Spacing = spacing
+        };
+
+        if (duration is not null)
+        {
+            timeColumn.Items.Add(new AdaptiveTextBlock
+            {
+                Text = "**" + duration?.ToString("#,##0.##") + "ч" + "**",
+                Size = size,
+            });
+        }
+        row.Columns.Add(timeColumn);
+
+        var projectColumn = new AdaptiveColumn();
+        projectColumn.Items.Add(new AdaptiveTextBlock
+        {
+            Text = style + description + style,
+            Size = size,
+            Wrap = wrap
+        });
+        row.Columns.Add(projectColumn);
+
+        return row;
     }
 
     private static StringBuilder AppendRow(this StringBuilder builder, ITurnContext turnContext, string fieldName, string? fieldValue)
