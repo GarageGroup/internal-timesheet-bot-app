@@ -13,7 +13,7 @@ partial class TimesheetSetGetChatFlow
         ITimesheetSetGetFunc timesheetSetGetFunc)
         =>
         chatFlow.Start(
-            static () => new TimesheetSetGetFlowStateJson())
+            static () => new DateTimesheetFlowState())
         .GetDate()
         .GetTimesheet(
             botUserProvider,

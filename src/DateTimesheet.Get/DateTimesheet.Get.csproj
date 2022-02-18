@@ -7,7 +7,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <InvariantGlobalization>false</InvariantGlobalization>
     <RootNamespace>GGroupp.Internal.Timesheet</RootNamespace>
-    <AssemblyName>GGroupp.Internal.Timesheet.Flow.TimesheetSet.Get</AssemblyName>
+    <AssemblyName>GGroupp.Internal.Timesheet.Flow.DateTimesheet.Get</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

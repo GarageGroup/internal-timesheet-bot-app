@@ -11,7 +11,7 @@ using ITimesheetSetGetFunc = IAsyncValueFunc<TimesheetSetGetIn, Result<Timesheet
 internal static class TimesheetSetGetStep
 {
     internal static ChatFlow<Unit> GetTimesheet(
-        this ChatFlow<TimesheetSetGetFlowStateJson> chatFlow,
+        this ChatFlow<DateTimesheetFlowState> chatFlow,
         IBotUserProvider botUserProvider,
         ITimesheetSetGetFunc timesheetSetGetFunc)
         =>
@@ -21,8 +21,8 @@ internal static class TimesheetSetGetStep
             TimesheetSetGetActivity.CreateActivity)
         .MapFlowState(
             Unit.From);
-    private static ValueTask<ChatFlowJump<TimesheetSetGetOut>> GetTimesheetSetAsync(
-        this IChatFlowContext<TimesheetSetGetFlowStateJson> context,
+    private static ValueTask<ChatFlowJump<DateTimesheetFlowState>> GetTimesheetSetAsync(
+        this IChatFlowContext<DateTimesheetFlowState> context,
         IBotUserProvider botUserProvider,
         ITimesheetSetGetFunc timesheetSetGetFunc,
         CancellationToken cancellationToken)
@@ -39,9 +39,14 @@ internal static class TimesheetSetGetStep
             timesheetSetGetFunc.InvokeAsync)
         .MapFailure(
             ToBreakState)
+        .MapSuccess(
+            @out => context.FlowState with
+            {
+                Timesheets = @out.Timesheets.Select(MapTimesheet).ToArray()
+            })
         .Fold(
             ChatFlowJump.Next,
-            ChatFlowJump.Break<TimesheetSetGetOut>);
+            ChatFlowJump.Break<DateTimesheetFlowState>);
 
     private static async Task<Result<Guid, Failure<TimesheetSetGetFailureCode>>> GetUserIdOrFailureAsync(
         this IBotUserProvider botUserProvider, Unit _, CancellationToken token)
@@ -66,6 +71,15 @@ internal static class TimesheetSetGetStep
             =>
             new(TimesheetSetGetFailureCode.Unknown, message);
     }
+
+    private static TimesheetJson MapTimesheet(TimesheetSetItemGetOut timesheet)
+        =>
+        new()
+        {
+            Duration = timesheet.Duration,
+            ProjectName = timesheet.ProjectName,
+            Description = timesheet.Description
+        };
 
     private static ChatFlowBreakState ToBreakState(Failure<TimesheetSetGetFailureCode> failure)
         =>

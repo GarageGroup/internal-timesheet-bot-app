@@ -30,8 +30,8 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <ProjectReference Include="..\Timesheet.Create\Timesheet.Create.csproj" />
-	  <ProjectReference Include="..\TimesheetSet.Get\TimesheetSet.Get.csproj" />
+    <ProjectReference Include="..\Timesheet.Create\Timesheet.Create.csproj" />
+    <ProjectReference Include="..\DateTimesheet.Get\DateTimesheet.Get.csproj" />
   </ItemGroup>
 
 </Project>

@@ -5,8 +5,8 @@ namespace GGroupp.Internal.Timesheet;
 
 internal static class DateGetFlowStep
 {
-    internal static ChatFlow<TimesheetSetGetFlowStateJson> GetDate(
-        this ChatFlow<TimesheetSetGetFlowStateJson> chatFlow)
+    internal static ChatFlow<DateTimesheetFlowState> GetDate(
+        this ChatFlow<DateTimesheetFlowState> chatFlow)
         =>
         chatFlow.AwaitDate(
             static _ => new(
