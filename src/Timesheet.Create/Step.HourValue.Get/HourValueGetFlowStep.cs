@@ -1,6 +1,7 @@
 ﻿using System;
 using GGroupp.Infra.Bot.Builder;
 using static System.FormattableString;
+using static GGroupp.Internal.Timesheet.HourValueGetFlowHelper;
 
 namespace GGroupp.Internal.Timesheet;
 
@@ -11,14 +12,23 @@ internal static class HourValueGetFlowStep
     internal static ChatFlow<TimesheetCreateFlowStateJson> GetHourValue(
         this ChatFlow<TimesheetCreateFlowStateJson> chatFlow)
         =>
-        chatFlow.SendText(
-            static _ => "Введите время работы в часах")
-        .AwaitValue(
-            text => text.ParseHourValueOrFailure().MapFailure(CreateUnexpectedValueFailure).Forward(ValidateValueOrFailure),
+        chatFlow.AwaitValue(
+            GetStepOption,
+            ParseHourValueOrFailure,
             (state, value) => state with
             {
                 ValueHours = value
             });
+
+    private static ValueStepOption GetStepOption(IChatFlowContext<TimesheetCreateFlowStateJson> context)
+        =>
+        new(
+            messageText: "Введите время работы в часах",
+            suggestions: GetSuggestions(context));
+
+    private static Result<decimal, BotFlowFailure> ParseHourValueOrFailure(string text)
+        =>
+        ParseDecimalOrAbsent(text).Fold(ValidateValueOrFailure, CreateUnexpectedValueFailureResult);
 
     private static Result<decimal, BotFlowFailure> ValidateValueOrFailure(decimal value)
         =>
@@ -29,7 +39,7 @@ internal static class HourValueGetFlowStep
             _ => value
         };
 
-    private static BotFlowFailure CreateUnexpectedValueFailure(Unit _)
+    private static Result<decimal, BotFlowFailure> CreateUnexpectedValueFailureResult()
         =>
         BotFlowFailure.From("Не удалось распознать десятичное число");
 }
