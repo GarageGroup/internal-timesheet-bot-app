@@ -2,16 +2,29 @@
 using GGroupp.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
-using static System.FormattableString;
 
 namespace GGroupp.Internal.Timesheet;
 
 internal static class TimesheetSetGetActivity
 {
-    private const string TimeColumnWith = "55px";
+    private const string TimeColumnWidth = "45px";
+
+    private const char HourSymbol = 'ч';
+
+    private static readonly string LineSeparator;
+
+    private static readonly CultureInfo RussianCultureInfo;
+
+    static TimesheetSetGetActivity()
+    {
+        LineSeparator = new('-', 50);
+        RussianCultureInfo = CultureInfo.GetCultureInfo("ru-RU");
+    }
 
     internal static IActivity CreateActivity(IChatFlowContext<DateTimesheetFlowState> context)
     {
@@ -30,33 +43,41 @@ internal static class TimesheetSetGetActivity
 
     private static IActivity CreateTextActivity(IChatFlowContext<DateTimesheetFlowState> context)
     {
-        var text = new StringBuilder();
-        var headerText = Invariant($"{context.FlowState.GetDurationSum():#,##0.##}ч Всего списаний {context.FlowState.Date:dd.MM.yyyy}:");
-
-        if (context.IsTelegramChannel())
-        {
-            text.Append("**").Append(headerText).Append("**");
-        }
-        else
-        {
-            text.Append(headerText);
-        }
-
+        var textBuilder = new StringBuilder(BuildHeader(context.FlowState));
         if (context.FlowState.Timesheets is null)
         {
-            return MessageFactory.Text(text.ToString());
+            return MessageFactory.Text(textBuilder.ToString());
         }
 
         foreach (var timesheetText in context.FlowState.Timesheets.Select(BuildTimesheetText))
         {
-            text.Append("\n\r---\n\r").Append(timesheetText);
+            textBuilder.AppendBotLine().Append(LineSeparator).AppendBotLine().Append(timesheetText);
         }
 
-        return MessageFactory.Text(text.ToString());
+        return MessageFactory.Text(textBuilder.ToString());
 
-        static string BuildTimesheetText(TimesheetJson timesheet)
+        StringBuilder BuildTimesheetText(TimesheetJson timesheet)
+        {
+            var row = new StringBuilder().AppendFormat(
+                "{0,-10}**{1}**",
+                timesheet.Duration.ToDurationText(true),
+                context.EncodeText(timesheet.ProjectName));
+
+            var encodedDescription = context.EncodeText(timesheet.Description);
+            if (string.IsNullOrEmpty(encodedDescription) is false)
+            {
+                row.AppendBotLine().Append(encodedDescription);
+            }
+
+            return row;
+        }
+
+        static string BuildHeader(DateTimesheetFlowState flowState)
             =>
-            Invariant($"{timesheet.Duration:#,##0.##}ч\n\r{timesheet.Description}");
+            string.Format(
+                "{0,-10}**Всего {1}**",
+                flowState.GetDurationSum().ToDurationText(true),
+                flowState.Date.ToDateText());
     }
 
     private static IActivity CreateAdaptiveCardActivity(IChatFlowContext<DateTimesheetFlowState> context)
@@ -73,10 +94,9 @@ internal static class TimesheetSetGetActivity
 
     private static List<AdaptiveElement> CreateAdaptiveBody(IChatFlowContext<DateTimesheetFlowState> context)
     {
-        var headerText = Invariant($"Всего списаний {context.FlowState.Date:dd.MM.yyyy}");
         var adaptiveElements = new List<AdaptiveElement>
         {
-            CreateAdaptiveTimesheetRow(context.FlowState.GetDurationSum(), headerText, AdaptiveTextSize.ExtraLarge)
+            CreateAdaptiveTimesheetRow(context.FlowState.GetDurationSum(), $"Всего {context.FlowState.Date.ToDateText()}")
         };
 
         if (context.FlowState.Timesheets is null)
@@ -86,7 +106,7 @@ internal static class TimesheetSetGetActivity
 
         foreach (var timesheet in context.FlowState.Timesheets)
         {
-            var timesheetRow = CreateAdaptiveTimesheetRow(timesheet.Duration, timesheet.ProjectName, AdaptiveTextSize.Default);
+            var timesheetRow = CreateAdaptiveTimesheetRow(timesheet.Duration, timesheet.ProjectName);
             adaptiveElements.Add(timesheetRow);
 
             if (string.IsNullOrEmpty(timesheet.Description) is false)
@@ -99,7 +119,7 @@ internal static class TimesheetSetGetActivity
         return adaptiveElements;
     }
 
-    private static AdaptiveColumnSet CreateAdaptiveTimesheetRow(decimal duration, string? projectName, AdaptiveTextSize size)
+    private static AdaptiveColumnSet CreateAdaptiveTimesheetRow(decimal duration, string? projectName)
         =>
         new()
         {
@@ -108,13 +128,13 @@ internal static class TimesheetSetGetActivity
             {
                 new()
                 {
-                    Width = TimeColumnWith,
+                    Width = TimeColumnWidth,
                     Items = new()
                     {
                         new AdaptiveTextBlock
                         {
-                            Text = Invariant($"**{duration:#,##0.##}ч**"),
-                            Size = size
+                            Text = duration.ToDurationText(),
+                            Size = AdaptiveTextSize.Default
                         }
                     }
                 },
@@ -125,7 +145,7 @@ internal static class TimesheetSetGetActivity
                         new AdaptiveTextBlock
                         {
                             Text = $"**{projectName}**",
-                            Size = size,
+                            Size = AdaptiveTextSize.Default,
                             Wrap = false
                         }
                     }
@@ -142,7 +162,7 @@ internal static class TimesheetSetGetActivity
             {
                 new()
                 {
-                    Width = TimeColumnWith
+                    Width = TimeColumnWidth
                 },
                 new()
                 {
@@ -159,11 +179,25 @@ internal static class TimesheetSetGetActivity
             }
         };
 
+    private static AdaptiveSchemaVersion GetAdaptiveSchemaVersion(this ITurnContext turnContext)
+        =>
+        turnContext.IsMsteamsChannel() ? AdaptiveCard.KnownSchemaVersion : new(1, 0);
+
+    private static StringBuilder AppendBotLine(this StringBuilder builder)
+        =>
+        builder.Append("\n\r");
+
     private static decimal GetDurationSum(this DateTimesheetFlowState flowState)
         =>
         flowState.Timesheets?.Sum(x => x.Duration) ?? default;
 
-    private static AdaptiveSchemaVersion GetAdaptiveSchemaVersion(this ITurnContext turnContext)
+    private static string ToDateText(this DateOnly date)
         =>
-        turnContext.IsMsteamsChannel() ? AdaptiveCard.KnownSchemaVersion : new(1, 0);
+        date.ToString("d MMMM yyyy", RussianCultureInfo);
+
+    private static string ToDurationText(this decimal value, bool fixWidth = false)
+        =>
+        fixWidth
+        ? value.ToString("#,##0.00", RussianCultureInfo) + HourSymbol
+        : value.ToString("#,##0.##", RussianCultureInfo) + HourSymbol;
 }
