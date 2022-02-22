@@ -59,11 +59,11 @@ internal static class TimesheetSetGetActivity
         StringBuilder BuildTimesheetText(TimesheetJson timesheet)
         {
             var row = new StringBuilder().AppendFormat(
-                "{0,-10}**{1}**",
+                "{0,-10}{1}",
                 timesheet.Duration.ToDurationText(true),
-                context.EncodeText(timesheet.ProjectName));
+                context.EncodeTextWithStyle(timesheet.ProjectName, BotTextStyle.Bold));
 
-            var encodedDescription = context.EncodeText(timesheet.Description);
+            var encodedDescription = context.EncodeTextWithStyle(timesheet.Description, BotTextStyle.Italic);
             if (string.IsNullOrEmpty(encodedDescription) is false)
             {
                 row.AppendBotLine().Append(encodedDescription);
