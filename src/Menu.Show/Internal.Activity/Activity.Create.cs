@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +5,6 @@ using AdaptiveCards;
 using GGroupp.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
-using Newtonsoft.Json.Linq;
 
 namespace GGroupp.Internal.Timesheet;
 
@@ -14,10 +12,21 @@ partial class BotMenuActivity
 {
     internal static IActivity CreateMenuActivity(this ITurnContext turnContext, BotMenuData menuData)
     {
+        if (turnContext.IsCardSupported())
+        {
+            return CreateAdaptiveCardActivity(turnContext, menuData);
+        }
 
+        if (turnContext.IsTelegramChannel())
+        {
+            var text = BuildTelegramText(turnContext, menuData);
+            return MessageFactory.Text(text);
+        }
+
+        return CreateHeroCardActivity(menuData);
     }
 
-    private static string BuildTelegramText(this ITurnContext turnContext, BotMenuData menuData)
+    private static string BuildTelegramText(ITurnContext turnContext, BotMenuData menuData)
     {
         var encodedText = turnContext.EncodeText(menuData.Text);
         if (menuData.Commands.Any() is false)
@@ -25,13 +34,13 @@ partial class BotMenuActivity
             return encodedText;
         }
 
-        var textBuilder = new StringBuilder(encodedText);
+        var textBuilder = new StringBuilder().Append("**").Append(encodedText).Append("**");
 
         foreach (var command in menuData.Commands)
         {
             if (textBuilder.Length is not 0)
             {
-                textBuilder.Append("\n\r\n\r");
+                textBuilder.Append("\n\r").Append(LineSeparator).Append("\n\r");
             }
 
             var encodedCommandName = turnContext.EncodeText(command.Name);
@@ -39,7 +48,7 @@ partial class BotMenuActivity
 
             if (string.IsNullOrEmpty(encodedCommandName) is false)
             {
-                textBuilder.Append("/" + encodedCommandName);
+                textBuilder.Append('/').Append(encodedCommandName);
 
                 if (string.IsNullOrEmpty(encodedCommandDescription) is false)
                 {
@@ -69,17 +78,17 @@ partial class BotMenuActivity
                         Wrap = true
                     }
                 },
-                Actions = menuData.Commands.Where(HasDescription).Select(context.CreateAdaptiveSubmitAction).ToList<AdaptiveAction>()
+                Actions = menuData.Commands.Where(HasDescription).Select(CreateAdaptiveSubmitAction).ToList<AdaptiveAction>()
             }
         }
         .ToActivity();
 
-    private static IActivity CreateHeroCardActivity(ITurnContext turnContext, BotMenuData menuData)
+    private static IActivity CreateHeroCardActivity(BotMenuData menuData)
         =>
         new HeroCard
         {
             Title = menuData.Text,
-            Buttons = menuData.Commands.Where(HasDescription).Select(turnContext.CreateCommandAction).ToArray()
+            Buttons = menuData.Commands.Where(HasDescription).Select(CreateCommandAction).ToArray()
         }
         .ToAttachment()
         .ToActivity();
@@ -102,21 +111,29 @@ partial class BotMenuActivity
         };
     }
 
-    private static AdaptiveSubmitAction CreateAdaptiveSubmitAction(this ITurnContext turnContext, BotMenuCommand command)
+    private static AdaptiveSubmitAction CreateAdaptiveSubmitAction(BotMenuCommand command)
         =>
         new()
         {
             Title = command.Description,
-            Data = turnContext.BuildCardActionValue(command.Id)
+            Data = ToActionValue(command)
         };
 
-    private static CardAction CreateCommandAction(this ITurnContext turnContext, BotMenuCommand command)
+    private static CardAction CreateCommandAction(BotMenuCommand command)
         =>
         new(ActionTypes.PostBack)
         {
             Title = command.Description,
             Text = command.Description,
-            Value = turnContext.BuildCardActionValue(command.Id)
+            Value = ToActionValue(command)
+        };
+
+    private static BotMenuCommandJson ToActionValue(BotMenuCommand command)
+        =>
+        new()
+        {
+            Id = command.Id,
+            Name = command.Name
         };
 
     private static AdaptiveSchemaVersion GetAdaptiveSchemaVersion(this ITurnContext turnContext)

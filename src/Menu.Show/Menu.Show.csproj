@@ -13,7 +13,13 @@
   <ItemGroup>
     <PackageReference Include="AdaptiveCards" Version="2.7.3" />
     <PackageReference Include="GGroupp.Infra.Bot.Builder.Core" Version="1.2.0" />
-    <PackageReference Include="GGroupp.Infra.Bot.Builder.TurnContext.Extensions" Version="1.0.1" />
+    <PackageReference Include="GGroupp.Infra.Bot.Builder.TurnContext.Extensions" Version="1.1.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="Internal.BotMenuCommand\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Internal.BotMiddleware\" />
+  </ItemGroup>
 </Project>

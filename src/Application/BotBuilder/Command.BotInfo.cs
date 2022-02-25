@@ -8,9 +8,9 @@ namespace GGroupp.Internal.Timesheet;
 
 partial class GTimesheetBotBuilder
 {
-    internal static IBotBuilder UseGTimesheetBotInfo(this IBotBuilder botBuilder, string commandName)
+    internal static IBotBuilder UseGTimesheetBotInfo(this IBotBuilder botBuilder)
         =>
-        botBuilder.UseBotInfo(commandName, GetBotInfoData);
+        botBuilder.UseBotInfo(BotInfoCommand, GetBotInfoData);
 
     private static BotInfoData GetBotInfoData(IBotContext botContext)
         =>

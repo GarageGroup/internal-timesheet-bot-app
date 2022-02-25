@@ -12,9 +12,9 @@ using ITimesheetCreateFunc = IAsyncValueFunc<TimesheetCreateIn, Result<Timesheet
 
 partial class GTimesheetBotBuilder
 {
-    internal static IBotBuilder UseGTimesheetCreate(this IBotBuilder botBuilder, string commandName)
+    internal static IBotBuilder UseGTimesheetCreate(this IBotBuilder botBuilder)
         =>
-        botBuilder.UseTimesheetCreate(commandName, GetFavoriteProjectSetGetApi, GetProjectSetSearchApi, GetTimesheetCreateApi);
+        botBuilder.UseTimesheetCreate(TimesheetCreateCommand, GetFavoriteProjectSetGetApi, GetProjectSetSearchApi, GetTimesheetCreateApi);
 
     private static IFavoriteProjectSetGetFunc GetFavoriteProjectSetGetApi(IBotContext botContext)
         =>

@@ -56,7 +56,7 @@ public static class TimesheetCreateBotBuilder
             botContext.InternalRecoginzeOrFailureAsync)
         .MapSuccessValue(
             (flow, token) => flow.CreateTimesheet(botUserProvider, favoriteProjectSetGetFunc, projectSetSearchFunc, timesheetCreateFunc).CompleteValueAsync(token))
-        .Fold(
-            Unit.From,
-            Unit.From);
+        .FoldValue(
+            (_, token) => botContext.BotFlow.EndAsync(token),
+            (_, token) => botContext.BotFlow.NextAsync(token));
 }
