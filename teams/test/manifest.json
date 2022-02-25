@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.9/MicrosoftTeams.schema.json",
   "manifestVersion": "1.9",
-  "version": "1.1.6",
+  "version": "1.4.0",
   "showLoadingIndicator": true,
   "id": "2e068bc9-50ac-4d23-a03a-f59e420a4b8c",
   "packageName": "ru.ggroupp.internal.testtimesheetbot",
@@ -54,6 +54,10 @@
             {
               "title": "newtimesheet",
               "description": "Списать время"
+            },
+            {
+              "title": "datetimesheet",
+              "description": "Показать мои списания времени"
             },
             {
               "title": "info",
