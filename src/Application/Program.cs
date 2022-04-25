@@ -30,6 +30,6 @@ static class Program
         .UseGTimesheetAuthorization()
         .UseGTimesheetBotInfo()
         .UseGTimesheetCreate()
-        .UseGDateTimesheetGet("datetimesheet")
+        .UseGDateTimesheetGet()
         .UseGTimesheetBotMenu();
 }

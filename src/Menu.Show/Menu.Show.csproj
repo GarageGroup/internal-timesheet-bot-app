@@ -16,10 +16,4 @@
     <PackageReference Include="GGroupp.Infra.Bot.Builder.TurnContext.Extensions" Version="1.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Remove="Internal.BotMenuCommand\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Internal.BotMiddleware\" />
-  </ItemGroup>
 </Project>
