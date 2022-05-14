@@ -54,11 +54,17 @@ internal static partial class BotMenuBotMiddleware
         IStatePropertyAccessor<ResourceResponse?> menuResourceAccessor,
         CancellationToken cancellationToken)
     {
+        if (botContext.TurnContext.IsWebchatChannel() || botContext.TurnContext.IsEmulatorChannel())
+        {
+            return;
+        }
+
         var previewActivity = await menuResourceAccessor.GetAsync(botContext.TurnContext, default, cancellationToken).ConfigureAwait(false);
         if (string.IsNullOrEmpty(previewActivity?.Id))
         {
             return;
         }
+
         await botContext.TurnContext.DeleteActivityAsync(previewActivity.Id, cancellationToken).ConfigureAwait(false);
     }
 

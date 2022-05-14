@@ -16,7 +16,7 @@ internal static class ProjectFindExtensions
 
     private const string ChooseFavoriteMessage = "Выберите проект или введите часть названия для поиска";
 
-    private const string ResultMessage = "Выбран проект";
+    private const string ResultMessage = "Проект";
 
     private const int MaxProjectsCount = 6;
 

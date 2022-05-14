@@ -18,6 +18,7 @@ internal static class DescriptionGetFlowStep
         =>
         new(
             messageText: "Введите описание. Этот шаг можно пропустить",
+            resultText: "Описание",
             suggestions: new[]
             {
                 new[]

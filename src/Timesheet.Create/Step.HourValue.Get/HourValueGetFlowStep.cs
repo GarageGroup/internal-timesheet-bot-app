@@ -24,6 +24,7 @@ internal static class HourValueGetFlowStep
         =>
         new(
             messageText: "Введите время работы в часах",
+            resultText: "Время работы в часах",
             suggestions: GetSuggestions(context));
 
     private static Result<decimal, BotFlowFailure> ParseHourValueOrFailure(string text)
