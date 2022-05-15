@@ -16,8 +16,6 @@ internal static class ProjectFindExtensions
 
     private const string ChooseFavoriteMessage = "Выберите проект или введите часть названия для поиска";
 
-    private const string ResultMessage = "Проект";
-
     private const int MaxProjectsCount = 6;
 
     internal static ValueTask<LookupValueSetOption> ShowFavorieProjects(
@@ -39,8 +37,7 @@ internal static class ProjectFindExtensions
         .Fold(
             static @out => new(
                 items: @out.Projects.Select(MapFavorieProjectItem).ToArray(),
-                choiceText: @out.Projects.Any() ? ChooseFavoriteMessage : DefaultMessage,
-                resultText: ResultMessage),
+                choiceText: @out.Projects.Any() ? ChooseFavoriteMessage : DefaultMessage),
             failure => MapSearchFailure(failure, context.Logger));
 
     internal static ValueTask<Result<LookupValueSetOption, BotFlowFailure>> SearchProjectsAsync(
@@ -62,8 +59,7 @@ internal static class ProjectFindExtensions
         .MapSuccess(
             static @out => new LookupValueSetOption(
                 items: @out.Projects.Select(MapProjectItem).ToArray(),
-                choiceText: "Выберите проект",
-                resultText: ResultMessage));
+                choiceText: "Выберите проект"));
 
     private static async Task<Result<Guid, Failure<FavoriteProjectSetGetFailureCode>>> GetUserIdOrFailureAsync(
         this IBotUserProvider botUserProvider, Unit _, CancellationToken token)
@@ -100,7 +96,7 @@ internal static class ProjectFindExtensions
     private static LookupValueSetOption MapSearchFailure(Failure<FavoriteProjectSetGetFailureCode> failure, ILogger logger)
     {
         logger.LogError("Favorite projects failure: {failureCode} {failureMessage}", failure.FailureCode, failure.FailureMessage);
-        return new(default, DefaultMessage, default, ResultMessage);
+        return new(default, DefaultMessage, default);
     }
 
     private static BotFlowFailure MapToFlowFailure(Failure<ProjectSetSearchFailureCode> failure)

@@ -12,13 +12,13 @@ internal static class DescriptionGetFlowStep
         =>
         chatFlow.AwaitText(
             GetStepOption,
+            static (context, suggestion) => $"Описание: {context.EncodeTextWithStyle(suggestion, BotTextStyle.Bold)}",
             BindWithDescription);
 
     private static ValueStepOption GetStepOption(IChatFlowContext<TimesheetCreateFlowStateJson> _)
         =>
         new(
             messageText: "Введите описание. Этот шаг можно пропустить",
-            resultText: "Описание",
             suggestions: new[]
             {
                 new[]

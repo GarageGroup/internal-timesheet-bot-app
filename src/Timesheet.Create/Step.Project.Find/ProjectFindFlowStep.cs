@@ -17,10 +17,19 @@ internal static class ProjectFindFlowStep
         chatFlow.AwaitLookupValue(
             (context, token) => context.ShowFavorieProjects(botUserProvider, favoriteProjectSetGetFunc, token),
             (_, search, token) => projectSetSearchFunc.SearchProjectsAsync(search, token),
+            CreateResultMessage,
             static (flowState, projectValue) => flowState with
             {
-                ProjectType = Enum.Parse<TimesheetProjectType>(projectValue.Data.OrEmpty()),
+                ProjectType = projectValue.GetProjectType(),
                 ProjectId = projectValue.Id,
                 ProjectName = projectValue.Name
             });
+
+    private static string CreateResultMessage(IChatFlowContext<TimesheetCreateFlowStateJson> context, LookupValue projectValue)
+        =>
+        $"{projectValue.GetProjectType().ToStringRussianCulture()}: {context.EncodeTextWithStyle(projectValue.Name, BotTextStyle.Bold)}";
+
+    private static TimesheetProjectType GetProjectType(this LookupValue projectValue)
+        =>
+        Enum.Parse<TimesheetProjectType>(projectValue.Data.OrEmpty());
 }

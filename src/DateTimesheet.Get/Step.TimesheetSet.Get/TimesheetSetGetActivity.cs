@@ -2,9 +2,7 @@
 using GGroupp.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
-using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -14,17 +12,11 @@ internal static class TimesheetSetGetActivity
 {
     private const string TimeColumnWidth = "45px";
 
-    private const char HourSymbol = 'ч';
-
     private static readonly string LineSeparator;
 
-    private static readonly CultureInfo RussianCultureInfo;
-
     static TimesheetSetGetActivity()
-    {
+        =>
         LineSeparator = new('-', 50);
-        RussianCultureInfo = CultureInfo.GetCultureInfo("ru-RU");
-    }
 
     internal static IActivity CreateActivity(IChatFlowContext<DateTimesheetFlowState> context)
     {
@@ -60,7 +52,7 @@ internal static class TimesheetSetGetActivity
         {
             var row = new StringBuilder().AppendFormat(
                 "{0,-10}{1}",
-                timesheet.Duration.ToDurationText(true),
+                timesheet.Duration.ToDurationStringRussianCulture(true),
                 context.EncodeTextWithStyle(timesheet.ProjectName, BotTextStyle.Bold));
 
             var encodedDescription = context.EncodeTextWithStyle(timesheet.Description, BotTextStyle.Italic);
@@ -76,8 +68,8 @@ internal static class TimesheetSetGetActivity
             =>
             string.Format(
                 "{0,-10}**Всего {1}**",
-                flowState.GetDurationSum().ToDurationText(true),
-                flowState.Date.ToDateText());
+                flowState.GetDurationSum().ToDurationStringRussianCulture(true),
+                flowState.Date.ToStringRussianCulture());
     }
 
     private static IActivity CreateAdaptiveCardActivity(IChatFlowContext<DateTimesheetFlowState> context)
@@ -96,7 +88,7 @@ internal static class TimesheetSetGetActivity
     {
         var adaptiveElements = new List<AdaptiveElement>
         {
-            CreateAdaptiveTimesheetRow(context.FlowState.GetDurationSum(), $"Всего {context.FlowState.Date.ToDateText()}")
+            CreateAdaptiveTimesheetRow(context.FlowState.GetDurationSum(), $"Всего {context.FlowState.Date.ToStringRussianCulture()}")
         };
 
         if (context.FlowState.Timesheets is null)
@@ -133,7 +125,7 @@ internal static class TimesheetSetGetActivity
                     {
                         new AdaptiveTextBlock
                         {
-                            Text = duration.ToDurationText(),
+                            Text = duration.ToDurationStringRussianCulture(),
                             Size = AdaptiveTextSize.Default
                         }
                     }
@@ -190,14 +182,4 @@ internal static class TimesheetSetGetActivity
     private static decimal GetDurationSum(this DateTimesheetFlowState flowState)
         =>
         flowState.Timesheets?.Sum(x => x.Duration) ?? default;
-
-    private static string ToDateText(this DateOnly date)
-        =>
-        date.ToString("d MMMM yyyy", RussianCultureInfo);
-
-    private static string ToDurationText(this decimal value, bool fixWidth = false)
-        =>
-        fixWidth
-        ? value.ToString("#,##0.00", RussianCultureInfo) + HourSymbol
-        : value.ToString("#,##0.##", RussianCultureInfo) + HourSymbol;
 }

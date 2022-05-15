@@ -15,6 +15,7 @@ internal static class HourValueGetFlowStep
         chatFlow.AwaitValue(
             GetStepOption,
             ParseHourValueOrFailure,
+            static (context, suggestion) => $"Время работы в часах: {context.EncodeTextWithStyle(suggestion, BotTextStyle.Bold)}",
             (state, value) => state with
             {
                 ValueHours = value
@@ -24,7 +25,6 @@ internal static class HourValueGetFlowStep
         =>
         new(
             messageText: "Введите время работы в часах",
-            resultText: "Время работы в часах",
             suggestions: GetSuggestions(context));
 
     private static Result<decimal, BotFlowFailure> ParseHourValueOrFailure(string text)

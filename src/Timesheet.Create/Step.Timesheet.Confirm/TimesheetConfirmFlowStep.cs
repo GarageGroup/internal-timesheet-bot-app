@@ -20,19 +20,9 @@ internal static class TimesheetConfirmFlowStep
             cancelText: "Списание времени было отменено",
             fieldValues: new KeyValuePair<string, string?>[]
             {
-                new(context.FlowState.ProjectType.GetName(), context.FlowState.ProjectName),
+                new(context.FlowState.ProjectType.ToStringRussianCulture(), context.FlowState.ProjectName),
                 new("Дата", context.FlowState.Date.ToStringRussianCulture()),
                 new("Время", context.FlowState.ValueHours.ToStringRussianCulture() + "ч"),
                 new(string.Empty, context.FlowState.Description)
             });
-
-    private static string GetName(this TimesheetProjectType projectType)
-        =>
-        projectType switch
-        {
-            TimesheetProjectType.Opportunity => "Возможная сделка",
-            TimesheetProjectType.Lead => "Лид",
-            TimesheetProjectType.Incident => "Инцидент",
-            _ => "Проект"
-        };
 }
