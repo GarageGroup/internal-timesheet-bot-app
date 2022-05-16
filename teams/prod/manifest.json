@@ -52,6 +52,10 @@
           ],
           "commands":[
             {
+              "title": "menu",
+              "description": "Меню бота"
+            },
+            {
               "title": "newtimesheet",
               "description": "Списать время"
             },
