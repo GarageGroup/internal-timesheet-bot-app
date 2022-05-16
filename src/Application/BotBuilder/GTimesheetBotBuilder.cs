@@ -10,6 +10,16 @@ namespace GGroupp.Internal.Timesheet;
 
 internal static partial class GTimesheetBotBuilder
 {
+    private const string TimesheetCreateCommand = "newtimesheet";
+
+    private const string DateTimesheetGetCommand = "datetimesheet";
+
+    private const string BotInfoCommand = "info";
+
+    private const string StopCommand = "stop";
+
+    private const string LogoutCommand = "logout";
+
     private static Dependency<LoggerDelegatingHandler> CreateStandardHttpHandlerDependency(string loggerCategoryName)
         =>
         PrimaryHandler.UseStandardSocketsHttpHandler()

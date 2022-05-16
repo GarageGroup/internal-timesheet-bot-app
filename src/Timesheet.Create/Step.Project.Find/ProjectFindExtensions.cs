@@ -96,7 +96,7 @@ internal static class ProjectFindExtensions
     private static LookupValueSetOption MapSearchFailure(Failure<FavoriteProjectSetGetFailureCode> failure, ILogger logger)
     {
         logger.LogError("Favorite projects failure: {failureCode} {failureMessage}", failure.FailureCode, failure.FailureMessage);
-        return new(default, DefaultMessage);
+        return new(default, DefaultMessage, default);
     }
 
     private static BotFlowFailure MapToFlowFailure(Failure<ProjectSetSearchFailureCode> failure)

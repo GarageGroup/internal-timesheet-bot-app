@@ -4,7 +4,7 @@ namespace GGroupp.Internal.Timesheet;
 
 partial class GTimesheetBotBuilder
 {
-    internal static IBotBuilder UseGTimesheetBotStop(this IBotBuilder botBuilder, string commandName)
+    internal static IBotBuilder UseGTimesheetBotStop(this IBotBuilder botBuilder)
         =>
-        botBuilder.UseBotStop(commandName, static () => new(successText: "Операция остановлена"));
+        botBuilder.UseBotStop(StopCommand, static () => new(successText: "Операция остановлена"));
 }

@@ -15,6 +15,7 @@ internal static class DateGetFlowStep
                 confirmButtonText: "Выбрать",
                 invalidDateText: "Не удалось распознать дату",
                 DateOnly.FromDateTime(DateTime.Now)),
+            static (context, date) => $"Дата списания: {context.EncodeTextWithStyle(date.ToStringRussianCulture(), BotTextStyle.Bold)}",
             static (state, date) => state with
             {
                 Date = date

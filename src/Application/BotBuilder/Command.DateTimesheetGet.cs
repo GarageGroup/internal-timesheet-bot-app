@@ -7,9 +7,9 @@ using ITimesheetSetGetFunc = IAsyncValueFunc<TimesheetSetGetIn, Result<Timesheet
 
 partial class GTimesheetBotBuilder
 {
-    internal static IBotBuilder UseGDateTimesheetGet(this IBotBuilder botBuilder, string commandName)
+    internal static IBotBuilder UseGDateTimesheetGet(this IBotBuilder botBuilder)
         =>
-        botBuilder.UseDateTimesheetGet(commandName, GetTimesheetSetApi);
+        botBuilder.UseDateTimesheetGet("datetimesheet", GetTimesheetSetApi);
 
     private static ITimesheetSetGetFunc GetTimesheetSetApi(IBotContext botContext)
         =>

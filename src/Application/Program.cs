@@ -24,10 +24,12 @@ static class Program
 
     private static IBotBuilder ConfigureGTimesheetBot(IBotBuilder bot)
         =>
-        bot.UseLogout("logout")
-        .UseGTimesheetBotStop("stop")
+        bot
+        .UseGTimesheetLogout()
+        .UseGTimesheetBotStop()
         .UseGTimesheetAuthorization()
-        .UseGTimesheetBotInfo("info")
-        .UseGTimesheetCreate("newtimesheet")
-        .UseGDateTimesheetGet("datetimesheet");
+        .UseGTimesheetBotInfo()
+        .UseGTimesheetCreate()
+        .UseGDateTimesheetGet()
+        .UseGTimesheetBotMenu();
 }
