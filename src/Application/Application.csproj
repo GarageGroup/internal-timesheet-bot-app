@@ -8,7 +8,7 @@
     <InvariantGlobalization>false</InvariantGlobalization>
     <RootNamespace>GGroupp.Internal.Timesheet</RootNamespace>
     <AssemblyName>GGroupp.Internal.Timesheet.Bot.Application</AssemblyName>
-    <Version>1.5.0-preview.3</Version>
+    <Version>1.5.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'Application' " />
