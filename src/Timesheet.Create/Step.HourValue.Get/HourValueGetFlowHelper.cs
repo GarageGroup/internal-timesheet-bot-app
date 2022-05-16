@@ -43,9 +43,9 @@ internal static class HourValueGetFlowHelper
 
     internal static Optional<decimal> ParseDecimalOrAbsent(string? text)
         =>
-        AwailableCultures.Select(text.ParseWithCultureOrAvsent).FirstOrDefault(r => r.IsPresent);
+        AwailableCultures.Select(text.ParseWithCultureOrAbsent).FirstOrDefault(r => r.IsPresent);
 
-    private static Optional<decimal> ParseWithCultureOrAvsent(this string? text, CultureInfo culture)
+    private static Optional<decimal> ParseWithCultureOrAbsent(this string? text, CultureInfo culture)
         =>
         decimal.TryParse(text, NumberStyles.Number, culture, out var value) ? Optional.Present(value) : default;
 }
