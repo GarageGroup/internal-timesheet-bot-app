@@ -7,15 +7,15 @@ internal static class DescriptionGetFlowStep
 {
     private const string SkipText = "Пропустить";
 
-    internal static ChatFlow<TimesheetCreateFlowStateJson> GetDescription(
-        this ChatFlow<TimesheetCreateFlowStateJson> chatFlow)
+    internal static ChatFlow<TimesheetCreateFlowState> GetDescription(
+        this ChatFlow<TimesheetCreateFlowState> chatFlow)
         =>
         chatFlow.AwaitText(
             GetStepOption,
             static (context, suggestion) => $"Описание: {context.EncodeTextWithStyle(suggestion, BotTextStyle.Bold)}",
             BindWithDescription);
 
-    private static ValueStepOption GetStepOption(IChatFlowContext<TimesheetCreateFlowStateJson> _)
+    private static ValueStepOption GetStepOption(IChatFlowContext<TimesheetCreateFlowState> _)
         =>
         new(
             messageText: "Введите описание. Этот шаг можно пропустить",
@@ -27,7 +27,7 @@ internal static class DescriptionGetFlowStep
                 }
             });
 
-    private static TimesheetCreateFlowStateJson BindWithDescription(TimesheetCreateFlowStateJson state, string description)
+    private static TimesheetCreateFlowState BindWithDescription(TimesheetCreateFlowState state, string description)
     {
         if (string.Equals(description, SkipText, StringComparison.InvariantCultureIgnoreCase))
         {

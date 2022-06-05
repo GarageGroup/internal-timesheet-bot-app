@@ -5,18 +5,15 @@ namespace GGroupp.Internal.Timesheet;
 
 internal static class DateGetFlowStep
 {
-    internal static ChatFlow<TimesheetCreateFlowStateJson> GetDate(
-        this ChatFlow<TimesheetCreateFlowStateJson> chatFlow)
+    internal static ChatFlow<TimesheetCreateFlowState> GetDate(
+        this ChatFlow<TimesheetCreateFlowState> chatFlow)
         =>
-        chatFlow.AwaitDate(
-            static _ => new(
-                text: "Введите дату списания",
-                confirmButtonText: "Выбрать",
-                invalidDateText: "Не удалось распознать дату",
-                DateOnly.FromDateTime(DateTime.Now)),
-            static (context, date) => $"Дата списания: {context.EncodeTextWithStyle(date.ToStringRussianCulture(), BotTextStyle.Bold)}",
-            static (state, date) => state with
-            {
-                Date = date
-            });
+        chatFlow.AwaitTimesheetDate("Дата списания", WithDate);
+
+    private static TimesheetCreateFlowState WithDate(TimesheetCreateFlowState state, DateOnly date)
+        =>
+        state with
+        {
+            Date = date
+        };
 }
