@@ -19,7 +19,7 @@ internal static class ProjectFindExtensions
     private const int MaxProjectsCount = 6;
 
     internal static ValueTask<LookupValueSetOption> ShowFavorieProjects(
-        this IChatFlowContext<TimesheetCreateFlowStateJson> context,
+        this IChatFlowContext<TimesheetCreateFlowState> context,
         IBotUserProvider botUserProvider,
         IFavoriteProjectSetGetFunc favoriteProjectSetGetFunc,
         CancellationToken token)

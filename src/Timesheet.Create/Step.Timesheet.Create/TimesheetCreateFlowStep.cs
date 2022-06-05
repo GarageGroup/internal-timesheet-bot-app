@@ -11,7 +11,7 @@ using ITimesheetCreateFunc = IAsyncValueFunc<TimesheetCreateIn, Result<Timesheet
 internal static class TimesheetCreateFlowStep
 {
     internal static ChatFlow<Unit> CreateTimesheet(
-        this ChatFlow<TimesheetCreateFlowStateJson> chatFlow,
+        this ChatFlow<TimesheetCreateFlowState> chatFlow,
         ITimesheetCreateFunc timesheetCreateFunc)
         =>
         chatFlow.ForwardValue(
@@ -20,7 +20,7 @@ internal static class TimesheetCreateFlowStep
             static _ => "Списание времени создано успешно");
 
     private static ValueTask<ChatFlowJump<Unit>> CreateTimesheetAsync(
-        this IChatFlowContext<TimesheetCreateFlowStateJson> context,
+        this IChatFlowContext<TimesheetCreateFlowState> context,
         ITimesheetCreateFunc timesheetCreateFunc,
         CancellationToken cancellationToken)
         =>

@@ -22,7 +22,7 @@ internal static class TimesheetSetGetActivity
     {
         if (context.FlowState.Timesheets?.Count is not > 0)
         {
-            return MessageFactory.Text("Нет списаний времени на указанную дату");
+            return MessageFactory.Text($"Нет списаний времени на {context.FlowState.Date.ToStringRussianCulture()}");
         }
 
         if (context.IsCardSupported())

@@ -8,8 +8,8 @@ using IProjectSetSearchFunc = IAsyncValueFunc<ProjectSetSearchIn, Result<Project
 
 internal static class ProjectFindFlowStep
 {
-    internal static ChatFlow<TimesheetCreateFlowStateJson> FindProject(
-        this ChatFlow<TimesheetCreateFlowStateJson> chatFlow,
+    internal static ChatFlow<TimesheetCreateFlowState> FindProject(
+        this ChatFlow<TimesheetCreateFlowState> chatFlow,
         IBotUserProvider botUserProvider,
         IFavoriteProjectSetGetFunc favoriteProjectSetGetFunc,
         IProjectSetSearchFunc projectSetSearchFunc)
@@ -25,7 +25,7 @@ internal static class ProjectFindFlowStep
                 ProjectName = projectValue.Name
             });
 
-    private static string CreateResultMessage(IChatFlowContext<TimesheetCreateFlowStateJson> context, LookupValue projectValue)
+    private static string CreateResultMessage(IChatFlowContext<TimesheetCreateFlowState> context, LookupValue projectValue)
         =>
         $"{projectValue.GetProjectType().ToStringRussianCulture()}: {context.EncodeTextWithStyle(projectValue.Name, BotTextStyle.Bold)}";
 

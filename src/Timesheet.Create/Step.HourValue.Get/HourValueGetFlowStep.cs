@@ -9,8 +9,8 @@ internal static class HourValueGetFlowStep
 {
     private const int MaxValue = 24;
 
-    internal static ChatFlow<TimesheetCreateFlowStateJson> GetHourValue(
-        this ChatFlow<TimesheetCreateFlowStateJson> chatFlow)
+    internal static ChatFlow<TimesheetCreateFlowState> GetHourValue(
+        this ChatFlow<TimesheetCreateFlowState> chatFlow)
         =>
         chatFlow.AwaitValue(
             GetStepOption,
@@ -21,7 +21,7 @@ internal static class HourValueGetFlowStep
                 ValueHours = value
             });
 
-    private static ValueStepOption GetStepOption(IChatFlowContext<TimesheetCreateFlowStateJson> context)
+    private static ValueStepOption GetStepOption(IChatFlowContext<TimesheetCreateFlowState> context)
         =>
         new(
             messageText: "Введите время работы в часах",

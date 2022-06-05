@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace GGroupp.Internal.Timesheet;
 
-internal sealed record class TimesheetCreateFlowStateJson
+internal sealed record class TimesheetCreateFlowState
 {
     [JsonProperty("projectId")]
     public Guid ProjectId { get; init; }

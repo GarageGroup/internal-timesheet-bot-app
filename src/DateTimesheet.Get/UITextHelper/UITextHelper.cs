@@ -1,5 +1,4 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 
 namespace GGroupp.Internal.Timesheet;
 
@@ -12,10 +11,6 @@ internal static class UITextHelper
     static UITextHelper()
         =>
         RussianCultureInfo = CultureInfo.GetCultureInfo("ru-RU");
-
-    internal static string ToStringRussianCulture(this DateOnly date)
-        =>
-        date.ToString("d MMMM yyyy", RussianCultureInfo);
 
     internal static string ToDurationStringRussianCulture(this decimal value, bool fixWidth = false)
         =>

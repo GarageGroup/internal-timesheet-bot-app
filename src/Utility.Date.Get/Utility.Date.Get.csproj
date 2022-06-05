@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <RootNamespace>GGroupp.Internal.Timesheet</RootNamespace>
+    <AssemblyName>GGroupp.Internal.Timesheet.Utility.Date.Get</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GGroupp.Infra.Bot.Builder.ChatFlow.Step.Date" Version="2.3.1" />
+    <PackageReference Include="GGroupp.Infra.Bot.Builder.TurnContext.Extensions" Version="1.1.1" />
+  </ItemGroup>
+
+</Project>
