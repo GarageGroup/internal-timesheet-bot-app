@@ -11,7 +11,6 @@ internal static class DateGetFlowStep
         chatFlow.AwaitDate(
             static _ => new(
                 text: "Введите дату списания",
-                dateFormat: "dd.MM.yyyy",
                 confirmButtonText: "Выбрать",
                 invalidDateText: "Не удалось распознать дату",
                 DateOnly.FromDateTime(DateTime.Now)),
