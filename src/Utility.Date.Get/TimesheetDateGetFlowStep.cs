@@ -9,6 +9,8 @@ namespace GGroupp.Internal.Timesheet;
 
 public static class TimesheetDateGetFlowStep
 {
+    private const int DaySuggestionsCount = 7;
+
     public static ChatFlow<TFlowState> AwaitTimesheetDate<TFlowState>(
         this ChatFlow<TFlowState> chatFlow, string propertyDisplayName, Func<TFlowState, DateOnly, TFlowState> mapFlowState)
     {
@@ -30,7 +32,7 @@ public static class TimesheetDateGetFlowStep
             invalidDateText: "Не удалось распознать дату",
             DateOnly.FromDateTime(DateTime.Now),
             placeholder: "дд.мм.гг",
-            suggestions: context.CreateSuggestions(7));
+            suggestions: context.CreateSuggestions(DaySuggestionsCount));
 
     private static string GetDateText(ITurnContext context)
     {
@@ -43,10 +45,15 @@ public static class TimesheetDateGetFlowStep
 
         if (context.IsTelegramChannel())
         {
-            textBuilder.Append(' ').Append("или выберите день недели");
+            var lastDay = DateOnly.FromDateTime(DateTime.Now);
+            var firstDay = lastDay.AddDays(1 - DaySuggestionsCount);
+
+            textBuilder.Append(' ').Append($"или выберите день недели с {ToString(firstDay)} по {ToString(lastDay)}");
         }
 
         return textBuilder.ToString();
+
+        static string ToString(DateOnly date) => date.ToStringRussianCulture("dd.MM");
     }
 
     private static IReadOnlyCollection<KeyValuePair<string, DateOnly>> CreateSuggestions(this ITurnContext context, int count)
@@ -61,6 +68,6 @@ public static class TimesheetDateGetFlowStep
 
         static KeyValuePair<string, DateOnly> CreateSuggestion(DateOnly date)
             =>
-            new(date.GetRussianCultureDayOfWeekName(), date);
+            new(date.ToStringRussianCulture("ddd"), date);
     }
 }

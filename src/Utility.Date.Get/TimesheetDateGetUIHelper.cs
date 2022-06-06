@@ -15,7 +15,7 @@ public static class TimesheetDateGetUIHelper
         =>
         date.ToString("d MMMM yyyy", RussianCultureInfo);
 
-    public static string GetRussianCultureDayOfWeekName(this DateOnly date)
+    internal static string ToStringRussianCulture(this DateOnly date, string format)
         =>
-        date.ToString("ddd", RussianCultureInfo);
+        date.ToString(format, RussianCultureInfo);
 }
