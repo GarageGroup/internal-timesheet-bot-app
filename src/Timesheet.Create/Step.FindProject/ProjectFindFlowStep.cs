@@ -3,19 +3,16 @@ using GGroupp.Infra.Bot.Builder;
 
 namespace GGroupp.Internal.Timesheet;
 
-using IFavoriteProjectSetGetFunc = IAsyncValueFunc<FavoriteProjectSetGetIn, Result<FavoriteProjectSetGetOut, Failure<FavoriteProjectSetGetFailureCode>>>;
+using IFavoriteSetGetFunc = IAsyncValueFunc<FavoriteProjectSetGetIn, Result<FavoriteProjectSetGetOut, Failure<FavoriteProjectSetGetFailureCode>>>;
 using IProjectSetSearchFunc = IAsyncValueFunc<ProjectSetSearchIn, Result<ProjectSetSearchOut, Failure<ProjectSetSearchFailureCode>>>;
 
 internal static class ProjectFindFlowStep
 {
     internal static ChatFlow<TimesheetCreateFlowState> FindProject(
-        this ChatFlow<TimesheetCreateFlowState> chatFlow,
-        IBotUserProvider botUserProvider,
-        IFavoriteProjectSetGetFunc favoriteProjectSetGetFunc,
-        IProjectSetSearchFunc projectSetSearchFunc)
+        this ChatFlow<TimesheetCreateFlowState> chatFlow, IFavoriteSetGetFunc favoriteProjectSetGetFunc, IProjectSetSearchFunc projectSetSearchFunc)
         =>
         chatFlow.AwaitLookupValue(
-            (context, token) => context.ShowFavorieProjects(botUserProvider, favoriteProjectSetGetFunc, token),
+            favoriteProjectSetGetFunc.GetFavoriteOptionsAsync,
             (_, search, token) => projectSetSearchFunc.SearchProjectsAsync(search, token),
             CreateResultMessage,
             static (flowState, projectValue) => flowState with

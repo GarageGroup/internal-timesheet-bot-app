@@ -7,7 +7,7 @@ namespace GGroupp.Internal.Timesheet;
 
 partial class TimesheetCreateChatFlow
 {
-    internal static async ValueTask<Result<ChatFlow, Unit>> InternalRecoginzeOrFailureAsync(
+    internal static async ValueTask<Result<ChatFlow, Unit>> InternalRecoginzeFlowAsync(
         this IBotContext context, string commandName, CancellationToken cancellationToken)
     {
         var turnContext = context.TurnContext;

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GGroupp.Internal.Timesheet;
 
-using IFavoriteProjectSetGetFunc = IAsyncValueFunc<FavoriteProjectSetGetIn, Result<FavoriteProjectSetGetOut, Failure<FavoriteProjectSetGetFailureCode>>>;
+using IFavoriteSetGetFunc = IAsyncValueFunc<FavoriteProjectSetGetIn, Result<FavoriteProjectSetGetOut, Failure<FavoriteProjectSetGetFailureCode>>>;
 using IProjectSetSearchFunc = IAsyncValueFunc<ProjectSetSearchIn, Result<ProjectSetSearchOut, Failure<ProjectSetSearchFailureCode>>>;
 
 internal static class ProjectFindExtensions
@@ -18,21 +18,19 @@ internal static class ProjectFindExtensions
 
     private const int MaxProjectsCount = 6;
 
-    internal static ValueTask<LookupValueSetOption> ShowFavorieProjects(
-        this IChatFlowContext<TimesheetCreateFlowState> context,
-        IBotUserProvider botUserProvider,
-        IFavoriteProjectSetGetFunc favoriteProjectSetGetFunc,
+    internal static ValueTask<LookupValueSetOption> GetFavoriteOptionsAsync(
+        this IFavoriteSetGetFunc favoriteProjectSetGetFunc,
+        IChatFlowContext<TimesheetCreateFlowState> context,
         CancellationToken token)
         =>
         AsyncPipeline.Pipe(
-            default(Unit), token)
+            context.FlowState.UserId, token)
+        .HandleCancellation()
         .Pipe(
-            botUserProvider.GetUserIdOrFailureAsync)
-        .MapSuccess(
             static userId => new FavoriteProjectSetGetIn(
                 userId: userId, 
                 top: MaxProjectsCount))
-        .ForwardValue(
+        .PipeValue(
             favoriteProjectSetGetFunc.InvokeAsync)
         .Fold(
             static @out => new(
@@ -45,6 +43,7 @@ internal static class ProjectFindExtensions
         =>
         AsyncPipeline.Pipe(
             seachText, cancellationToken)
+        .HandleCancellation()
         .Pipe(
             static text => new ProjectSetSearchIn(
                 searchText: text,
@@ -60,31 +59,6 @@ internal static class ProjectFindExtensions
             static @out => new LookupValueSetOption(
                 items: @out.Projects.Select(MapProjectItem).ToArray(),
                 choiceText: "Выберите проект"));
-
-    private static async Task<Result<Guid, Failure<FavoriteProjectSetGetFailureCode>>> GetUserIdOrFailureAsync(
-        this IBotUserProvider botUserProvider, Unit _, CancellationToken token)
-    {
-        var currentUser = await botUserProvider.GetCurrentUserAsync(token);
-        if (currentUser is null)
-        {
-            return CreateFailure("Bot user must be specified");
-        }
-
-        return currentUser.Claims.GetValueOrAbsent("DataverseSystemUserId").Fold(ParseOrFailure, CreateClaimMustBeSpecifiedFailure);
-
-        static Result<Guid, Failure<FavoriteProjectSetGetFailureCode>> ParseOrFailure(string value)
-            =>
-            Guid.TryParse(value, out var guid) ? guid : CreateFailure($"DataverseUserId Claim {value} is not a Guid");
-
-        static Result<Guid, Failure<FavoriteProjectSetGetFailureCode>> CreateClaimMustBeSpecifiedFailure()
-            =>
-            CreateFailure("Dataverse user claim must be specified");
-
-        static Failure<FavoriteProjectSetGetFailureCode> CreateFailure(string message)
-            =>
-            new(FavoriteProjectSetGetFailureCode.Unknown, message);
-    }
-
     private static LookupValue MapFavorieProjectItem(FavoriteProjectItemGetOut item)
         =>
         new(item.Id, item.Name, item.Type.ToString("G"));

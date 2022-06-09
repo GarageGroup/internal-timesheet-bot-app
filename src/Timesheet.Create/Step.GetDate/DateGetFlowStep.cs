@@ -5,8 +5,7 @@ namespace GGroupp.Internal.Timesheet;
 
 internal static class DateGetFlowStep
 {
-    internal static ChatFlow<TimesheetCreateFlowState> GetDate(
-        this ChatFlow<TimesheetCreateFlowState> chatFlow)
+    internal static ChatFlow<TimesheetCreateFlowState> GetDate(this ChatFlow<TimesheetCreateFlowState> chatFlow)
         =>
         chatFlow.AwaitTimesheetDate("Дата списания", WithDate);
 

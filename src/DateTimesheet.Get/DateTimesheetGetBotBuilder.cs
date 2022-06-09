@@ -21,7 +21,6 @@ public static class DateTimesheetGetBotBuilder
             =>
             botContext.InnerDateTimesheetGetAsync(
                 commandName ?? string.Empty,
-                botContext.BotUserProvider,
                 timesheetSetGetFuncResolver.Invoke(botContext),
                 cancellationToken);
     }
@@ -29,7 +28,6 @@ public static class DateTimesheetGetBotBuilder
     private static ValueTask<Unit> InnerDateTimesheetGetAsync(
         this IBotContext botContext,
         string commandName,
-        IBotUserProvider botUserProvider,
         ITimesheetSetGetFunc timesheetSetGetFuncResolver,
         CancellationToken cancellationToken)
         =>
@@ -38,7 +36,7 @@ public static class DateTimesheetGetBotBuilder
         .PipeValue(
             botContext.InternalRecoginzeOrFailureAsync)
         .MapSuccessValue(
-            (flow, token) => flow.GetTimesheet(botUserProvider, timesheetSetGetFuncResolver).CompleteValueAsync(token))
+            (flow, token) => flow.GetTimesheet(timesheetSetGetFuncResolver).CompleteValueAsync(token))
         .FoldValue(
             (_, token) => botContext.BotFlow.EndAsync(token),
             (_, token) => botContext.BotFlow.NextAsync(token));
