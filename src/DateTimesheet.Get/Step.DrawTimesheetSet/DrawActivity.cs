@@ -8,13 +8,13 @@ using System.Text;
 
 namespace GGroupp.Internal.Timesheet;
 
-internal static class TimesheetSetGetActivity
+internal static class DrawActivity
 {
     private const string TimeColumnWidth = "45px";
 
     private static readonly string LineSeparator;
 
-    static TimesheetSetGetActivity()
+    static DrawActivity()
         =>
         LineSeparator = new('-', 50);
 
@@ -22,7 +22,7 @@ internal static class TimesheetSetGetActivity
     {
         if (context.FlowState.Timesheets?.Count is not > 0)
         {
-            return MessageFactory.Text($"Нет списаний времени на {context.FlowState.Date.ToStringRussianCulture()}");
+            return MessageFactory.Text($"Нет списаний времени за {context.FlowState.Date.ToStringRussianCulture()}");
         }
 
         if (context.IsCardSupported())

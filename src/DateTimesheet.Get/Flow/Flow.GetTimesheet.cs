@@ -7,15 +7,13 @@ using ITimesheetSetGetFunc = IAsyncValueFunc<TimesheetSetGetIn, Result<Timesheet
 
 partial class TimesheetSetGetChatFlow
 {
-    internal static ChatFlow<Unit> GetTimesheet(
-        this ChatFlow chatFlow,
-        IBotUserProvider botUserProvider,
-        ITimesheetSetGetFunc timesheetSetGetFunc)
+    internal static ChatFlow<Unit> GetTimesheet(this ChatFlow chatFlow, ITimesheetSetGetFunc timesheetSetGetFunc)
         =>
-        chatFlow.Start(
-            static () => new DateTimesheetFlowState())
+        chatFlow.Start<DateTimesheetFlowState>(
+            static () => new())
+        .GetUserId()
         .GetDate()
-        .GetTimesheet(
-            botUserProvider,
-            timesheetSetGetFunc);
+        .GetTimesheetSet(
+            timesheetSetGetFunc)
+        .DrawTimesheetSet();
 }

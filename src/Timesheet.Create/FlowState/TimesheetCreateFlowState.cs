@@ -6,6 +6,9 @@ namespace GGroupp.Internal.Timesheet;
 
 internal sealed record class TimesheetCreateFlowState
 {
+    [JsonProperty("userId")]
+    public Guid UserId { get; init; }
+
     [JsonProperty("projectId")]
     public Guid ProjectId { get; init; }
 

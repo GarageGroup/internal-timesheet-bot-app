@@ -10,6 +10,9 @@ internal sealed record class DateTimesheetFlowState
     [JsonIgnore]
     public DateOnly Date { get; init; }
 
+    [JsonProperty("userId")]
+    public Guid UserId { get; init; }
+
     [JsonProperty("dateText")]
     public string DateText
     {

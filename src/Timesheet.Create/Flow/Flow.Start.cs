@@ -3,29 +3,27 @@ using GGroupp.Infra.Bot.Builder;
 
 namespace GGroupp.Internal.Timesheet;
 
-using IFavoriteProjectSetGetFunc = IAsyncValueFunc<FavoriteProjectSetGetIn, Result<FavoriteProjectSetGetOut, Failure<FavoriteProjectSetGetFailureCode>>>;
+using IFavoriteSetGetFunc = IAsyncValueFunc<FavoriteProjectSetGetIn, Result<FavoriteProjectSetGetOut, Failure<FavoriteProjectSetGetFailureCode>>>;
 using IProjectSetSearchFunc = IAsyncValueFunc<ProjectSetSearchIn, Result<ProjectSetSearchOut, Failure<ProjectSetSearchFailureCode>>>;
 using ITimesheetCreateFunc = IAsyncValueFunc<TimesheetCreateIn, Result<TimesheetCreateOut, Failure<TimesheetCreateFailureCode>>>;
 
 partial class TimesheetCreateChatFlow
 {
-    internal static ChatFlow<Unit> CreateTimesheet(
+    internal static ChatFlow<Unit> Start(
         this ChatFlow chatFlow,
-        IBotUserProvider botUserProvider,
-        IFavoriteProjectSetGetFunc favoriteProjectSetGetFunc,
+        IFavoriteSetGetFunc favoriteSetGetFunc,
         IProjectSetSearchFunc projectSetSearchFunc,
         ITimesheetCreateFunc timesheetCreateFunc)
         =>
-        chatFlow.Start(
-            static () => new TimesheetCreateFlowState())
+        chatFlow.Start<TimesheetCreateFlowState>(
+            static () => new())
+        .GetUserId()
         .FindProject(
-            botUserProvider,
-            favoriteProjectSetGetFunc,
-            projectSetSearchFunc)
+            favoriteSetGetFunc, projectSetSearchFunc)
         .GetDate()
         .GetHourValue()
         .GetDescription()
-        .ConfirmCreation()
+        .ConfirmTimesheet()
         .CreateTimesheet(
             timesheetCreateFunc);
 }

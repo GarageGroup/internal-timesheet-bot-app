@@ -22,7 +22,7 @@ partial class GTimesheetBotBuilder
         .UseDataverseImpersonation(botContext)
         .CreateDataverseApiClient()
         .UseFavoriteProjectSetGetApi(
-            sp => sp.GetRequiredService<IConfiguration>().GetFavoriteProjectSetGetApiConfiguration())
+            sp => sp.GetRequiredService<IConfiguration>().GetFavoriteProjectSetGetApiOption())
         .Resolve(botContext.ServiceProvider);
 
     private static IProjectSetSearchFunc GetProjectSetSearchApi(IBotContext botContext)
@@ -39,10 +39,10 @@ partial class GTimesheetBotBuilder
         .UseDataverseImpersonation(botContext)
         .CreateDataverseApiClient()
         .UseTimesheetCreateApi(
-            sp => sp.GetRequiredService<IConfiguration>().GetTimesheetCreateApiConfiguration())
+            sp => sp.GetRequiredService<IConfiguration>().GetTimesheetCreateApiOption())
         .Resolve(botContext.ServiceProvider);
 
-    private static TimesheetCreateApiConfiguration GetTimesheetCreateApiConfiguration(this IConfiguration configuration)
+    private static TimesheetCreateApiOption GetTimesheetCreateApiOption(this IConfiguration configuration)
         =>
         new(
             channelCodes: new Dictionary<TimesheetChannel, int?>
@@ -53,7 +53,7 @@ partial class GTimesheetBotBuilder
                 [TimesheetChannel.Emulator] = configuration.GetValue<int?>("DataverseChannelCodes:Emulator")
             });
 
-    private static FavoriteProjectSetGetApiConfiguration GetFavoriteProjectSetGetApiConfiguration(this IConfiguration configuration)
+    private static FavoriteProjectSetGetApiOption GetFavoriteProjectSetGetApiOption(this IConfiguration configuration)
         =>
         new(
             countTimesheetItems: configuration.GetValue<int?>("CountTimesheetItems"),

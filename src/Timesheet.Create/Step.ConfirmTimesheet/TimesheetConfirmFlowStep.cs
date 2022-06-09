@@ -5,13 +5,12 @@ namespace GGroupp.Internal.Timesheet;
 
 internal static class TimesheetConfirmFlowStep
 {
-    internal static ChatFlow<TimesheetCreateFlowState> ConfirmCreation(
+    internal static ChatFlow<TimesheetCreateFlowState> ConfirmTimesheet(
         this ChatFlow<TimesheetCreateFlowState> chatFlow)
         =>
-        chatFlow.AwaitConfirmation(
-            CreateConfirmationOption);
+        chatFlow.AwaitConfirmation(CreateOption);
 
-    private static ConfirmationCardOption CreateConfirmationOption(IChatFlowContext<TimesheetCreateFlowState> context)
+    private static ConfirmationCardOption CreateOption(IChatFlowContext<TimesheetCreateFlowState> context)
         =>
         new(
             questionText: "Списать время?",

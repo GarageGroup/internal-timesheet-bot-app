@@ -11,8 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GGroupp.Infra.Bot.Builder.ChatFlow.Step.Date" Version="2.3.1" />
-    <PackageReference Include="GGroupp.Infra.Bot.Builder.TurnContext.Extensions" Version="1.1.1" />
+    <PackageReference Include="GGroupp.Infra.Bot.Builder.ChatFlow.Step.Date" Version="2.4.1" />
   </ItemGroup>
 
 </Project>
