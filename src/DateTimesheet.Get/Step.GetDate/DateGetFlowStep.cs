@@ -8,7 +8,7 @@ internal static class DateGetFlowStep
     internal static ChatFlow<DateTimesheetFlowState> GetDate(
         this ChatFlow<DateTimesheetFlowState> chatFlow)
         =>
-        chatFlow.AwaitTimesheetDate("Дата", WithDate);
+        chatFlow.AwaitTimesheetDate("Дата", 3, WithDate);
 
     private static DateTimesheetFlowState WithDate(DateTimesheetFlowState state, DateOnly date)
         =>
