@@ -37,7 +37,7 @@ public static class TimesheetDateGetFlowStep
             text: GetDateText(context),
             confirmButtonText: "Выбрать",
             invalidDateText: "Не удалось распознать дату",
-            DateOnly.FromDateTime(DateTime.Now),
+            defaultDate: DateOnly.FromDateTime(DateTime.Now),
             placeholder: DatePlaceholder,
             suggestions: context.CreateSuggestions(days));
 
@@ -79,6 +79,6 @@ public static class TimesheetDateGetFlowStep
 
         KeyValuePair<string, DateOnly> CreateSuggestion(DateOnly date)
             =>
-            date == today ? new("Сегодня", date) : new(date.ToStringRussianCulture("dd.MM ddd"), date);
+            date == today ? new("Сегодня", date) : new(date.ToStringRussianCulture("dd.MM ddd").ToUpperInvariant(), date);
     }
 }
