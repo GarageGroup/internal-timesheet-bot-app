@@ -59,6 +59,7 @@ internal static class ProjectFindExtensions
             static @out => new LookupValueSetOption(
                 items: @out.Projects.Select(MapProjectItem).ToArray(),
                 choiceText: "Выберите проект"));
+
     private static LookupValue MapFavorieProjectItem(FavoriteProjectItemGetOut item)
         =>
         new(item.Id, item.Name, item.Type.ToString("G"));

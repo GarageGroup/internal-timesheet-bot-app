@@ -36,7 +36,7 @@ internal static class HourValueGetFlowStep
         value switch
         {
             not > 0 => BotFlowFailure.From("Значение должно быть больше нуля"),
-            not <= MaxValue => BotFlowFailure.From(Invariant($"Значение должно быть меньше {MaxValue}")),
+            not <= MaxValue => BotFlowFailure.From(Invariant($"Значение не может быть больше {MaxValue}")),
             _ => value
         };
 
