@@ -76,7 +76,7 @@ internal static class DrawActivity
     {
         var adaptiveElements = new List<AdaptiveElement>
         {
-            CreateAdaptiveTimesheetRow(context.FlowState.GetDurationSum(), $"Всего {context.FlowState.Date.ToStringRussianCulture()}")
+            CreateAdaptiveTimesheetRow(context.FlowState.GetDurationSum(), $"Всего за {context.FlowState.Date.ToStringRussianCulture()}")
         };
 
         if (context.FlowState.Timesheets is null)
@@ -169,7 +169,8 @@ internal static class DrawActivity
         var flowState = context.FlowState;
 
         var textBuilder = new StringBuilder().AppendRow(
-            flowState.GetDurationSum().ToDurationStringRussianCulture(true), context.EncodeTextWithStyle(flowState.Date.ToStringRussianCulture(), BotTextStyle.Bold));
+            flowState.GetDurationSum().ToDurationStringRussianCulture(true),
+            context.EncodeTextWithStyle($"Всего за {context.FlowState.Date.ToStringRussianCulture()}", BotTextStyle.Bold));
 
         if (context.FlowState.Timesheets?.Count is not > 0)
         {
@@ -204,7 +205,7 @@ internal static class DrawActivity
         var flowState = context.FlowState;
 
         var textBuilder = new StringBuilder().AppendRow(
-            flowState.GetDurationSum().ToDurationStringRussianCulture(true), $"<b>{flowState.Date.ToStringRussianCulture()}</b>");
+            flowState.GetDurationSum().ToDurationStringRussianCulture(true), $"<b>Всего за {flowState.Date.ToStringRussianCulture()}</b>");
 
         if (context.FlowState.Timesheets?.Count is not > 0)
         {
