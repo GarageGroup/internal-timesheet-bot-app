@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GGroupp.Infra.Bot.Builder.ChatFlow.Step.Card" Version="1.2.3" />
+    <PackageReference Include="GGroupp.Infra.Bot.Builder.ChatFlow.Step.Card" Version="1.2.4" />
     <PackageReference Include="GGroupp.Infra.Bot.Builder.ChatFlow.Step.Lookup" Version="2.3.3" />
     <PackageReference Include="GGroupp.Infra.Bot.Builder.ChatFlow.Step.Value" Version="2.3.3" />
     <PackageReference Include="GGroupp.Internal.Timesheet.FavoriteProjectSet.Get.InOut" Version="1.8.1" />
