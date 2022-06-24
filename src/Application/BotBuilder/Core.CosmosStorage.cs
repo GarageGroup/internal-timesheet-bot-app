@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using GGroupp.Infra.Bot.Builder;
-using Microsoft.Bot.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PrimeFuncPack;
@@ -11,7 +10,7 @@ namespace GGroupp.Internal.Timesheet;
 
 partial class GTimesheetBotBuilder
 {
-    internal static IStorage ResolveCosmosStorage(IServiceProvider serviceProvider)
+    internal static ICosmosStorage ResolveCosmosStorage(IServiceProvider serviceProvider)
         =>
         lazyCosmosStorageDependency.Value.Resolve(serviceProvider);
 
