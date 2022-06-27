@@ -24,7 +24,7 @@ internal static class ProjectFindFlowStep
 
     private static string CreateResultMessage(IChatFlowContext<TimesheetCreateFlowState> context, LookupValue projectValue)
         =>
-        $"{projectValue.GetProjectType().ToStringRussianCulture()}: {context.EncodeTextWithStyle(projectValue.Name, BotTextStyle.Bold)}";
+        $"{projectValue.GetProjectType().ToStringRussianCulture()}: {context.CreateBoldText(projectValue.Name)}";
 
     private static TimesheetProjectType GetProjectType(this LookupValue projectValue)
         =>
