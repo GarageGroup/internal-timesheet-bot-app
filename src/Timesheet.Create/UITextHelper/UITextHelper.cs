@@ -1,4 +1,7 @@
 ﻿using System.Globalization;
+using System.Text;
+using GGroupp.Infra.Bot.Builder;
+using Microsoft.Bot.Builder;
 
 namespace GGroupp.Internal.Timesheet;
 
@@ -22,5 +25,13 @@ internal static class UITextHelper
             TimesheetProjectType.Lead => "Лид",
             TimesheetProjectType.Incident => "Инцидент",
             _ => "Проект"
+        };
+
+    internal static string CreateBoldText(this ITurnContext turnContext, string message)
+        =>
+        turnContext.IsNotTelegramChannel() switch
+        {
+            true => new StringBuilder().Append("**").Append(message).Append("**").ToString(),
+            _ => new StringBuilder().Append("<b>").Append(message).Append("</b>").ToString()
         };
 }
