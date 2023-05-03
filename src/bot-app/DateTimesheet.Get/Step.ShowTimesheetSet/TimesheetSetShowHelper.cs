@@ -12,6 +12,10 @@ namespace GGroupp.Internal.Timesheet;
 
 internal static class TimesheetSetShowHelper
 {
+    private const string BotLine = "\n\r\n\r";
+
+    private const string TelegramBotLine = "\n\r";
+
     private const string TimeColumnWidth = "45px";
 
     private static readonly string LineSeparator = new('-', 50);
@@ -81,8 +85,14 @@ internal static class TimesheetSetShowHelper
 
     private static IActivity CreateTelegramTextActivity(this ITurnContext context, string text)
     {
+        var textBuilder = new StringBuilder(text)
+            .Append(TelegramBotLine)
+            .Append(LineSeparator)
+            .Append(TelegramBotLine)
+            .Append("/newtimesheet - Списать время");
+
         var channelData = new TelegramChannelData(
-            parameters: new TelegramParameters(text)
+            parameters: new TelegramParameters(textBuilder.ToString())
             {
                 ParseMode = TelegramParseMode.Html,
                 ReplyMarkup = new TelegramReplyKeyboardRemove()
@@ -214,18 +224,16 @@ internal static class TimesheetSetShowHelper
 
     private static string BuildText(IChatFlowContext<DateTimesheetFlowState> context)
     {
-        const string botLine = "\n\r\n\r";
         var flowState = context.FlowState;
-
         var textBuilder = new StringBuilder();
 
         if (string.IsNullOrEmpty(flowState.MessageText) is false)
         {
             textBuilder = textBuilder.AppendRow(
                 string.Empty, context.EncodeTextWithStyle(flowState.MessageText, BotTextStyle.Bold))
-            .Append(botLine)
+            .Append(BotLine)
             .Append(HeaderLineSeparator)
-            .Append(botLine);
+            .Append(BotLine);
         }
 
         textBuilder = textBuilder.AppendRow(
@@ -239,7 +247,7 @@ internal static class TimesheetSetShowHelper
 
         foreach (var timesheetText in context.FlowState.Timesheets.Select(BuildTimesheetText))
         {
-            textBuilder.Append(botLine).Append(LineSeparator).Append(botLine).Append(timesheetText);
+            textBuilder.Append(BotLine).Append(LineSeparator).Append(BotLine).Append(timesheetText);
         }
 
         return textBuilder.ToString();
@@ -254,23 +262,21 @@ internal static class TimesheetSetShowHelper
                 return row;
             }
 
-            return row.Append(botLine).AppendFormat(
+            return row.Append(BotLine).AppendFormat(
                 context.EncodeTextWithStyle(timesheet.Description, BotTextStyle.Italic));
         }
     }
 
     private static string BuildTelegramText(IChatFlowContext<DateTimesheetFlowState> context)
     {
-        const string botLine = "\n\r";
         var flowState = context.FlowState;
-
         var textBuilder = new StringBuilder();
 
         if (string.IsNullOrEmpty(flowState.MessageText) is false)
         {
             textBuilder = textBuilder
                 .AppendRow(string.Empty, $"<b>{HttpUtility.HtmlEncode(flowState.MessageText)}</b>")
-                .Append(botLine).Append(HeaderLineSeparator).Append(botLine);
+                .Append(TelegramBotLine).Append(HeaderLineSeparator).Append(TelegramBotLine);
         }
 
         textBuilder = textBuilder.AppendRow(
@@ -283,10 +289,10 @@ internal static class TimesheetSetShowHelper
 
         foreach (var timesheetText in context.FlowState.Timesheets.Select(BuildTimesheetText))
         {
-            textBuilder.Append(botLine).Append(LineSeparator).Append(botLine).Append(timesheetText);
+            textBuilder.Append(TelegramBotLine).Append(LineSeparator).Append(TelegramBotLine).Append(timesheetText);
         }
 
-        return textBuilder.Append(botLine).Append(LineSeparator).Append(botLine).Append("/newtimesheet - Списать время").ToString();
+        return textBuilder.ToString();
 
         static StringBuilder BuildTimesheetText(TimesheetJson timesheet)
         {
@@ -298,7 +304,7 @@ internal static class TimesheetSetShowHelper
                 return row;
             }
 
-            return row.Append(botLine).Append(
+            return row.Append(TelegramBotLine).Append(
                 $"<i>{HttpUtility.HtmlEncode(timesheet.Description)}</i>");
         }
     }
