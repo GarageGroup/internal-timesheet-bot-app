@@ -7,7 +7,6 @@ using PrimeFuncPack;
 
 namespace GGroupp.Internal.Timesheet;
 
-[KeepWarmFunction("KeepBotWarm", "0 */5 * * * *")]
 internal static partial class Application
 {
     private const string DataverseSectionName = "Dataverse";
