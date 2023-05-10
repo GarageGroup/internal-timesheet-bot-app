@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "app", "app", "{46F1F7DF-94A6-4394-985E-5F4CAF24002D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "step", "step", "{BD8C0083-779C-46EC-ABA1-BE03C7218140}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserId.Get", "bot-step\UserId.Get\UserId.Get.csproj", "{F3283C54-9C87-4DAF-B7C7-BBF06AEAC992}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Date.Get", "bot-step\Date.Get\Date.Get.csproj", "{D559D5DD-0416-4FDA-BFD5-54ED2234F09B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Timesheet.Create", "bot-app\Timesheet.Create\Timesheet.Create.csproj", "{D6638261-20A7-457F-8419-73B561E33310}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DateTimesheet.Get", "bot-app\DateTimesheet.Get\DateTimesheet.Get.csproj", "{BC451B3A-26FF-4606-B6A4-5181DA92EDE3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureFunc", "bot-app\AzureFunc\AzureFunc.csproj", "{D660B505-DFA0-4157-B221-A06F2A3CEFB6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F3283C54-9C87-4DAF-B7C7-BBF06AEAC992}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3283C54-9C87-4DAF-B7C7-BBF06AEAC992}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3283C54-9C87-4DAF-B7C7-BBF06AEAC992}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3283C54-9C87-4DAF-B7C7-BBF06AEAC992}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D559D5DD-0416-4FDA-BFD5-54ED2234F09B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D559D5DD-0416-4FDA-BFD5-54ED2234F09B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D559D5DD-0416-4FDA-BFD5-54ED2234F09B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D559D5DD-0416-4FDA-BFD5-54ED2234F09B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6638261-20A7-457F-8419-73B561E33310}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6638261-20A7-457F-8419-73B561E33310}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6638261-20A7-457F-8419-73B561E33310}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6638261-20A7-457F-8419-73B561E33310}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC451B3A-26FF-4606-B6A4-5181DA92EDE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC451B3A-26FF-4606-B6A4-5181DA92EDE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC451B3A-26FF-4606-B6A4-5181DA92EDE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC451B3A-26FF-4606-B6A4-5181DA92EDE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D660B505-DFA0-4157-B221-A06F2A3CEFB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D660B505-DFA0-4157-B221-A06F2A3CEFB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D660B505-DFA0-4157-B221-A06F2A3CEFB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D660B505-DFA0-4157-B221-A06F2A3CEFB6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F3283C54-9C87-4DAF-B7C7-BBF06AEAC992} = {BD8C0083-779C-46EC-ABA1-BE03C7218140}
+		{D559D5DD-0416-4FDA-BFD5-54ED2234F09B} = {BD8C0083-779C-46EC-ABA1-BE03C7218140}
+		{D6638261-20A7-457F-8419-73B561E33310} = {46F1F7DF-94A6-4394-985E-5F4CAF24002D}
+		{BC451B3A-26FF-4606-B6A4-5181DA92EDE3} = {46F1F7DF-94A6-4394-985E-5F4CAF24002D}
+		{D660B505-DFA0-4157-B221-A06F2A3CEFB6} = {46F1F7DF-94A6-4394-985E-5F4CAF24002D}
+	EndGlobalSection
+EndGlobal
