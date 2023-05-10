@@ -1,6 +1,6 @@
 using System;
 
-namespace GGroupp.Internal.Timesheet;
+namespace GarageGroup.Internal.Timesheet;
 
 public sealed record class TimesheetDateStepOption
 {

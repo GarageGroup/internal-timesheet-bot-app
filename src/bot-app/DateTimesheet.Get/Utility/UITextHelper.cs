@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 
-namespace GGroupp.Internal.Timesheet;
+namespace GarageGroup.Internal.Timesheet;
 
 internal static class UITextHelper
 {

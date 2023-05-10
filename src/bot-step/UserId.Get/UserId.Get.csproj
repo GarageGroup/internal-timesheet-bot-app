@@ -6,13 +6,13 @@
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <InvariantGlobalization>false</InvariantGlobalization>
-    <RootNamespace>GGroupp.Internal.Timesheet</RootNamespace>
-    <AssemblyName>GGroupp.Internal.Timesheet.Step.UserId.Get</AssemblyName>
+    <RootNamespace>GarageGroup.Internal.Timesheet</RootNamespace>
+    <AssemblyName>GarageGroup.Internal.Timesheet.Step.UserId.Get</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="EarlyFuncPack.Core.AsyncPipeline" Version="0.2.0" />
-    <PackageReference Include="GGroupp.Infra.Bot.Builder.ChatFlow.Core" Version="2.0.4" />
+    <PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Core" Version="0.0.1" />
     <PackageReference Include="PrimeFuncPack.Core.Failure" Version="2.0.1" />
     <PackageReference Include="PrimeFuncPack.Core.Optional" Version="2.1.0" />
   </ItemGroup>

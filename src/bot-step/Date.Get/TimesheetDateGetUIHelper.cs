@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 
-namespace GGroupp.Internal.Timesheet;
+namespace GarageGroup.Internal.Timesheet;
 
 public static class TimesheetDateGetUIHelper
 {

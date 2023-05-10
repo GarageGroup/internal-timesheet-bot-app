@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace GGroupp.Internal.Timesheet;
+namespace GarageGroup.Internal.Timesheet;
 
 internal sealed record class TimesheetJson
 {

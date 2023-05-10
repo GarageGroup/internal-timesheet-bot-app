@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using GGroupp.Infra.Bot.Builder;
+using GarageGroup.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
 using static System.FormattableString;
 
-namespace GGroupp.Internal.Timesheet;
+namespace GarageGroup.Internal.Timesheet;
 
 using IHourValueSuggestionCollection = IReadOnlyCollection<IReadOnlyCollection<KeyValuePair<string, decimal>>>;
 

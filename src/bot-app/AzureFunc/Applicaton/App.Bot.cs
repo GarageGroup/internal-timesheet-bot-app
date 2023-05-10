@@ -1,14 +1,15 @@
 using System;
-using GGroupp.Infra;
-using GGroupp.Infra.Bot.Builder;
+using GarageGroup.Infra;
+using GarageGroup.Infra.Bot.Builder;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Bot.Builder;
 using PrimeFuncPack;
 
-namespace GGroupp.Internal.Timesheet;
+namespace GarageGroup.Internal.Timesheet;
 
 partial class Application
 {
-    [ServiceBusBotFunction("HandleServiceBusBotMessage", "sbq-gtimesheet-bot-message", "BotServiceBusConnection")]
+    [HttpBotFunction("HandleHttpBotMessage", AuthLevel = AuthorizationLevel.Function)]
     internal static Dependency<IBot> UseBot()
         =>
         Dependency.From(ResolveBot);
@@ -23,5 +24,5 @@ partial class Application
         .UseTimesheetCreateFlow()
         .UseDateTimesheetGetFlow()
         .UseBotMenuFlow()
-        .Build();
+        .Build(true);
 }

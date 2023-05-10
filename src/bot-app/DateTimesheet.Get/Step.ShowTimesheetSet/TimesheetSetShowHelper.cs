@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Web;
 using AdaptiveCards;
-using GGroupp.Infra.Bot.Builder;
+using GarageGroup.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
 
-namespace GGroupp.Internal.Timesheet;
+namespace GarageGroup.Internal.Timesheet;
 
 internal static class TimesheetSetShowHelper
 {
