@@ -6,9 +6,10 @@ internal static class UserIdGetFlowStep
 {
     internal static ChatFlow<DateTimesheetFlowState> GetUserId(this ChatFlow<DateTimesheetFlowState> chatFlow)
         =>
-        chatFlow.GetUserId(
-            static (flowState, userId) => flowState with
+        chatFlow.GetDataverseUserOrBreak(
+            "Произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее",
+            static (flowState, user) => flowState with
             {
-                UserId = userId
+                UserId = user.SystemUserId
             });
 }
