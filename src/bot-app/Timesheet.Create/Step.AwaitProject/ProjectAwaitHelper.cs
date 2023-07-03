@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra.Bot.Builder;
-using GGroupp;
 using Microsoft.Extensions.Logging;
 
 namespace GarageGroup.Internal.Timesheet;

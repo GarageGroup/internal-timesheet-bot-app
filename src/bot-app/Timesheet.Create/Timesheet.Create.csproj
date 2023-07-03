@@ -12,12 +12,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\bot-step\Date.Get\Date.Get.csproj" />
-    <ProjectReference Include="..\..\bot-step\UserId.Get\UserId.Get.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="GGroupp.Core.Collections.FlatArray.Extensions" Version="1.8.0" />
-    <PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Extensions" Version="0.0.1" />
+    <PackageReference Include="EarlyFuncPack.Core.AsyncPipeline" Version="0.2.0" />
+    <PackageReference Include="GarageGroup.Core.Collections.FlatArray.Extensions" Version="1.8.0" />
+    <PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Extensions" Version="0.1.0" />
     <PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Step.Card" Version="0.0.1" />
     <PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Step.Lookup" Version="0.0.1" />
     <PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Step.Value" Version="0.0.1" />
