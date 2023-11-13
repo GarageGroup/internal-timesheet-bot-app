@@ -77,5 +77,5 @@ internal static partial class TimesheetCreateFlowStep
 
     private static string CreateBoldText(this ITurnContext turnContext, string message)
         =>
-        turnContext.IsNotTelegramChannel() ? $"**{message}**" : $"<b>message</b>";
+        turnContext.IsNotTelegramChannel() ? $"**{message}**" : $"<b>{message}</b>";
 }

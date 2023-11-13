@@ -24,7 +24,7 @@ partial class CrmProjectApi<TDataverseApi>
         .PipeValue(
             dataverseApi.Impersonate(input.UserId).GetEntitySetAsync<LastTimesheetItemJson>)
         .Map(
-            success => new LastProjectSetGetOut()
+            success => new LastProjectSetGetOut
             {
                 Projects = GetProjects(success.Value, input.Top)
             },

@@ -7,7 +7,9 @@ namespace GarageGroup.Internal.Timesheet;
 
 internal sealed record class IncidentJson : ITimesheetProjectType
 {
-    public static readonly FlatArray<string> FieldNames = new(TitleFieldName);
+    public static readonly FlatArray<string> FieldNames
+        =
+        new(TitleFieldName);
 
     public const TimesheetProjectType Type = TimesheetProjectType.Incident;
 
