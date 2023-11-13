@@ -16,10 +16,15 @@ partial class TimesheetCreateFlowStep
                 text: context.GetDateText(),
                 confirmButtonText: "Выбрать",
                 invalidDateText: "Не удалось распознать дату",
-                defaultDate: DateOnly.FromDateTime(DateTime.Now),
+                defaultDate: GetNow(),
                 placeholder: DatePlaceholder,
                 suggestions: context.CreateSuggestions()),
             static (context, date) => "Дата списания: " + context.EncodeTextWithStyle(date.ToStringRussianCulture(), BotTextStyle.Bold),
+            static (_, date) => (date <= GetNow()) switch
+            {
+                true => Result.Success(date),
+                _ => BotFlowFailure.From("Дата не может быть в будущем")
+            },
             static (state, date) => state with
             {
                 Date = date
@@ -47,7 +52,7 @@ partial class TimesheetCreateFlowStep
             return [];
         }
 
-        var today = DateOnly.FromDateTime(DateTime.Now);
+        var today = GetNow();
         var days = DaysInRow * DaysRowsCount;
 
         return Enumerable.Range(1 - days, days).GroupBy(GetRowNumber).Select(CreateRow).ToArray();

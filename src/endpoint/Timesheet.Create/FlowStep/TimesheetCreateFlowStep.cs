@@ -55,9 +55,13 @@ internal static partial class TimesheetCreateFlowStep
         };
     }
 
-    private static DateOnly GetDate(int daysAddedToNow)
+    private static DateOnly GetDateUtc(int daysAddedToNow)
         =>
         DateOnly.FromDateTime(DateTime.UtcNow.AddDays(daysAddedToNow));
+
+    private static DateOnly GetNow()
+        =>
+        DateOnly.FromDateTime(DateTime.Now);
 
     private static string ToStringRussianCulture(this DateOnly date, string format)
         =>
