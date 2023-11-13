@@ -10,7 +10,11 @@ internal sealed partial class CrmProjectApi<TDataverseApi> : ICrmProjectApi
 
     static CrmProjectApi()
         =>
-        ProjectTypeEntityNames = new(ProjectJson.EntityName, LeadJson.EntityName, OpportunityJson.EntityName, IncidentJson.EntityName);
+        ProjectTypeEntityNames = new(
+            ProjectJson.EntityName,
+            LeadJson.EntityName,
+            OpportunityJson.EntityName,
+            IncidentJson.EntityName);
 
     private readonly TDataverseApi dataverseApi;
 

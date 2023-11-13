@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using GarageGroup.Infra;
@@ -13,16 +14,6 @@ namespace GarageGroup.Internal.Timesheet;
 internal static partial class Application
 {
     private const string DataverseSectionName = "Dataverse";
-
-    private static readonly CrmTimesheetApiOption TimesheetApiOption
-        =
-        new(
-            channelCodes: new(
-                new(TimesheetChannel.Telegram, 140120000),
-                new(TimesheetChannel.Teams, 140120001),
-                new(TimesheetChannel.WebChat, 140120002),
-                new(TimesheetChannel.Emulator, 140120003),
-                new(TimesheetChannel.Unknown, null)));
 
     private static Dependency<HttpMessageHandler> UseHttpMessageHandlerStandard(string loggerCategoryName)
         =>
@@ -40,20 +31,20 @@ internal static partial class Application
     private static Dependency<ICrmTimesheetApi> UseCrmTimesheetApi()
         =>
         Dependency.From(
-            ServiceProviderServiceExtensions.GetRequiredService<IDataverseApiClient>)
-        .With(
-            TimesheetApiOption)
+            ServiceProviderServiceExtensions.GetRequiredService<IDataverseApiClient>,
+            ResolveTimesheetApiOption)
         .UseCrmTimesheetApi();
 
     private static CrmProjectApiOption ResolveProjectApiOption(IServiceProvider serviceProvider)
-    {
-        var section = serviceProvider.GetConfiguration().GetRequiredSection("CrmProjectApi");
+        =>
+        serviceProvider.GetConfiguration().GetRequiredSection("CrmProjectApi").Get<CrmProjectApiOption>();
 
-        return new()
-        {
-            LastProjectItemsCount = section.GetValue<int?>("LastProjectItemsCount"),
-            LastProjectDaysCount = section.GetValue<int?>("LastProjectDaysCount")
-        };
+    private static CrmTimesheetApiOption ResolveTimesheetApiOption(IServiceProvider serviceProvider)
+    {
+        var section = serviceProvider.GetConfiguration().GetRequiredSection("CrmTimesheetApi:ChannelCodes");
+
+        return new(
+            channelCodes: section.Get<Dictionary<TimesheetChannel, int?>>().ToFlatArray());
     }
 
     private static IConfiguration GetConfiguration(this IServiceProvider serviceProvider)

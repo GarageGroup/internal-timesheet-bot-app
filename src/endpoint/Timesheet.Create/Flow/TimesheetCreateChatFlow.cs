@@ -18,7 +18,8 @@ internal static partial class TimesheetCreateChatFlow
             crmProjectApi)
         .AwaitDate()
         .AwaitHourValue()
-        .AwaitDescription()
+        .AwaitDescription(
+            crmTimesheetApi)
         .ConfirmTimesheet()
         .CreateTimesheet(
             crmTimesheetApi)

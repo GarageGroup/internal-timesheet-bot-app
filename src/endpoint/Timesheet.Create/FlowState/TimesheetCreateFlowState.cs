@@ -31,6 +31,9 @@ internal sealed record class TimesheetCreateFlowState
     [JsonProperty("valueHours")]
     public decimal ValueHours { get; init; }
 
+    [JsonProperty("descriptionTags")]
+    public string[]? DescriptionTags { get; init; }
+
     [JsonProperty("description")]
     public string? Description { get; init; }
 }

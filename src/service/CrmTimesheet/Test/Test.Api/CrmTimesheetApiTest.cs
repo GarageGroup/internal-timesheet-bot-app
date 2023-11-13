@@ -29,6 +29,13 @@ public static partial class CrmTimesheetApiTest
             userId: Guid.Parse("bd8b8e33-554e-e611-80dc-c4346bad0190"),
             date: new(2022, 02, 07));
 
+    private static readonly TimesheetTagSetGetIn SomeTimesheetTagSetGetInput
+        =
+        new(
+            userId: Guid.Parse("54f0d2cf-93a3-417e-a21a-bff4e16c1b25"),
+            projectId: Guid.Parse("6f8f07d6-b7e4-4b00-a829-e680c0375d1e"),
+            minDate: new(2023, 07, 24));
+
     private static readonly CrmTimesheetApiOption SomeOption
         =
         new(
@@ -67,6 +74,21 @@ public static partial class CrmTimesheetApiTest
                 }
             });
 
+    private static readonly DataverseEntitySetGetOut<TimesheetTagJson> SomeTimesheetTagJsonSetOutput
+        =
+        new(
+            value: new TimesheetTagJson[]
+            {
+                new() 
+                {
+                    Description = "#TaskOne. Some text"
+                },
+                new()
+                {
+                    Description = "#TaskTwo. More text"
+                }
+            });
+
     private static Mock<IStubDataverseApi> BuildMockDataverseApiClient(
         Result<Unit, Failure<DataverseFailureCode>> result)
     {
@@ -82,13 +104,13 @@ public static partial class CrmTimesheetApiTest
         return mock;
     }
 
-    private static Mock<IStubDataverseApi> BuildMockDataverseApiClient(
-        Result<DataverseEntitySetGetOut<TimesheetItemJson>, Failure<DataverseFailureCode>> result)
+    private static Mock<IStubDataverseApi> BuildMockDataverseApiClient<TEntityJson>(
+        Result<DataverseEntitySetGetOut<TEntityJson>, Failure<DataverseFailureCode>> result)
     {
         var mock = new Mock<IStubDataverseApi>();
 
         _ = mock
-            .Setup(static a => a.GetEntitySetAsync<TimesheetItemJson>(It.IsAny<DataverseEntitySetGetIn>(), It.IsAny<CancellationToken>()))
+            .Setup(static a => a.GetEntitySetAsync<TEntityJson>(It.IsAny<DataverseEntitySetGetIn>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
 
         _ = mock.Setup(static a => a.Impersonate(It.IsAny<Guid>())).Returns(mock.Object);

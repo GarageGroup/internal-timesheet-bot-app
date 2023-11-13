@@ -13,7 +13,7 @@ partial class CrmTimesheetApiTest
     [Fact]
     public static async Task CreateAsync_InputIsNull_ExpectArgumentNullException()
     {
-        var mockDataverseApiClient = BuildMockDataverseApiClient(SomeTimesheetJsonSetOutput);
+        var mockDataverseApiClient = BuildMockDataverseApiClient(Result.Success<Unit>(default));
 
         var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, SomeOption);
         var ex = await Assert.ThrowsAsync<ArgumentNullException>(TestAsync);
@@ -28,7 +28,7 @@ partial class CrmTimesheetApiTest
     [Fact]
     public static async Task CreateAsync_InputIsNotNull_ExpectDataverseImpersonateCalledOnce()
     {
-        var mockDataverseApiClient = BuildMockDataverseApiClient(SomeTimesheetJsonSetOutput);
+        var mockDataverseApiClient = BuildMockDataverseApiClient(Result.Success<Unit>(default));
         var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, SomeOption);
 
         var input = new TimesheetCreateIn(
@@ -51,7 +51,7 @@ partial class CrmTimesheetApiTest
     public static async Task CreateAsync_InputIsNotNull_ExpectDataverseApiClientCalledOnce(
         TimesheetCreateIn input, CrmTimesheetApiOption option, DataverseEntityCreateIn<IReadOnlyDictionary<string, object?>> expectedInput)
     {
-        var mockDataverseApiClient = BuildMockDataverseApiClient(SomeTimesheetJsonSetOutput);
+        var mockDataverseApiClient = BuildMockDataverseApiClient(Result.Success<Unit>(default));
         var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, option);
 
         var cancellationToken = new CancellationToken(false);
