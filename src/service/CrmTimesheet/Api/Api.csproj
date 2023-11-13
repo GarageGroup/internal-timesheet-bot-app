@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <RootNamespace>GarageGroup.Internal.Timesheet</RootNamespace>
+    <AssemblyName>GarageGroup.Internal.Timesheet.Service.CrmTimesheet.Api</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Contract\Contract.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EarlyFuncPack.Core.AsyncPipeline" Version="0.3.0" />
+    <PackageReference Include="GarageGroup.Infra.Dataverse.Api.Abstractions.EntityCreate" Version="3.10.2" />
+    <PackageReference Include="GarageGroup.Infra.Dataverse.Api.Abstractions.EntitySetGet" Version="3.8.2" />
+    <PackageReference Include="GarageGroup.Infra.Dataverse.Api.Abstractions.Impersonate" Version="2.1.1" />
+    <PackageReference Include="PrimeFuncPack.Core.Optional" Version="2.1.0" />
+    <PackageReference Include="PrimeFuncPack.Dependency.Core" Version="2.0.2" />
+  </ItemGroup>
+
+</Project>
