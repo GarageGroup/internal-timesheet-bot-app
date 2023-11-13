@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <RootNamespace>GarageGroup.Internal.Timesheet</RootNamespace>
+    <AssemblyName>GarageGroup.Internal.Timesheet.Service.CrmProject.Contract</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Entity\Entity.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PrimeFuncPack.Core.Failure" Version="2.0.1" />
+    <PackageReference Include="PrimeFuncPack.Core.FlatArray" Version="1.2.1" />
+    <PackageReference Include="PrimeFuncPack.Core.Result" Version="2.0.2" />
+    <PackageReference Include="PrimeFuncPack.Primitives.Strings" Version="2.0.2" />
+  </ItemGroup>
+
+</Project>
