@@ -29,7 +29,7 @@ partial class CrmProjectApiTest
 
     [Theory]
     [MemberData(nameof(CrmProjectApiSource.InputGetLastTestData), MemberType = typeof(CrmProjectApiSource))]
-    public static async Task GetLastAsync_CancellationTokenIsNotCanceled_ExpectDataverseApiClientCalledOnce(
+    public static async Task GetLastAsync_ExpectDataverseApiClientCalledOnce(
         LastProjectSetGetIn input, CrmProjectApiOption option, DateOnly now, DataverseEntitySetGetIn expectedInput)
     {
         var mockDataverseApiClient = BuildMockDataverseApiClient(SomeLastTimesheetSetOutput);

@@ -14,11 +14,11 @@ partial class CrmTimesheetApi<TDataverseApi>
             input, cancellationToken)
         .Pipe(
             static @in => new DataverseEntitySetGetIn(
-                entityPluralName: BaseTimesheetItemJson.EntityPluralName,
+                entityPluralName: TimesheetItemJson.EntityPluralName,
                 selectFields: TimesheetItemJson.SelectedFields,
-                expandFields: BaseTimesheetItemJson.ExpandedFields,
+                expandFields: TimesheetItemJson.ExpandedFields,
                 filter: TimesheetItemJson.BuildFilter(@in.UserId, @in.Date),
-                orderBy: TimesheetItemJson.OrderFiels))
+                orderBy: TimesheetItemJson.OrderFields))
         .PipeValue(
             dataverseApi.Impersonate(input.UserId).GetEntitySetAsync<TimesheetItemJson>)
         .MapFailure(

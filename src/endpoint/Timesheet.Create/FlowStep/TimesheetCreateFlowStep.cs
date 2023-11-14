@@ -12,15 +12,17 @@ internal static partial class TimesheetCreateFlowStep
 
     private const int DaysRowsCount = 2;
 
-    private const string DatePlaceholder = "дд.мм.гг";
-
     private const int MaxValue = 24;
+
+    private const int MaxProjectsCount = 6;
+
+    private const int DescriptionTagDays = 30;
+
+    private const string DatePlaceholder = "дд.мм.гг";
 
     private const string DefaultProjectMessage = "Нужно выбрать проект. Введите часть названия для поиска";
 
     private const string ChooseProjectMessage = "Выберите проект или введите часть названия для поиска";
-
-    private const int MaxProjectsCount = 6;
 
     private static readonly IReadOnlyCollection<CultureInfo> AwailableCultures;
 
@@ -52,6 +54,14 @@ internal static partial class TimesheetCreateFlowStep
             [new("0,25", 0.25m), new("0,5", 0.5m), new("0,75", 0.75m), new("1", 1), new("2", 2), new("8", 8)]
         };
     }
+
+    private static DateOnly GetDateUtc(int daysAddedToNow)
+        =>
+        DateOnly.FromDateTime(DateTime.UtcNow.AddDays(daysAddedToNow));
+
+    private static DateOnly GetNow()
+        =>
+        DateOnly.FromDateTime(DateTime.Now);
 
     private static string ToStringRussianCulture(this DateOnly date, string format)
         =>

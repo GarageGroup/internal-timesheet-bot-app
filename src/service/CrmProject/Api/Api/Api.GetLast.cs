@@ -15,10 +15,10 @@ partial class CrmProjectApi<TDataverseApi>
             input, cancellationToken)
         .Pipe(
             @in => new DataverseEntitySetGetIn(
-                entityPluralName: BaseTimesheetItemJson.EntityPluralName,
+                entityPluralName: LastTimesheetItemJson.EntityPluralName,
                 selectFields: LastTimesheetItemJson.SelectedFields,
-                expandFields: BaseTimesheetItemJson.ExpandedFields,
-                orderBy: LastTimesheetItemJson.OrderFiels,
+                expandFields: LastTimesheetItemJson.ExpandedFields,
+                orderBy: LastTimesheetItemJson.OrderFields,
                 filter: BuildFilter(@in),
                 top: option.LastProjectItemsCount))
         .PipeValue(
