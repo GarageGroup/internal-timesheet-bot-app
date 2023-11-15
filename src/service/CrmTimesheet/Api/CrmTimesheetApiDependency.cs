@@ -10,16 +10,20 @@ namespace GarageGroup.Internal.Timesheet;
 
 public static class CrmTimesheetApiDependency
 {
-    public static Dependency<ICrmTimesheetApi> UseCrmTimesheetApi<TDataverseApi>(this Dependency<TDataverseApi, CrmTimesheetApiOption> dependency)
+    public static Dependency<ICrmTimesheetApi> UseCrmTimesheetApi<TDataverseApi, TSqlApi>(
+        this Dependency<TDataverseApi, TSqlApi, CrmTimesheetApiOption> dependency)
         where TDataverseApi : IDataverseEntitySetGetSupplier, IDataverseEntityCreateSupplier, IDataverseImpersonateSupplier<TDataverseApi>
+        where TSqlApi : ISqlQueryEntitySetSupplier
     {
         ArgumentNullException.ThrowIfNull(dependency);
         return dependency.Fold<ICrmTimesheetApi>(CreateApi);
 
-        static CrmTimesheetApi<TDataverseApi> CreateApi(TDataverseApi dataverseApi, CrmTimesheetApiOption option)
+        static CrmTimesheetApi<TDataverseApi> CreateApi(TDataverseApi dataverseApi, TSqlApi sqlApi, CrmTimesheetApiOption option)
         {
             ArgumentNullException.ThrowIfNull(dataverseApi);
-            return new(dataverseApi, option);
+            ArgumentNullException.ThrowIfNull(sqlApi);
+
+            return new(dataverseApi, sqlApi, option);
         }
     }
 }

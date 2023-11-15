@@ -13,7 +13,7 @@ partial class CrmTimesheetApiTest
     public static async Task GetAsync_ExpectDataverseImpersonateCalledOnce()
     {
         var mockDataverseApiClient = BuildMockDataverseApiClient<TimesheetItemJson>(SomeTimesheetJsonSetOutput);
-        var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, SomeOption);
+        var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
 
         var input = new TimesheetSetGetIn(
             userId: Guid.Parse("784b7329-2ad2-ed11-a7c6-6045bd8d750a"),
@@ -26,10 +26,10 @@ partial class CrmTimesheetApiTest
     }
 
     [Fact]
-    public static async Task GetAsync_ExpectDataverseApiClientCalledOnce()
+    public static async Task GetAsync_ExpectDataverseApiCalledOnce()
     {
         var mockDataverseApiClient = BuildMockDataverseApiClient<TimesheetItemJson>(SomeTimesheetJsonSetOutput);
-        var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, SomeOption);
+        var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
 
         var input = new TimesheetSetGetIn(
             userId: Guid.Parse("bd8b8e33-554e-e611-80dc-c4346bad0190"),
@@ -72,7 +72,7 @@ partial class CrmTimesheetApiTest
         var dataverseFailure = sourceException.ToFailure(sourceFailureCode, "Some failure message");
 
         var mockDataverseApiClient = BuildMockDataverseApiClient<TimesheetItemJson>(dataverseFailure);
-        var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, SomeOption);
+        var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
 
         var actual = await api.GetAsync(SomeTimesheetSetGetInput, default);
         var expected = Failure.Create(expectedFailureCode, "Some failure message", sourceException);
@@ -86,7 +86,7 @@ partial class CrmTimesheetApiTest
         DataverseEntitySetGetOut<TimesheetItemJson> dataverseOutput, TimesheetSetGetOut expected)
     {
         var mockDataverseApiClient = BuildMockDataverseApiClient<TimesheetItemJson>(dataverseOutput);
-        var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, SomeOption);
+        var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
 
         var actual = await api.GetAsync(SomeTimesheetSetGetInput, default);
         Assert.StrictEqual(expected, actual);

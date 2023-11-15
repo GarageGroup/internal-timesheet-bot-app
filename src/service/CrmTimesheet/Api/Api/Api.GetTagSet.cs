@@ -16,28 +16,35 @@ partial class CrmTimesheetApi<TDataverseApi>
         AsyncPipeline.Pipe(
             input ?? throw new ArgumentNullException(nameof(input)), cancellationToken)
         .Pipe(
-            static @in => new DataverseEntitySetGetIn(
-                entityPluralName: TimesheetItemJson.EntityPluralName,
-                selectFields: TimesheetTagJson.SelectedFields,
-                filter: TimesheetTagJson.BuildFilter(@in.UserId, @in.ProjectId, @in.MinDate),
-                orderBy: TimesheetTagJson.OrderFields))
+            static @in => DbTimesheetTag.QueryAll with
+            {
+                Filter = new DbCombinedFilter(DbLogicalOperator.And)
+                {
+                    Filters = new(
+                        DbTimesheetTag.BuildOwnerFilter(@in.UserId),
+                        DbTimesheetTag.BuildProjectFilter(@in.ProjectId),
+                        DescriptionTagFilter,
+                        DbTimesheetTag.BuildMinDateFilter(@in.MinDate),
+                        DbTimesheetTag.BuildMaxDateFilter(@in.MaxDate))
+                },
+                Orders = DbTimesheetTag.DefaultOrders
+            })
         .PipeValue(
-            dataverseApi.Impersonate(input.UserId).GetEntitySetAsync<TimesheetTagJson>)
-        .Map(
+            sqlApi.QueryEntitySetOrFailureAsync<DbTimesheetTag>)
+        .MapSuccess(
             static success => new TimesheetTagSetGetOut
             {
-                Tags = success.Value.AsEnumerable().SelectMany(GetHashTags).Distinct().ToFlatArray()
-            },
-            static failure => failure.MapFailureCode(Unit.From));
+                Tags = success.AsEnumerable().SelectMany(GetHashTags).Distinct().ToFlatArray()
+            });
 
-    private static IEnumerable<string> GetHashTags(TimesheetTagJson timesheet)
+    private static IEnumerable<string> GetHashTags(DbTimesheetTag timesheet)
     {
         if (string.IsNullOrWhiteSpace(timesheet.Description))
         {
             yield break;
         }
 
-        foreach (var tagMatch in HashTagRegex.Matches(timesheet.Description).Cast<Match>())
+        foreach (var tagMatch in TagRegex.Matches(timesheet.Description).Cast<Match>())
         {
             yield return tagMatch.Value;
         }

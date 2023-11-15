@@ -43,7 +43,7 @@ partial class CrmProjectApiTest
 
     [Theory]
     [MemberData(nameof(CrmProjectApiSource.InputSearchTestData), MemberType = typeof(CrmProjectApiSource))]
-    public static async Task SearchAsync_InputIsNotNull_ExpectDataverseApiClientCalledOnce(
+    public static async Task SearchAsync_InputIsNotNull_ExpectDataverseApiCalledOnce(
         ProjectSetSearchIn input, DataverseSearchIn expectedInput)
     {
         var mockDataverseApiClient = BuildMockDataverseApiClient(SomeDataverseSearchOutput);

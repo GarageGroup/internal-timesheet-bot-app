@@ -84,7 +84,8 @@ partial class TimesheetCreateFlowStep
             static state => new TimesheetTagSetGetIn(
                 userId: state.UserId,
                 projectId: state.ProjectId,
-                minDate: GetDateUtc(-DescriptionTagDays)))
+                minDate: state.Date.AddDays(-DescriptionTagDays),
+                maxDate: state.Date))
         .PipeValue(
             crmTimesheetApi.GetTagSetAsync)
         .OnFailure(

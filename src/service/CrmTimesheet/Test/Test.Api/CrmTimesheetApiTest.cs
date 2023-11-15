@@ -34,7 +34,8 @@ public static partial class CrmTimesheetApiTest
         new(
             userId: Guid.Parse("54f0d2cf-93a3-417e-a21a-bff4e16c1b25"),
             projectId: Guid.Parse("6f8f07d6-b7e4-4b00-a829-e680c0375d1e"),
-            minDate: new(2023, 07, 24));
+            minDate: new(2023, 07, 24),
+            maxDate: new(2023, 08, 01));
 
     private static readonly CrmTimesheetApiOption SomeOption
         =
@@ -74,20 +75,19 @@ public static partial class CrmTimesheetApiTest
                 }
             });
 
-    private static readonly DataverseEntitySetGetOut<TimesheetTagJson> SomeTimesheetTagJsonSetOutput
+    private static readonly FlatArray<DbTimesheetTag> SomeDbTimesheetTagSet
         =
-        new(
-            value: new TimesheetTagJson[]
+        new DbTimesheetTag[]
+        {
+            new() 
             {
-                new() 
-                {
-                    Description = "#TaskOne. Some text"
-                },
-                new()
-                {
-                    Description = "#TaskTwo. More text"
-                }
-            });
+                Description = "#TaskOne. Some text"
+            },
+            new()
+            {
+                Description = "#TaskTwo. More text"
+            }
+        };
 
     private static Mock<IStubDataverseApi> BuildMockDataverseApiClient(
         Result<Unit, Failure<DataverseFailureCode>> result)
@@ -114,6 +114,18 @@ public static partial class CrmTimesheetApiTest
             .ReturnsAsync(result);
 
         _ = mock.Setup(static a => a.Impersonate(It.IsAny<Guid>())).Returns(mock.Object);
+
+        return mock;
+    }
+
+    private static Mock<ISqlQueryEntitySetSupplier> BuildMockSqlApi(
+        Result<FlatArray<DbTimesheetTag>, Failure<Unit>> result)
+    {
+        var mock = new Mock<ISqlQueryEntitySetSupplier>();
+
+        _ = mock
+            .Setup(static a => a.QueryEntitySetOrFailureAsync<DbTimesheetTag>(It.IsAny<IDbQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
 
         return mock;
     }

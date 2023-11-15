@@ -40,7 +40,7 @@ partial class CrmProjectApiTest
 
     [Theory]
     [MemberData(nameof(CrmProjectApiSource.OutputGetLastTestData), MemberType = typeof(CrmProjectApiSource))]
-    internal static async Task GetLastAsync_DataverseResultIsSuccess_ExpectSuccess(
+    internal static async Task GetLastAsync_DbResultIsSuccess_ExpectSuccess(
         FlatArray<DbTimesheetProject> dbTimesheetProjects, LastProjectSetGetOut expected)
     {
         var mockSqlApi = BuildMockSqlApi(dbTimesheetProjects);

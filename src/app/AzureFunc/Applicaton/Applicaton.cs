@@ -32,6 +32,7 @@ internal static partial class Application
         =>
         Dependency.From(
             ServiceProviderServiceExtensions.GetRequiredService<IDataverseApiClient>,
+            ServiceProviderServiceExtensions.GetRequiredService<ISqlApi>,
             ResolveTimesheetApiOption)
         .UseCrmTimesheetApi();
 
