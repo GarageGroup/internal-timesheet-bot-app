@@ -25,7 +25,7 @@ internal static partial class Application
         =>
         Dependency.From(
             ServiceProviderServiceExtensions.GetRequiredService<IDataverseApiClient>,
-            ResolveProjectApiOption)
+            ServiceProviderServiceExtensions.GetRequiredService<ISqlApi>)
         .UseCrmProjectApi();
 
     private static Dependency<ICrmTimesheetApi> UseCrmTimesheetApi()
@@ -34,10 +34,6 @@ internal static partial class Application
             ServiceProviderServiceExtensions.GetRequiredService<IDataverseApiClient>,
             ResolveTimesheetApiOption)
         .UseCrmTimesheetApi();
-
-    private static CrmProjectApiOption ResolveProjectApiOption(IServiceProvider serviceProvider)
-        =>
-        serviceProvider.GetConfiguration().GetRequiredSection("CrmProjectApi").Get<CrmProjectApiOption>();
 
     private static CrmTimesheetApiOption ResolveTimesheetApiOption(IServiceProvider serviceProvider)
     {

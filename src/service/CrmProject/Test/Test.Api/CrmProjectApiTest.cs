@@ -16,7 +16,8 @@ public static partial class CrmProjectApiTest
         =
         new(
             userId: Guid.Parse("a93ca280-e910-474a-a6a4-e50b5d38ade7"),
-            top: 5);
+            top: 5,
+            minDate: new(2023, 07, 25));
 
     private static readonly ProjectSetSearchIn SomeProjectSetSearchInput
         =
@@ -25,43 +26,25 @@ public static partial class CrmProjectApiTest
             userId: Guid.Parse("45b6e085-4d6e-4b2d-a26c-eb8c1c5a2e5e"),
             top: 10);
 
-    private static readonly CrmProjectApiOption SomeOption
+    private static readonly FlatArray<DbTimesheetProject> SomeTimesheetProjectSetOutput
         =
-        new()
+        new DbTimesheetProject[]
         {
-            LastProjectDaysCount = 30,
-            LastProjectItemsCount = 90
-        };
-
-    private static readonly DateOnly SomeDate
-        =
-        new(2021, 11, 21);
-
-    private static readonly DataverseEntitySetGetOut<LastTimesheetItemJson> SomeLastTimesheetSetOutput
-        =
-        new(
-            value: new LastTimesheetItemJson[]
+            new()
             {
-                new()
-                {
-                    Project = new()
-                    {
-                        Id = Guid.Parse("63d9e1b7-706b-ea11-a813-000d3a44ad35"),
-                        Name = "Some project name"
-                    },
-                    TimesheetDate = new(2022, 01, 15)
-                },
-                new()
-                {
-                    Lead = new()
-                    {
-                        Id = Guid.Parse("20f2d7f3-c73d-4895-aa09-c8cdb3cd0acd"),
-                        Subject = "Some lead subject",
-                        CompanyName = "Some lead company name"
-                    },
-                    TimesheetDate = new(2023, 11, 03)
-                }
-            });
+                ProjectId = Guid.Parse("63d9e1b7-706b-ea11-a813-000d3a44ad35"),
+                ProjectName = "Some project name",
+                ProjectTypeCode = 10912,
+                Subject = null
+            },
+            new()
+            {
+                ProjectId = Guid.Parse("20f2d7f3-c73d-4895-aa09-c8cdb3cd0acd"),
+                ProjectName = "Some lead name",
+                ProjectTypeCode = 4,
+                Subject = "Some lead subject"
+            }
+        };
 
     private static readonly DataverseSearchOut SomeDataverseSearchOutput
         =
@@ -85,16 +68,14 @@ public static partial class CrmProjectApiTest
                     })
             });
 
-    private static Mock<IStubDataverseApi> BuildMockDataverseApiClient(
-        Result<DataverseEntitySetGetOut<LastTimesheetItemJson>, Failure<DataverseFailureCode>> result)
+    private static Mock<ISqlQueryEntitySetSupplier> BuildMockSqlApi(
+        Result<FlatArray<DbTimesheetProject>, Failure<Unit>> result)
     {
-        var mock = new Mock<IStubDataverseApi>();
+        var mock = new Mock<ISqlQueryEntitySetSupplier>();
 
         _ = mock
-            .Setup(static a => a.GetEntitySetAsync<LastTimesheetItemJson>(It.IsAny<DataverseEntitySetGetIn>(), It.IsAny<CancellationToken>()))
+            .Setup(static a => a.QueryEntitySetOrFailureAsync<DbTimesheetProject>(It.IsAny<IDbQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
-
-        _ = mock.Setup(static a => a.Impersonate(It.IsAny<Guid>())).Returns(mock.Object);
 
         return mock;
     }
@@ -113,11 +94,7 @@ public static partial class CrmProjectApiTest
         return mock;
     }
 
-    private static ITodayProvider BuildTodayProvider(DateOnly now)
-        =>
-        Mock.Of<ITodayProvider>(p => p.GetToday() == now);
-
-    internal interface IStubDataverseApi : IDataverseEntitySetGetSupplier, IDataverseSearchSupplier, IDataverseImpersonateSupplier<IStubDataverseApi>
+    internal interface IStubDataverseApi : IDataverseSearchSupplier, IDataverseImpersonateSupplier<IStubDataverseApi>
     {
     }
 }

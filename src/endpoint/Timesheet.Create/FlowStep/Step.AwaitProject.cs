@@ -31,7 +31,8 @@ partial class TimesheetCreateFlowStep
         .Pipe(
             static flowState => new LastProjectSetGetIn(
                 userId: flowState.UserId,
-                top: MaxProjectsCount))
+                top: MaxProjectsCount,
+                minDate: GetDateUtc(-ProjectDays)))
         .PipeValue(
             crmProjectApi.GetLastAsync)
         .Fold(

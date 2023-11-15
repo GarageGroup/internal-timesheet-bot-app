@@ -12,54 +12,46 @@ partial class CrmProjectApiSource
             [
                 new LastProjectSetGetIn(
                     userId: Guid.Parse("bef33be0-99f5-4018-ba80-3366ec9ec1fd"),
-                    top: 7),
-                new CrmProjectApiOption
+                    top: 7,
+                    minDate: new(2023, 05, 27)),
+                new DbSelectQuery("gg_timesheetactivity", "t")
                 {
-                    LastProjectItemsCount = null,
-                    LastProjectDaysCount = 5
-                },
-                new DateOnly(2022, 02, 01),
-                new DataverseEntitySetGetIn(
-                    entityPluralName: "gg_timesheetactivities",
-                    selectFields: new("gg_date"),
-                    expandFields: new(
-                        new("regardingobjectid_incident", new("title")),
-                        new("regardingobjectid_lead", new("subject", "companyname")),
-                        new("regardingobjectid_opportunity", new("name")),
-                        new("regardingobjectid_gg_project", new("gg_name"))),
-                    filter:
-                        "(_ownerid_value eq 'bef33be0-99f5-4018-ba80-3366ec9ec1fd' " +
-                        "and _regardingobjectid_value ne null and gg_date lt 2022-02-02 and gg_date gt 2022-01-27)",
-                    orderBy: new(
-                        new("gg_date", DataverseOrderDirection.Descending),
-                        new("createdon", DataverseOrderDirection.Descending)),
-                    top: null)
-            ],
-            [
-                new LastProjectSetGetIn(
-                    userId: Guid.Parse("e0ede566-276c-4d56-b8d7-aed2f411463e"),
-                    top: 3),
-                new CrmProjectApiOption
-                {
-                    LastProjectItemsCount = 71,
-                    LastProjectDaysCount = null
-                },
-                new DateOnly(2022, 01, 17),
-                new DataverseEntitySetGetIn(
-                    entityPluralName: "gg_timesheetactivities",
-                    selectFields: new("gg_date"),
-                    expandFields: new(
-                        new("regardingobjectid_incident", new("title")),
-                        new("regardingobjectid_lead", new("subject", "companyname")),
-                        new("regardingobjectid_opportunity", new("name")),
-                        new("regardingobjectid_gg_project", new("gg_name"))),
-                    filter:
-                        "(_ownerid_value eq 'e0ede566-276c-4d56-b8d7-aed2f411463e' " +
-                        "and _regardingobjectid_value ne null and gg_date lt 2022-01-18)",
-                    orderBy: new(
-                        new("gg_date", DataverseOrderDirection.Descending),
-                        new("createdon", DataverseOrderDirection.Descending)),
-                    top: 71)
+                    Top = 7,
+                    SelectedFields = new(
+                        "t.regardingobjectid AS ProjectId",
+                        "t.regardingobjecttypecode AS ProjectTypeCode",
+                        "MAX(t.regardingobjectidname) AS ProjectName",
+                        "MAX(t.subject) AS Subject",
+                        "MAX(t.gg_date) AS MaxDate",
+                        "MAX(t.createdon) AS MaxCreatedOn"),
+                    Filter = new DbCombinedFilter(DbLogicalOperator.And)
+                    {
+                        Filters = new IDbFilter[]
+                        {
+                            new DbParameterFilter(
+                                fieldName: "t.ownerid",
+                                @operator: DbFilterOperator.Equal,
+                                fieldValue: Guid.Parse("bef33be0-99f5-4018-ba80-3366ec9ec1fd"),
+                                parameterName: "ownerId"),
+                            new DbParameterFilter(
+                                fieldName: "t.gg_date",
+                                @operator: DbFilterOperator.Greater,
+                                fieldValue: "2023-05-27",
+                                parameterName: "minDate"),
+                            new DbParameterArrayFilter(
+                                fieldName: "t.regardingobjecttypecode",
+                                @operator: DbArrayFilterOperator.In,
+                                fieldValues: new object[] { 3, 4, 112, 10912 },
+                                parameterPrefix: "projectTypeCode")
+                        }
+                    },
+                    GroupByFields = new("t.regardingobjectid", "t.regardingobjecttypecode"),
+                    Orders = new DbOrder[]
+                    {
+                        new("MaxDate", DbOrderType.Descending),
+                        new("MaxCreatedOn", DbOrderType.Descending)
+                    }
+                }
             ]
         ];
 }

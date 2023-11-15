@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra;
@@ -16,40 +16,43 @@ partial class CrmProjectApi<TDataverseApi>
         .Pipe<DataverseSearchIn>(
             static @in => new($"*{@in.SearchText}*")
             {
-                Entities = ProjectTypeEntityNames,
-                Top = @in.Top
+                Top = @in.Top,
+                Entities = DataverseProjectSearch.EntityNames
             })
         .PipeValue(
             dataverseApi.Impersonate(input.UserId).SearchAsync)
         .Map(
             static success => new ProjectSetSearchOut
             {
-                Projects = success.Value.AsEnumerable().Select(MapProjectType).NotNull().Select(MapProjectItem).ToFlatArray()
+                Projects = GetProjects(success.Value).ToFlatArray()
             },
             static failure => failure.MapFailureCode(MapFailureCode));
 
-    private static ITimesheetProjectType? MapProjectType(DataverseSearchItem item)
+    private static IEnumerable<ProjectSetGetItem> GetProjects(FlatArray<DataverseSearchItem> items)
     {
-        if (IncidentJson.FromSearchItem(item) is IncidentJson incident)
+        foreach (var item in items)
         {
-            return incident;
-        }
+            var projectType = item.GetProjectType();
+            if (projectType is null)
+            {
+                continue;
+            }
 
-        if (LeadJson.FromSearchItem(item) is LeadJson lead)
-        {
-            return lead;
+            yield return new(
+                id: item.ObjectId,
+                name: item.GetProjectName(projectType.Value),
+                type: projectType.Value);
         }
-
-        if (OpportunityJson.FromSearchItem(item) is OpportunityJson opportunity)
-        {
-            return opportunity;
-        }
-
-        if (ProjectJson.FromSearchItem(item) is ProjectJson project)
-        {
-            return project;
-        }
-
-        return null;
     }
+
+    private static ProjectSetGetFailureCode MapFailureCode(DataverseFailureCode failureCode)
+        =>
+        failureCode switch
+        {
+            DataverseFailureCode.UserNotEnabled => ProjectSetGetFailureCode.NotAllowed,
+            DataverseFailureCode.PrivilegeDenied => ProjectSetGetFailureCode.NotAllowed,
+            DataverseFailureCode.SearchableEntityNotFound => ProjectSetGetFailureCode.NotAllowed,
+            DataverseFailureCode.Throttling => ProjectSetGetFailureCode.TooManyRequests,
+            _ => default
+        };
 }

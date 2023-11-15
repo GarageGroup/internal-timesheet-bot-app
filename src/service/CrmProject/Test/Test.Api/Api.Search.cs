@@ -13,9 +13,8 @@ partial class CrmProjectApiTest
     public static async Task SearchAsync_InputIsNull_ExpectArgumentNullException()
     {
         var mockDataverseApiClient = BuildMockDataverseApiClient(SomeDataverseSearchOutput);
-        var todayProvider = BuildTodayProvider(SomeDate);
+        var api = new CrmProjectApi<IStubDataverseApi>(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>());
 
-        var api = new CrmProjectApi<IStubDataverseApi>(mockDataverseApiClient.Object, todayProvider, SomeOption);
         var ex = await Assert.ThrowsAsync<ArgumentNullException>(TestAsync);
 
         Assert.Equal("input", ex.ParamName);
@@ -28,10 +27,8 @@ partial class CrmProjectApiTest
     [Fact]
     public static async Task SearchAsync_InputIsNotNull_ExpectDataverseImpersonateCalledOnce()
     {
-        var mockDataverseApiClient = BuildMockDataverseApiClient(SomeLastTimesheetSetOutput);
-        var todayProvider = BuildTodayProvider(SomeDate);
-
-        var api = new CrmProjectApi<IStubDataverseApi>(mockDataverseApiClient.Object, todayProvider, SomeOption);
+        var mockDataverseApiClient = BuildMockDataverseApiClient(SomeDataverseSearchOutput);
+        var api = new CrmProjectApi<IStubDataverseApi>(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>());
 
         var input = new ProjectSetSearchIn(
             searchText: "Some search text",
@@ -49,10 +46,8 @@ partial class CrmProjectApiTest
     public static async Task SearchAsync_InputIsNotNull_ExpectDataverseApiClientCalledOnce(
         ProjectSetSearchIn input, DataverseSearchIn expectedInput)
     {
-        var mockDataverseApiClient = BuildMockDataverseApiClient(SomeLastTimesheetSetOutput);
-        var todayProvider = BuildTodayProvider(SomeDate);
-
-        var api = new CrmProjectApi<IStubDataverseApi>(mockDataverseApiClient.Object, todayProvider, SomeOption);
+        var mockDataverseApiClient = BuildMockDataverseApiClient(SomeDataverseSearchOutput);
+        var api = new CrmProjectApi<IStubDataverseApi>(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>());
 
         var cancellationToken = new CancellationToken(false);
         _ = await api.SearchAsync(input, cancellationToken);
@@ -76,11 +71,8 @@ partial class CrmProjectApiTest
         var sourceException = new Exception("Some exception message");
         var dataverseFailure = sourceException.ToFailure(sourceFailureCode, "Some failure text");
 
-        var dataverseResult = Result.Failure(dataverseFailure).With<DataverseSearchOut>();
-        var mockDataverseApiClient = BuildMockDataverseApiClient(dataverseResult);
-
-        var todayProvider = BuildTodayProvider(SomeDate);
-        var api = new CrmProjectApi<IStubDataverseApi>(mockDataverseApiClient.Object, todayProvider, SomeOption);
+        var mockDataverseApiClient = BuildMockDataverseApiClient(dataverseFailure);
+        var api = new CrmProjectApi<IStubDataverseApi>(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>());
 
         var actual = await api.SearchAsync(SomeProjectSetSearchInput, default);
         var expected = Failure.Create(expectedFailureCode, "Some failure text", sourceException);
@@ -94,9 +86,7 @@ partial class CrmProjectApiTest
         DataverseSearchOut dataverseOutput, ProjectSetSearchOut expected)
     {
         var mockDataverseApiClient = BuildMockDataverseApiClient(dataverseOutput);
-        var todayProvider = BuildTodayProvider(SomeDate);
-
-        var api = new CrmProjectApi<IStubDataverseApi>(mockDataverseApiClient.Object, todayProvider, SomeOption);
+        var api = new CrmProjectApi<IStubDataverseApi>(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>());
 
         var actual = await api.SearchAsync(SomeProjectSetSearchInput, default);
         Assert.StrictEqual(expected, actual);

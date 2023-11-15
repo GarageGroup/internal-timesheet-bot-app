@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra;
@@ -14,50 +13,35 @@ partial class CrmProjectApi<TDataverseApi>
         AsyncPipeline.Pipe(
             input, cancellationToken)
         .Pipe(
-            @in => new DataverseEntitySetGetIn(
-                entityPluralName: LastTimesheetItemJson.EntityPluralName,
-                selectFields: LastTimesheetItemJson.SelectedFields,
-                expandFields: LastTimesheetItemJson.ExpandedFields,
-                orderBy: LastTimesheetItemJson.OrderFields,
-                filter: BuildFilter(@in),
-                top: option.LastProjectItemsCount))
-        .PipeValue(
-            dataverseApi.Impersonate(input.UserId).GetEntitySetAsync<LastTimesheetItemJson>)
-        .Map(
-            success => new LastProjectSetGetOut
+            static @in => DbTimesheetProject.QueryAll with
             {
-                Projects = GetProjects(success.Value, input.Top)
+                Top = @in.Top,
+                Filter = new DbCombinedFilter(DbLogicalOperator.And)
+                {
+                    Filters = new(
+                        DbTimesheetProject.BuildOwnerFilter(@in.UserId),
+                        DbTimesheetProject.BuildMinDateFilter(@in.MinDate),
+                        AllowedProjectTypeSetFilter)
+                },
+                Orders = DbTimesheetProject.DefaultOrders
+            })
+        .PipeValue(
+            sqlApi.QueryEntitySetOrFailureAsync<DbTimesheetProject>)
+        .Map(
+            static success => new LastProjectSetGetOut
+            {
+                Projects = success.Map(MapProject)
             },
-            static failure => failure.MapFailureCode(MapFailureCode));
+            static failure => failure.MapFailureCode(GetUnknownFailureCode));
 
-    private string BuildFilter(LastProjectSetGetIn input)
-    {
-        var today = todayProvider.GetToday();
-        var maxDate = today.AddDays(1);
-
-        DateOnly? minDate = option.LastProjectDaysCount switch
-        {
-            not null => today.AddDays(option.LastProjectDaysCount.Value * -1),
-            _ => null
-        };
-
-        return LastTimesheetItemJson.BuildFilter(input.UserId, maxDate, minDate);
-    }
-
-    private static FlatArray<ProjectSetGetItem> GetProjects(
-        FlatArray<LastTimesheetItemJson> itemsJson, int? top)
+    private static ProjectSetGetItem MapProject(DbTimesheetProject dbTimesheetProject)
         =>
-        itemsJson.AsEnumerable()
-        .Select(
-            static item => item.GetProjectType())
-        .NotNull()
-        .GroupBy(
-            static type => type.Id)
-        .Select(
-            static item => item.First())
-        .Select(
-            MapProjectItem)
-        .TakeTop(
-            top)
-        .ToFlatArray();
+        new(
+            id: dbTimesheetProject.ProjectId,
+            name: dbTimesheetProject.Subject.OrNullIfEmpty() ?? dbTimesheetProject.ProjectName,
+            type: (TimesheetProjectType)dbTimesheetProject.ProjectTypeCode);
+
+    private static ProjectSetGetFailureCode GetUnknownFailureCode(Unit _)
+        =>
+        ProjectSetGetFailureCode.Unknown;
 }

@@ -2,11 +2,11 @@ namespace GarageGroup.Internal.Timesheet;
 
 public enum TimesheetProjectType
 {
-    Project,
+    Project = 10912,
 
-    Opportunity,
+    Opportunity = 3,
 
-    Lead,
+    Lead = 4,
 
-    Incident
+    Incident = 112
 }
