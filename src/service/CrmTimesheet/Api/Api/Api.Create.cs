@@ -15,8 +15,8 @@ partial class CrmTimesheetApi<TDataverseApi>
             input ?? throw new ArgumentNullException(nameof(input)), cancellationToken)
         .Pipe(
             @in => new DataverseEntityCreateIn<IReadOnlyDictionary<string, object?>>(
-                entityPluralName: TimesheetItemJson.EntityPluralName,
-                entityData: new TimesheetJsonCreateIn
+                entityPluralName: TimesheetJson.EntityPluralName,
+                entityData: new TimesheetJson
                 {
                     ProjectType = @in.ProjectType,
                     ProjectId = @in.ProjectId,

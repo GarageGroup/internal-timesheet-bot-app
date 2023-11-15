@@ -12,7 +12,7 @@ partial class CrmTimesheetApiTest
     [Fact]
     public static async Task GetTagSetAsync_InputIsNull_ExpectArgumentNullException()
     {
-        var mockSqlApi = BuildMockSqlApi(SomeDbTimesheetTagSet);
+        var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(SomeDbTimesheetTagSet);
         var api = new CrmTimesheetApi<IStubDataverseApi>(Mock.Of<IStubDataverseApi>(), mockSqlApi.Object, SomeOption);
 
         var ex = await Assert.ThrowsAsync<ArgumentNullException>(TestAsync);
@@ -26,7 +26,7 @@ partial class CrmTimesheetApiTest
     [Fact]
     public static async Task GetTagSetAsync_InputIsNotNull_ExpectSqlApiCalledOnce()
     {
-        var mockSqlApi = BuildMockSqlApi(SomeDbTimesheetTagSet);
+        var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(SomeDbTimesheetTagSet);
         var api = new CrmTimesheetApi<IStubDataverseApi>(Mock.Of<IStubDataverseApi>(), mockSqlApi.Object, SomeOption);
 
         var input = new TimesheetTagSetGetIn(
@@ -73,7 +73,7 @@ partial class CrmTimesheetApiTest
         var sourceException = new Exception("Some error message");
         var dbFailure = sourceException.ToFailure("Some failure text");
 
-        var mockSqlApi = BuildMockSqlApi(dbFailure);
+        var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(dbFailure);
         var api = new CrmTimesheetApi<IStubDataverseApi>(Mock.Of<IStubDataverseApi>(), mockSqlApi.Object, SomeOption);
 
         var actual = await api.GetTagSetAsync(SomeTimesheetTagSetGetInput, default);
@@ -87,7 +87,7 @@ partial class CrmTimesheetApiTest
     internal static async Task GetTagSetAsync_DbResultIsSuccess_ExpectSuccess(
         FlatArray<DbTimesheetTag> dbTimesheetTags, TimesheetTagSetGetOut expected)
     {
-        var mockSqlApi = BuildMockSqlApi(dbTimesheetTags);
+        var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(dbTimesheetTags);
         var api = new CrmTimesheetApi<IStubDataverseApi>(Mock.Of<IStubDataverseApi>(), mockSqlApi.Object, SomeOption);
 
         var actual = await api.GetTagSetAsync(SomeTimesheetTagSetGetInput, default);
