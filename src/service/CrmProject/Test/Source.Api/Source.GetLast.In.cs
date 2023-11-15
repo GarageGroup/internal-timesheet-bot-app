@@ -35,17 +35,19 @@ partial class CrmProjectApiSource
                                 parameterName: "ownerId"),
                             new DbParameterFilter(
                                 fieldName: "t.gg_date",
-                                @operator: DbFilterOperator.Greater,
+                                @operator: DbFilterOperator.GreaterOrEqual,
                                 fieldValue: "2023-05-27",
                                 parameterName: "minDate"),
                             new DbParameterArrayFilter(
                                 fieldName: "t.regardingobjecttypecode",
                                 @operator: DbArrayFilterOperator.In,
-                                fieldValues: new object[] { 3, 4, 112, 10912 },
+                                fieldValues: new(3, 4, 112, 10912),
                                 parameterPrefix: "projectTypeCode")
                         }
                     },
-                    GroupByFields = new("t.regardingobjectid", "t.regardingobjecttypecode"),
+                    GroupByFields = new(
+                        "t.regardingobjectid",
+                        "t.regardingobjecttypecode"),
                     Orders = new DbOrder[]
                     {
                         new("MaxDate", DbOrderType.Descending),

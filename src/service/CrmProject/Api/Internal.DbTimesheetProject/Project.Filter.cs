@@ -29,5 +29,5 @@ partial record class DbTimesheetProject
 
     internal static DbParameterFilter BuildMinDateFilter(DateOnly minDate)
         =>
-        new($"{AliasName}.gg_date", DbFilterOperator.Greater, minDate.ToString("yyyy-MM-dd"), "minDate");
+        new($"{AliasName}.gg_date", DbFilterOperator.GreaterOrEqual, minDate.ToString("yyyy-MM-dd"), "minDate");
 }

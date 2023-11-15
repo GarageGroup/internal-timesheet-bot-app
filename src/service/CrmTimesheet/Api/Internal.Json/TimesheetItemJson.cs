@@ -38,8 +38,6 @@ internal sealed record class TimesheetItemJson
 
     private const string DescriptionFieldName = "gg_description";
 
-    private const string ActivityIdFieldName = "activityid";
-
     [JsonPropertyName("regardingobjectid_incident")]
     public IncidentJson? Incident { get; init; }
 
@@ -52,7 +50,7 @@ internal sealed record class TimesheetItemJson
     [JsonPropertyName("regardingobjectid_gg_project")]
     public ProjectJson? Project { get; init; }
 
-    [JsonPropertyName(ActivityIdFieldName)]
+    [JsonPropertyName("activityid")]
     public Guid TimesheetId { get; init; }
 
     [JsonPropertyName(DateFieldName)]
