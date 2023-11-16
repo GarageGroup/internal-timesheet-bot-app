@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using DeepEqual.Syntax;
 using GarageGroup.Infra;
 using Moq;
-
-[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
 namespace GarageGroup.Internal.Timesheet.Service.CrmTimesheet.Test;
 
@@ -81,17 +78,25 @@ public static partial class CrmTimesheetApiTest
             }
         };
 
-    private static Mock<IStubDataverseApi> BuildMockDataverseApiClient(
+    private static Mock<IDataverseEntityCreateSupplier> BuildMockDataverseCreateSupplier(
         Result<Unit, Failure<DataverseFailureCode>> result)
     {
-        var mock = new Mock<IStubDataverseApi>();
+        var mock = new Mock<IDataverseEntityCreateSupplier>();
 
         _ = mock
             .Setup(static a => a.CreateEntityAsync(
                 It.IsAny<DataverseEntityCreateIn<IReadOnlyDictionary<string, object?>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
 
-        _ = mock.Setup(static a => a.Impersonate(It.IsAny<Guid>())).Returns(mock.Object);
+        return mock;
+    }
+
+    private static Mock<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>> BuildMockDataverseApiClient(
+        IDataverseEntityCreateSupplier dataverseCreateSupplier)
+    {
+        var mock = new Mock<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>();
+
+        _ = mock.Setup(static a => a.Impersonate(It.IsAny<Guid>())).Returns(dataverseCreateSupplier);
 
         return mock;
     }
@@ -113,9 +118,5 @@ public static partial class CrmTimesheetApiTest
     {
         actual.ShouldDeepEqual(expected);
         return true;
-    }
-
-    internal interface IStubDataverseApi : IDataverseEntityCreateSupplier, IDataverseImpersonateSupplier<IStubDataverseApi>
-    {
     }
 }

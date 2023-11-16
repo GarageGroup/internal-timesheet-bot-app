@@ -13,7 +13,7 @@ partial class CrmTimesheetApiTest
     public static async Task GetAsync_ExpectSqlApiCalledOnce()
     {
         var mockSqlApi = BuildMockSqlApi<DbTimesheet>(SomeDbTimesheetSet);
-        var api = new CrmTimesheetApi<IStubDataverseApi>(Mock.Of<IStubDataverseApi>(), mockSqlApi.Object, SomeOption);
+        var api = new CrmTimesheetApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>(), mockSqlApi.Object, SomeOption);
 
         var input = new TimesheetSetGetIn(
             userId: Guid.Parse("bd8b8e33-554e-e611-80dc-c4346bad0190"),
@@ -53,7 +53,7 @@ partial class CrmTimesheetApiTest
         var dbFailure = sourceException.ToFailure("Some failure message");
 
         var mockSqlApi = BuildMockSqlApi<DbTimesheet>(dbFailure);
-        var api = new CrmTimesheetApi<IStubDataverseApi>(Mock.Of<IStubDataverseApi>(), mockSqlApi.Object, SomeOption);
+        var api = new CrmTimesheetApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>(), mockSqlApi.Object, SomeOption);
 
         var actual = await api.GetAsync(SomeTimesheetSetGetInput, default);
         var expected = Failure.Create(TimesheetSetGetFailureCode.Unknown, "Some failure message", sourceException);
@@ -67,7 +67,7 @@ partial class CrmTimesheetApiTest
         FlatArray<DbTimesheet> dbTimesheets, TimesheetSetGetOut expected)
     {
         var mockSqlApi = BuildMockSqlApi<DbTimesheet>(dbTimesheets);
-        var api = new CrmTimesheetApi<IStubDataverseApi>(Mock.Of<IStubDataverseApi>(), mockSqlApi.Object, SomeOption);
+        var api = new CrmTimesheetApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>(), mockSqlApi.Object, SomeOption);
 
         var actual = await api.GetAsync(SomeTimesheetSetGetInput, default);
         Assert.StrictEqual(expected, actual);

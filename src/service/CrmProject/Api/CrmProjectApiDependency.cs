@@ -12,13 +12,13 @@ public static class CrmProjectApiDependency
 {
     public static Dependency<ICrmProjectApi> UseCrmProjectApi<TDataverseApi, TSqlApi>(
         this Dependency<TDataverseApi, TSqlApi> dependency)
-        where TDataverseApi : IDataverseSearchSupplier, IDataverseImpersonateSupplier<IDataverseSearchSupplier>
+        where TDataverseApi : IDataverseImpersonateSupplier<IDataverseSearchSupplier>
         where TSqlApi : ISqlQueryEntitySetSupplier
     {
         ArgumentNullException.ThrowIfNull(dependency);
         return dependency.Fold<ICrmProjectApi>(CreateApi);
 
-        static CrmProjectApi<TDataverseApi> CreateApi(TDataverseApi dataverseApi, TSqlApi sqlApi)
+        static CrmProjectApi CreateApi(TDataverseApi dataverseApi, TSqlApi sqlApi)
         {
             ArgumentNullException.ThrowIfNull(dataverseApi);
             ArgumentNullException.ThrowIfNull(sqlApi);

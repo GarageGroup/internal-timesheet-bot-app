@@ -2,22 +2,14 @@
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal sealed partial class CrmProjectApi<TDataverseApi> : ICrmProjectApi
-    where TDataverseApi : IDataverseSearchSupplier, IDataverseImpersonateSupplier<IDataverseSearchSupplier>
+using TDataverseApi = IDataverseImpersonateSupplier<IDataverseSearchSupplier>;
+using TSqlApi = ISqlQueryEntitySetSupplier;
+
+internal sealed partial class CrmProjectApi(TDataverseApi dataverseApi, TSqlApi sqlApi) : ICrmProjectApi
 {
     private static readonly IDbFilter AllowedProjectTypeSetFilter;
 
     static CrmProjectApi()
         =>
         AllowedProjectTypeSetFilter = DbTimesheetProject.BuildAllowedProjectTypeSetFilter();
-
-    private readonly TDataverseApi dataverseApi;
-
-    private readonly ISqlQueryEntitySetSupplier sqlApi;
-
-    internal CrmProjectApi(TDataverseApi dataverseApi, ISqlQueryEntitySetSupplier sqlApi)
-    {
-        this.dataverseApi = dataverseApi;
-        this.sqlApi = sqlApi;
-    }
 }

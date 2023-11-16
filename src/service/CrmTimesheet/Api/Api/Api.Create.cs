@@ -6,7 +6,7 @@ using GarageGroup.Infra;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class CrmTimesheetApi<TDataverseApi>
+partial class CrmTimesheetApi
 {
     public ValueTask<Result<Unit, Failure<TimesheetCreateFailureCode>>> CreateAsync(
         TimesheetCreateIn input, CancellationToken cancellationToken)

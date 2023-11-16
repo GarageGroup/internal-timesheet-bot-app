@@ -3,8 +3,10 @@ using GarageGroup.Infra;
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal sealed partial class CrmTimesheetApi<TDataverseApi> : ICrmTimesheetApi
-    where TDataverseApi : IDataverseEntityCreateSupplier, IDataverseImpersonateSupplier<TDataverseApi>
+using TDataverseApi = IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>;
+using TSqlApi = ISqlQueryEntitySetSupplier;
+
+internal sealed partial class CrmTimesheetApi(TDataverseApi dataverseApi, TSqlApi sqlApi, CrmTimesheetApiOption option) : ICrmTimesheetApi
 {
     private const string TagStartSymbol = "#";
 
@@ -20,17 +22,4 @@ internal sealed partial class CrmTimesheetApi<TDataverseApi> : ICrmTimesheetApi
 
     [GeneratedRegex($"{TagStartSymbol}\\w+", RegexOptions.CultureInvariant)]
     private static partial Regex CreateTagRegex();
-
-    private readonly TDataverseApi dataverseApi;
-
-    private readonly ISqlQueryEntitySetSupplier sqlApi;
-
-    private readonly CrmTimesheetApiOption option;
-
-    internal CrmTimesheetApi(TDataverseApi dataverseApi, ISqlQueryEntitySetSupplier sqlApi, CrmTimesheetApiOption option)
-    {
-        this.dataverseApi = dataverseApi;
-        this.sqlApi = sqlApi;
-        this.option = option;
-    }
 }

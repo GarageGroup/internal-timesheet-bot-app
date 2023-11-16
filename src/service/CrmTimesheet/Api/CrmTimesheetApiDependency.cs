@@ -12,13 +12,13 @@ public static class CrmTimesheetApiDependency
 {
     public static Dependency<ICrmTimesheetApi> UseCrmTimesheetApi<TDataverseApi, TSqlApi>(
         this Dependency<TDataverseApi, TSqlApi, CrmTimesheetApiOption> dependency)
-        where TDataverseApi : IDataverseEntityCreateSupplier, IDataverseImpersonateSupplier<TDataverseApi>
+        where TDataverseApi : IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>
         where TSqlApi : ISqlQueryEntitySetSupplier
     {
         ArgumentNullException.ThrowIfNull(dependency);
         return dependency.Fold<ICrmTimesheetApi>(CreateApi);
 
-        static CrmTimesheetApi<TDataverseApi> CreateApi(TDataverseApi dataverseApi, TSqlApi sqlApi, CrmTimesheetApiOption option)
+        static CrmTimesheetApi CreateApi(TDataverseApi dataverseApi, TSqlApi sqlApi, CrmTimesheetApiOption option)
         {
             ArgumentNullException.ThrowIfNull(dataverseApi);
             ArgumentNullException.ThrowIfNull(sqlApi);

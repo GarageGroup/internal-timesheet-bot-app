@@ -8,7 +8,7 @@ using GarageGroup.Infra;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class CrmTimesheetApi<TDataverseApi>
+partial class CrmTimesheetApi
 {
     public ValueTask<Result<TimesheetTagSetGetOut, Failure<Unit>>> GetTagSetAsync(
         TimesheetTagSetGetIn input, CancellationToken cancellationToken)

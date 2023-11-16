@@ -5,7 +5,7 @@ using GarageGroup.Infra;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class CrmTimesheetApi<TDataverseApi>
+partial class CrmTimesheetApi
 {
     public ValueTask<Result<TimesheetSetGetOut, Failure<TimesheetSetGetFailureCode>>> GetAsync(
         TimesheetSetGetIn input, CancellationToken cancellationToken)

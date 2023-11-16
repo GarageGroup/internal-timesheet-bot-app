@@ -5,7 +5,7 @@ using GarageGroup.Infra;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class CrmProjectApi<TDataverseApi>
+partial class CrmProjectApi
 {
     public ValueTask<Result<LastProjectSetGetOut, Failure<ProjectSetGetFailureCode>>> GetLastAsync(
         LastProjectSetGetIn input, CancellationToken cancellationToken)

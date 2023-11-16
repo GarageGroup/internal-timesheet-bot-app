@@ -15,7 +15,7 @@ partial class CrmProjectApiTest
         LastProjectSetGetIn input, DbSelectQuery expectedQuery)
     {
         var mockSqlApi = BuildMockSqlApi(SomeTimesheetProjectSetOutput);
-        var api = new CrmProjectApi<IStubDataverseApi>(Mock.Of<IStubDataverseApi>(), mockSqlApi.Object);
+        var api = new CrmProjectApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseSearchSupplier>>(), mockSqlApi.Object);
 
         var cancellationToken = new CancellationToken(false);
         _ = await api.GetLastAsync(input, cancellationToken);
@@ -30,7 +30,7 @@ partial class CrmProjectApiTest
         var dbFailure = sourceException.ToFailure("Some Failure message");
 
         var mockSqlApi = BuildMockSqlApi(dbFailure);
-        var api = new CrmProjectApi<IStubDataverseApi>(Mock.Of<IStubDataverseApi>(), mockSqlApi.Object);
+        var api = new CrmProjectApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseSearchSupplier>>(), mockSqlApi.Object);
 
         var actual = await api.GetLastAsync(SomeLastProjectSetGetInput, default);
         var expected = Failure.Create(ProjectSetGetFailureCode.Unknown, "Some Failure message", sourceException);
@@ -44,7 +44,7 @@ partial class CrmProjectApiTest
         FlatArray<DbTimesheetProject> dbTimesheetProjects, LastProjectSetGetOut expected)
     {
         var mockSqlApi = BuildMockSqlApi(dbTimesheetProjects);
-        var api = new CrmProjectApi<IStubDataverseApi>(Mock.Of<IStubDataverseApi>(), mockSqlApi.Object);
+        var api = new CrmProjectApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseSearchSupplier>>(), mockSqlApi.Object);
 
         var actual = await api.GetLastAsync(SomeLastProjectSetGetInput, default);
         Assert.StrictEqual(expected, actual);

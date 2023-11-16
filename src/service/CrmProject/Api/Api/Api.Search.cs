@@ -6,7 +6,7 @@ using GarageGroup.Infra;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class CrmProjectApi<TDataverseApi>
+partial class CrmProjectApi
 {
     public ValueTask<Result<ProjectSetSearchOut, Failure<ProjectSetGetFailureCode>>> SearchAsync(
         ProjectSetSearchIn input, CancellationToken cancellationToken)

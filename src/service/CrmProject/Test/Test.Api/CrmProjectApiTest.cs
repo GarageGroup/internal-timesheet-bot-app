@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
 using GarageGroup.Infra;
 using Moq;
-
-[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
 namespace GarageGroup.Internal.Timesheet.Service.CrmProject.Test;
 
@@ -80,21 +77,25 @@ public static partial class CrmProjectApiTest
         return mock;
     }
 
-    private static Mock<IStubDataverseApi> BuildMockDataverseApiClient(
+    private static Mock<IDataverseImpersonateSupplier<IDataverseSearchSupplier>> BuildMockDataverseApiClient(
+        IDataverseSearchSupplier dataverseSearchSupplier)
+    {
+        var mock = new Mock<IDataverseImpersonateSupplier<IDataverseSearchSupplier>>();
+
+        _ = mock.Setup(static a => a.Impersonate(It.IsAny<Guid>())).Returns(dataverseSearchSupplier);
+
+        return mock;
+    }
+
+    private static Mock<IDataverseSearchSupplier> BuildMockDataverseSearchSupplier(
         Result<DataverseSearchOut, Failure<DataverseFailureCode>> result)
     {
-        var mock = new Mock<IStubDataverseApi>();
+        var mock = new Mock<IDataverseSearchSupplier>();
 
         _ = mock
             .Setup(static a => a.SearchAsync(It.IsAny<DataverseSearchIn>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
 
-        _ = mock.Setup(static a => a.Impersonate(It.IsAny<Guid>())).Returns(mock.Object);
-
         return mock;
-    }
-
-    internal interface IStubDataverseApi : IDataverseSearchSupplier, IDataverseImpersonateSupplier<IStubDataverseApi>
-    {
     }
 }
