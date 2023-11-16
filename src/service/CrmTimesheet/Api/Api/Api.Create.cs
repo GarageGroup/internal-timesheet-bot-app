@@ -14,21 +14,24 @@ partial class CrmTimesheetApi<TDataverseApi>
         AsyncPipeline.Pipe(
             input ?? throw new ArgumentNullException(nameof(input)), cancellationToken)
         .Pipe(
-            @in => new DataverseEntityCreateIn<IReadOnlyDictionary<string, object?>>(
+            @in => new TimesheetJson
+            {
+                ProjectType = @in.Project.Type,
+                ProjectId = @in.Project.Id,
+                ProjectDisplayName = @in.Project.DisplayName,
+                Date = @in.Date,
+                Description = @in.Description.OrNullIfEmpty(),
+                Duration = @in.Duration,
+                ChannelCode = GetChannelCode(@in.Channel)
+            }
+            .BuildEntityOrFailure())
+        .Map(
+            static entity => new DataverseEntityCreateIn<IReadOnlyDictionary<string, object?>>(
                 entityPluralName: TimesheetJson.EntityPluralName,
-                entityData: new TimesheetJson
-                {
-                    ProjectType = @in.ProjectType,
-                    ProjectId = @in.ProjectId,
-                    Date = @in.Date,
-                    Description = @in.Description.OrNullIfEmpty(),
-                    Duration = @in.Duration,
-                    ChannelCode = GetChannelCode(@in.Channel)
-                }
-                .BuildEntity()))
-        .PipeValue(
-            dataverseApi.Impersonate(input.UserId).CreateEntityAsync)
-        .MapFailure(
+                entityData: entity),
+            static failure => failure.MapFailureCode(GetUnknownCreateFailureCode))
+        .ForwardValue(
+            dataverseApi.Impersonate(input.UserId).CreateEntityAsync,
             static failure => failure.MapFailureCode(ToTimesheetCreateFailureCode));
 
     private int? GetChannelCode(TimesheetChannel channel)
@@ -54,4 +57,8 @@ partial class CrmTimesheetApi<TDataverseApi>
             DataverseFailureCode.Throttling => TimesheetCreateFailureCode.TooManyRequests,
             _ => default
         };
+
+    private static TimesheetCreateFailureCode GetUnknownCreateFailureCode(Unit _)
+        =>
+        TimesheetCreateFailureCode.Unknown;
 }

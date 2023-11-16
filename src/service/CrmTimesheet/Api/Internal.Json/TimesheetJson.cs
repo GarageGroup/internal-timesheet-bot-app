@@ -12,6 +12,8 @@ internal sealed record class TimesheetJson
 
     public required Guid ProjectId { get; init; }
 
+    public required string? ProjectDisplayName { get; init; }
+
     public required DateOnly Date { get; init; }
 
     public required string? Description { get; init; }
@@ -20,7 +22,7 @@ internal sealed record class TimesheetJson
 
     public required int? ChannelCode { get; init; }
 
-    internal IReadOnlyDictionary<string, object?> BuildEntity()
+    internal Result<IReadOnlyDictionary<string, object?>, Failure<Unit>> BuildEntityOrFailure()
     {
         var entityData = new Dictionary<string, object?>
         {
@@ -47,7 +49,12 @@ internal sealed record class TimesheetJson
         }
         else
         {
-            throw new InvalidOperationException($"An unexpected project type: {ProjectType}");
+            return Failure.Create($"An unexpected project type: {ProjectType}");
+        }
+
+        if (string.IsNullOrEmpty(ProjectDisplayName) is false)
+        {
+            entityData["subject"] = ProjectDisplayName;
         }
 
         if (ChannelCode is not null)

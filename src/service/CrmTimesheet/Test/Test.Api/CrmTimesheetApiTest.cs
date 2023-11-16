@@ -17,8 +17,10 @@ public static partial class CrmTimesheetApiTest
         new(
             userId: Guid.Parse("56276a44-1444-4f67-bdb7-774b3f25932a"),
             date: new(2021, 10, 07),
-            projectId: Guid.Parse("7583b4e6-23f5-eb11-94ef-00224884a588"),
-            projectType: TimesheetProjectType.Project,
+            project: new(
+                id: Guid.Parse("7583b4e6-23f5-eb11-94ef-00224884a588"),
+                type: TimesheetProjectType.Project,
+                displayName: "Some project name"),
             duration: 9,
             description: "Some description",
             channel: TimesheetChannel.Telegram);

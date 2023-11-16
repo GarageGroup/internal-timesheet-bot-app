@@ -26,7 +26,30 @@ partial class CrmTimesheetApiTest
     }
 
     [Fact]
-    public static async Task CreateAsync_InputIsNotNull_ExpectDataverseImpersonateCalledOnce()
+    public static async Task CreateAsync_InputProjectTypeIsInvalid_ExpectUnknownFailureCode()
+    {
+        var mockDataverseApiClient = BuildMockDataverseApiClient(Result.Success<Unit>(default));
+        var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
+
+        var input = new TimesheetCreateIn(
+            userId: Guid.Parse("00889262-2cd5-4084-817b-d810626f2600"),
+            date: new(2021, 11, 07),
+            project: new(
+                id: Guid.Parse("f7410932-b1ee-47b5-844f-7da94836c433"),
+                type: (TimesheetProjectType)1,
+                displayName: "Some name"),
+            duration: 3,
+            description: "Some text",
+            channel: TimesheetChannel.Telegram);
+
+        var actual = await api.CreateAsync(input, default);
+        var expected = Failure.Create(TimesheetCreateFailureCode.Unknown, "An unexpected project type: 1");
+
+        Assert.StrictEqual(expected, actual);
+    }
+
+    [Fact]
+    public static async Task CreateAsync_InputIsValid_ExpectDataverseImpersonateCalledOnce()
     {
         var mockDataverseApiClient = BuildMockDataverseApiClient(Result.Success<Unit>(default));
         var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
@@ -34,8 +57,10 @@ partial class CrmTimesheetApiTest
         var input = new TimesheetCreateIn(
             userId: Guid.Parse("4698fc58-770b-4a53-adcd-592eaded6f87"),
             date: new(2023, 05, 21),
-            projectId: Guid.Parse("5cef9828-c94b-4ca0-bab5-28c1a45d95ef"),
-            projectType: TimesheetProjectType.Lead,
+            project: new(
+                id: Guid.Parse("5cef9828-c94b-4ca0-bab5-28c1a45d95ef"),
+                type: TimesheetProjectType.Lead,
+                displayName: default),
             duration: 3,
             description: "Some description text",
             channel: TimesheetChannel.Teams);

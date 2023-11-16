@@ -24,8 +24,10 @@ partial class TimesheetCreateFlowStep
             flowState => new TimesheetCreateIn(
                 userId: flowState.UserId,
                 date: flowState.Date,
-                projectId: flowState.ProjectId,
-                projectType: flowState.ProjectType,
+                project: new(
+                    id: flowState.ProjectId,
+                    type: flowState.ProjectType,
+                    displayName: flowState.ProjectName),
                 duration: flowState.ValueHours,
                 description: flowState.Description,
                 channel: context.GetChannel()))
