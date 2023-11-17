@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using GarageGroup.Infra;
+﻿using System;
+using System.Collections.Generic;
 
 namespace GarageGroup.Internal.Timesheet.Service.CrmTimesheet.Test;
 
@@ -9,57 +9,55 @@ partial class CrmTimesheetApiSource
         =>
         [
             [
-                default(DataverseEntitySetGetOut<TimesheetTagJson>),
+                default(FlatArray<DbTimesheetTag>),
                 default(TimesheetTagSetGetOut)
             ],
             [
-                new DataverseEntitySetGetOut<TimesheetTagJson>(
-                    value: new TimesheetTagJson[]
+                new DbTimesheetTag[]
+                {
+                    new()
                     {
-                        new()
-                        {
-                            Description = null
-                        },
-                        new()
-                        {
-                            Description = "Some text without tags"
-                        }
-                    }),
+                        Description = null
+                    },
+                    new()
+                    {
+                        Description = "Some text without tags"
+                    }
+                },
                 default(TimesheetTagSetGetOut)
             ],
             [
-                new DataverseEntitySetGetOut<TimesheetTagJson>(
-                    value: new TimesheetTagJson[]
+                new DbTimesheetTag[]
+                {
+                    new()
                     {
-                        new()
-                        {
-                            Description = "#Task1. Some first text"
-                        },
-                        new()
-                        {
-                            Description = string.Empty
-                        },
-                        new()
-                        {
-                            Description = "Some text.#Task_01#Task02, Some second # text"
-                        },
-                        new()
-                        {
-                            Description = "#SomeTag"
-                        },
-                        new()
-                        {
-                            Description = "#Task1; Another text"
-                        },
-                        new()
-                        {
-                            Description = null
-                        },
-                        new()
-                        {
-                            Description = "Text#One"
-                        }
-                    }),
+                        Description = "#Task1. Some first text"
+                    },
+                    new()
+                    {
+                        Description = string.Empty
+                    },
+                    new()
+                    {
+                        Description = "Some text.#Task_01#Task02, Some second # text"
+                    },
+                    new()
+                    {
+                        Description = "#SomeTag"
+                    },
+                    new()
+                    {
+                        Description = "#Task1; Another text"
+                    },
+                    new()
+                    {
+                        Description = null
+                    },
+                    new()
+                    {
+                        Description = "Text#One"
+                    }
+                },
                 new TimesheetTagSetGetOut
                 {
                     Tags = new("#Task1", "#Task_01", "#Task02", "#SomeTag", "#One")

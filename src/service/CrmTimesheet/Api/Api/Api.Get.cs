@@ -5,7 +5,7 @@ using GarageGroup.Infra;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class CrmTimesheetApi<TDataverseApi>
+partial class CrmTimesheetApi
 {
     public ValueTask<Result<TimesheetSetGetOut, Failure<TimesheetSetGetFailureCode>>> GetAsync(
         TimesheetSetGetIn input, CancellationToken cancellationToken)
@@ -13,38 +13,33 @@ partial class CrmTimesheetApi<TDataverseApi>
         AsyncPipeline.Pipe(
             input, cancellationToken)
         .Pipe(
-            static @in => new DataverseEntitySetGetIn(
-                entityPluralName: TimesheetItemJson.EntityPluralName,
-                selectFields: TimesheetItemJson.SelectedFields,
-                expandFields: TimesheetItemJson.ExpandedFields,
-                filter: TimesheetItemJson.BuildFilter(@in.UserId, @in.Date),
-                orderBy: TimesheetItemJson.OrderFields))
-        .PipeValue(
-            dataverseApi.Impersonate(input.UserId).GetEntitySetAsync<TimesheetItemJson>)
-        .MapFailure(
-            static failure => failure.MapFailureCode(ToTimesheetSetGetFailureCode))
-        .MapSuccess(
-            static @out => new TimesheetSetGetOut
+            static @in => DbTimesheet.QueryAll with
             {
-                Timesheets = @out.Value.Map(MapTimesheetItemJson)
-            });
+                Filter = new DbCombinedFilter(DbLogicalOperator.And)
+                {
+                    Filters = new(
+                        DbTimesheet.BuildOwnerFilter(@in.UserId),
+                        DbTimesheet.BuildDateFilter(@in.Date))
+                },
+                Orders = DbTimesheet.DefaultOrders
+            })
+        .PipeValue(
+            sqlApi.QueryEntitySetOrFailureAsync<DbTimesheet>)
+        .Map(
+            static success => new TimesheetSetGetOut
+            {
+                Timesheets = success.Map(MapTimesheet)
+            },
+            static failure => failure.MapFailureCode(GetUnknownSetGetFailureCode));
 
-    private static TimesheetSetGetItem MapTimesheetItemJson(TimesheetItemJson itemJson)
+    private static TimesheetSetGetItem MapTimesheet(DbTimesheet dbTimesheet)
         =>
         new(
-            timesheetId: itemJson.TimesheetId,
-            date: new(itemJson.Date.Year, itemJson.Date.Month, itemJson.Date.Day),
-            duration: itemJson.Duration,
-            projectName: itemJson.GetProjectType()?.Name, 
-            description: itemJson.Description);
+            duration: dbTimesheet.Duration,
+            projectName: dbTimesheet.Subject.OrNullIfEmpty() ?? dbTimesheet.ProjectName, 
+            description: dbTimesheet.Description);
 
-    private static TimesheetSetGetFailureCode ToTimesheetSetGetFailureCode(DataverseFailureCode code)
+    private static TimesheetSetGetFailureCode GetUnknownSetGetFailureCode(Unit _)
         =>
-        code switch
-        {
-            DataverseFailureCode.UserNotEnabled => TimesheetSetGetFailureCode.NotAllowed,
-            DataverseFailureCode.PrivilegeDenied => TimesheetSetGetFailureCode.NotAllowed,
-            DataverseFailureCode.Throttling => TimesheetSetGetFailureCode.TooManyRequests,
-            _ => default
-        };
+        TimesheetSetGetFailureCode.Unknown;
 }

@@ -12,8 +12,8 @@ partial class CrmTimesheetApiTest
     [Fact]
     public static async Task GetTagSetAsync_InputIsNull_ExpectArgumentNullException()
     {
-        var mockDataverseApiClient = BuildMockDataverseApiClient<TimesheetTagJson>(SomeTimesheetTagJsonSetOutput);
-        var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, SomeOption);
+        var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(SomeDbTimesheetTagSet);
+        var api = new CrmTimesheetApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>(), mockSqlApi.Object, SomeOption);
 
         var ex = await Assert.ThrowsAsync<ArgumentNullException>(TestAsync);
         Assert.Equal("input", ex.ParamName);
@@ -24,70 +24,57 @@ partial class CrmTimesheetApiTest
     }
 
     [Fact]
-    public static async Task GetTagSetAsync_InputIsNotNull_ExpectDataverseImpersonateCalledOnce()
+    public static async Task GetTagSetAsync_InputIsNotNull_ExpectSqlApiCalledOnce()
     {
-        var mockDataverseApiClient = BuildMockDataverseApiClient<TimesheetTagJson>(SomeTimesheetTagJsonSetOutput);
-        var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, SomeOption);
-
-        var input = new TimesheetTagSetGetIn(
-            userId: Guid.Parse("35e89c69-a7b4-4513-87ee-8c353cf84fc9"),
-            projectId: Guid.Parse("80c9f40b-5f28-4ca7-b6ec-91eda71fe12b"),
-            minDate: new(2023, 01, 27));
-
-        var cancellationToken = new CancellationToken(false);
-        _ = await api.GetTagSetAsync(input, cancellationToken);
-
-        mockDataverseApiClient.Verify(static a => a.Impersonate(Guid.Parse("35e89c69-a7b4-4513-87ee-8c353cf84fc9")), Times.Once);
-    }
-
-    [Fact]
-    public static async Task GetTagSetAsync_InputIsNotNull_ExpectDataverseApiClientCalledOnce()
-    {
-        var mockDataverseApiClient = BuildMockDataverseApiClient<TimesheetTagJson>(SomeTimesheetTagJsonSetOutput);
-        var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, SomeOption);
+        var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(SomeDbTimesheetTagSet);
+        var api = new CrmTimesheetApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>(), mockSqlApi.Object, SomeOption);
 
         var input = new TimesheetTagSetGetIn(
             userId: Guid.Parse("82ee3d26-17f1-4e2f-adb2-eeea5119a512"),
             projectId: Guid.Parse("58482d23-ca3e-4499-8294-cc9b588cce73"),
-            minDate: new(2023, 06, 15));
+            minDate: new(2023, 06, 15),
+            maxDate: new(2023, 11, 03));
 
         var cancellationToken = new CancellationToken(false);
         _ = await api.GetTagSetAsync(input, cancellationToken);
 
-        var expectedInput = new DataverseEntitySetGetIn(
-            entityPluralName: "gg_timesheetactivities",
-            selectFields: new("gg_description"),
-            filter:
-                "(_ownerid_value eq '82ee3d26-17f1-4e2f-adb2-eeea5119a512' " +
-                "and _regardingobjectid_value eq '58482d23-ca3e-4499-8294-cc9b588cce73' " +
-                "and contains(gg_description, '%23') " +
-                "and gg_date ge 2023-06-15)",
-            orderBy: new DataverseOrderParameter[]
+        var expectedQuery = new DbSelectQuery("gg_timesheetactivity", "t")
+        {
+            SelectedFields = new("t.gg_description AS Description"),
+            Filter = new DbCombinedFilter(DbLogicalOperator.And)
             {
-                new("createdon", DataverseOrderDirection.Descending)
-            });
+                Filters = new IDbFilter[]
+                {
+                    new DbParameterFilter(
+                        "t.ownerid", DbFilterOperator.Equal, Guid.Parse("82ee3d26-17f1-4e2f-adb2-eeea5119a512"), "ownerId"),
+                    new DbParameterFilter(
+                        "t.regardingobjectid", DbFilterOperator.Equal, Guid.Parse("58482d23-ca3e-4499-8294-cc9b588cce73"), "projectId"),
+                    new DbLikeFilter(
+                        "t.gg_description", "%#%", "description"),
+                    new DbParameterFilter(
+                        "t.gg_date", DbFilterOperator.GreaterOrEqual, "2023-06-15", "minDate"),
+                    new DbParameterFilter(
+                        "t.gg_date", DbFilterOperator.LessOrEqual, "2023-11-03", "maxDate")
+                }
+            },
+            Orders = new DbOrder[]
+            {
+                new("t.gg_date", DbOrderType.Descending),
+                new("t.createdon", DbOrderType.Descending)
+            }
+        };
 
-        mockDataverseApiClient.Verify(a => a.GetEntitySetAsync<TimesheetTagJson>(expectedInput, cancellationToken), Times.Once);
+        mockSqlApi.Verify(a => a.QueryEntitySetOrFailureAsync<DbTimesheetTag>(expectedQuery, cancellationToken), Times.Once);
     }
 
-    [Theory]
-    [InlineData(DataverseFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.DuplicateRecord)]
-    [InlineData(DataverseFailureCode.Unauthorized)]
-    [InlineData(DataverseFailureCode.Throttling)]
-    [InlineData(DataverseFailureCode.SearchableEntityNotFound)]
-    [InlineData(DataverseFailureCode.PicklistValueOutOfRange)]
-    [InlineData(DataverseFailureCode.RecordNotFound)]
-    [InlineData(DataverseFailureCode.UserNotEnabled)]
-    [InlineData(DataverseFailureCode.PrivilegeDenied)]
-    public static async Task GetTagSetAsync_DataverseResultIsFailure_ExpectFailure(
-        DataverseFailureCode sourceFailureCode)
+    [Fact]
+    public static async Task GetTagSetAsync_DbResultIsFailure_ExpectFailure()
     {
         var sourceException = new Exception("Some error message");
-        var dataverseFailure = sourceException.ToFailure(sourceFailureCode, "Some failure text");
+        var dbFailure = sourceException.ToFailure("Some failure text");
 
-        var mockDataverseApiClient = BuildMockDataverseApiClient<TimesheetTagJson>(dataverseFailure);
-        var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, SomeOption);
+        var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(dbFailure);
+        var api = new CrmTimesheetApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>(), mockSqlApi.Object, SomeOption);
 
         var actual = await api.GetTagSetAsync(SomeTimesheetTagSetGetInput, default);
         var expected = Failure.Create("Some failure text", sourceException);
@@ -97,11 +84,11 @@ partial class CrmTimesheetApiTest
 
     [Theory]
     [MemberData(nameof(CrmTimesheetApiSource.OutputGetTagSetTestData), MemberType = typeof(CrmTimesheetApiSource))]
-    internal static async Task GetTagSetAsync_DataverseResultIsSuccess_ExpectSuccess(
-        DataverseEntitySetGetOut<TimesheetTagJson> dataverseOutput, TimesheetTagSetGetOut expected)
+    internal static async Task GetTagSetAsync_DbResultIsSuccess_ExpectSuccess(
+        FlatArray<DbTimesheetTag> dbTimesheetTags, TimesheetTagSetGetOut expected)
     {
-        var mockDataverseApiClient = BuildMockDataverseApiClient<TimesheetTagJson>(dataverseOutput);
-        var api = new CrmTimesheetApi<IStubDataverseApi>(mockDataverseApiClient.Object, SomeOption);
+        var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(dbTimesheetTags);
+        var api = new CrmTimesheetApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>(), mockSqlApi.Object, SomeOption);
 
         var actual = await api.GetTagSetAsync(SomeTimesheetTagSetGetInput, default);
         Assert.StrictEqual(expected, actual);

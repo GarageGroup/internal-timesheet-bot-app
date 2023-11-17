@@ -18,6 +18,8 @@ internal static partial class TimesheetCreateFlowStep
 
     private const int DescriptionTagDays = 30;
 
+    private const int ProjectDays = 30;
+
     private const string DatePlaceholder = "дд.мм.гг";
 
     private const string DefaultProjectMessage = "Нужно выбрать проект. Введите часть названия для поиска";
