@@ -15,6 +15,8 @@ internal static partial class Application
 {
     private const string DataverseSectionName = "Dataverse";
 
+    private const string BotEntityName = "BotRequest";
+
     private static Dependency<HttpMessageHandler> UseHttpMessageHandlerStandard(string loggerCategoryName)
         =>
         PrimaryHandler.UseStandardSocketsHttpHandler()
