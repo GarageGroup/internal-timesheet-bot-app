@@ -105,6 +105,7 @@ partial class CrmTimesheetApiTest
     [InlineData(DataverseFailureCode.Throttling, TimesheetCreateFailureCode.TooManyRequests)]
     [InlineData(DataverseFailureCode.SearchableEntityNotFound, TimesheetCreateFailureCode.Unknown)]
     [InlineData(DataverseFailureCode.DuplicateRecord, TimesheetCreateFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.InvalidPayload, TimesheetCreateFailureCode.Unknown)]
     public static async Task CreateTimesheetSetAsync_DataverseResultIsFailure_ExpectFailure(
         DataverseFailureCode sourceFailureCode, TimesheetCreateFailureCode expectedFailureCode)
     {

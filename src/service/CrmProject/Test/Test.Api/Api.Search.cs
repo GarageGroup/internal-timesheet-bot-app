@@ -70,6 +70,7 @@ partial class CrmProjectApiTest
     [InlineData(DataverseFailureCode.Throttling, ProjectSetGetFailureCode.TooManyRequests)]
     [InlineData(DataverseFailureCode.SearchableEntityNotFound, ProjectSetGetFailureCode.NotAllowed)]
     [InlineData(DataverseFailureCode.DuplicateRecord, ProjectSetGetFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.InvalidPayload, ProjectSetGetFailureCode.Unknown)]
     public static async Task SearchProjectSetAsync_DataverseResultIsFailure_ExpectFailure(
         DataverseFailureCode sourceFailureCode, ProjectSetGetFailureCode expectedFailureCode)
     {
