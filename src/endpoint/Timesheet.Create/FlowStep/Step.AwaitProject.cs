@@ -78,7 +78,12 @@ partial class TimesheetCreateFlowStep
 
     private static LookupValueSetOption LogFailure(this ILoggerSupplier context, Failure<ProjectSetGetFailureCode> failure)
     {
-        context.Logger.LogError("GetLastProjects failure: {failureCode} {failureMessage}", failure.FailureCode, failure.FailureMessage);
+        context.Logger.LogError(
+            failure.SourceException,
+            "GetLastProjects failure: {failureCode} {failureMessage}",
+            failure.FailureCode,
+            failure.FailureMessage);
+
         return new(default, DefaultProjectMessage, default);
     }
 
