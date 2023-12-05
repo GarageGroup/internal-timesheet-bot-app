@@ -25,9 +25,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="GarageGroup.Infra.Azure.DurableTask" Version="0.3.0" />
-    <PackageReference Include="GarageGroup.Infra.Azure.HealthCheck" Version="0.6.0" />
-    <PackageReference Include="GarageGroup.Infra.Azure.Hosting" Version="0.6.0" />
+    <PackageReference Include="GarageGroup.Infra.Azure.DurableTask" Version="0.4.0" />
+    <PackageReference Include="GarageGroup.Infra.Azure.HealthCheck" Version="0.7.0" />
+    <PackageReference Include="GarageGroup.Infra.Azure.Hosting" Version="0.6.1" />
     <PackageReference Include="GarageGroup.Infra.Azure.Services.AzureUser.Api" Version="0.1.1" />
     <PackageReference Include="GarageGroup.Infra.Bot.Builder.Authorization.Dataverse" Version="0.4.0" />
     <PackageReference Include="GarageGroup.Infra.Bot.Builder.Command.Info" Version="0.2.0" />
