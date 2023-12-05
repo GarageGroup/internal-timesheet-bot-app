@@ -32,7 +32,7 @@ partial class CrmProjectApi
             {
                 Projects = success.Map(MapProject)
             },
-            static failure => failure.MapFailureCode(GetUnknownFailureCode));
+            static failure => failure.WithFailureCode(ProjectSetGetFailureCode.Unknown));
 
     private static ProjectSetGetItem MapProject(DbTimesheetProject dbTimesheetProject)
         =>
@@ -40,8 +40,4 @@ partial class CrmProjectApi
             id: dbTimesheetProject.ProjectId,
             name: dbTimesheetProject.Subject.OrNullIfEmpty() ?? dbTimesheetProject.ProjectName,
             type: (TimesheetProjectType)dbTimesheetProject.ProjectTypeCode);
-
-    private static ProjectSetGetFailureCode GetUnknownFailureCode(Unit _)
-        =>
-        ProjectSetGetFailureCode.Unknown;
 }

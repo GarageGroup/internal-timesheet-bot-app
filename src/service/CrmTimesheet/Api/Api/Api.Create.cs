@@ -29,7 +29,7 @@ partial class CrmTimesheetApi
             static entity => new DataverseEntityCreateIn<IReadOnlyDictionary<string, object?>>(
                 entityPluralName: TimesheetJson.EntityPluralName,
                 entityData: entity),
-            static failure => failure.MapFailureCode(GetUnknownCreateFailureCode))
+            static failure => failure.WithFailureCode(TimesheetCreateFailureCode.Unknown))
         .ForwardValue(
             dataverseApi.Impersonate(input.UserId).CreateEntityAsync,
             static failure => failure.MapFailureCode(ToTimesheetCreateFailureCode));
@@ -57,8 +57,4 @@ partial class CrmTimesheetApi
             DataverseFailureCode.Throttling => TimesheetCreateFailureCode.TooManyRequests,
             _ => default
         };
-
-    private static TimesheetCreateFailureCode GetUnknownCreateFailureCode(Unit _)
-        =>
-        TimesheetCreateFailureCode.Unknown;
 }

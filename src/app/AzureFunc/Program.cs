@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using GarageGroup.Infra;
 using Microsoft.Extensions.Hosting;
 
 namespace GarageGroup.Internal.Timesheet;
@@ -7,8 +8,7 @@ static class Program
 {
     static Task Main()
         =>
-        Host.CreateDefaultBuilder()
-        .ConfigureFunctionsWorkerStandard(
+        FunctionHost.CreateFunctionsWorkerBuilderStandard(
             useHostConfiguration: false,
             configure: Application.Configure)
         .ConfigureBotBuilder(

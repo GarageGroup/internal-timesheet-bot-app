@@ -30,7 +30,7 @@ partial class CrmTimesheetApi
             {
                 Timesheets = success.Map(MapTimesheet)
             },
-            static failure => failure.MapFailureCode(GetUnknownSetGetFailureCode));
+            static failure => failure.WithFailureCode(TimesheetSetGetFailureCode.Unknown));
 
     private static TimesheetSetGetItem MapTimesheet(DbTimesheet dbTimesheet)
         =>
@@ -38,8 +38,4 @@ partial class CrmTimesheetApi
             duration: dbTimesheet.Duration,
             projectName: dbTimesheet.Subject.OrNullIfEmpty() ?? dbTimesheet.ProjectName, 
             description: dbTimesheet.Description);
-
-    private static TimesheetSetGetFailureCode GetUnknownSetGetFailureCode(Unit _)
-        =>
-        TimesheetSetGetFailureCode.Unknown;
 }
