@@ -22,7 +22,7 @@
     <PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Step.Date" Version="0.3.0" />
     <PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Step.Lookup" Version="0.2.0" />
     <PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Step.Value" Version="0.2.1" />
-    <PackageReference Include="PrimeFuncPack.Dependency.Core" Version="2.0.2" />
+    <PackageReference Include="PrimeFuncPack.Dependency.Core" Version="2.1.0" />
   </ItemGroup>
 
 </Project>

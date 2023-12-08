@@ -89,7 +89,7 @@ partial class TimesheetCreateFlowStep
         .PipeValue(
             crmTimesheetApi.GetTagSetAsync)
         .OnFailure(
-            failure => context.Logger.LogError("GetTags failure: '{failureMessage}'", failure.FailureMessage))
+            failure => context.Logger.LogError(failure.SourceException, "GetTags failure: '{failureMessage}'", failure.FailureMessage))
         .Fold(
             static success => success.Tags,
             static _ => default);

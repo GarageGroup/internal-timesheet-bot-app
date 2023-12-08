@@ -53,5 +53,5 @@ partial class DateTimesheetFlowStep
                 => "Произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее"
         })
         .Pipe(
-            message => ChatFlowBreakState.From(message, failure.FailureMessage));
+            message => ChatFlowBreakState.From(message, failure.FailureMessage, failure.SourceException));
 }
