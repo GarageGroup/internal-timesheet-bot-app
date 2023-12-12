@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using GarageGroup.Infra;
-using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PrimeFuncPack;
 
 namespace GarageGroup.Internal.Timesheet;
 
-[HealthCheckFunc("HealthCheck", AuthLevel = AuthorizationLevel.Function)]
 internal static partial class Application
 {
     private const string DataverseSectionName = "Dataverse";

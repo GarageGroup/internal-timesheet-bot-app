@@ -1,18 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
+using Xunit;
 
 namespace GarageGroup.Internal.Timesheet.Service.CrmTimesheet.Test;
 
 partial class CrmTimesheetApiSource
 {
-    public static IEnumerable<object[]> OutputGetTestData
+    public static TheoryData<FlatArray<DbTimesheet>, TimesheetSetGetOut> OutputGetTestData
         =>
-        [
-            [
-                default(FlatArray<DbTimesheet>),
-                default(TimesheetSetGetOut)
-            ],
-            [
+        new()
+        {
+            {
+                default,
+                default
+            },
+            {
                 new DbTimesheet[]
                 {
                     new()
@@ -75,6 +76,6 @@ partial class CrmTimesheetApiSource
                             description : string.Empty)
                     }
                 }
-            ]
-        ];
+            }
+        };
 }

@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
 using GarageGroup.Infra;
+using GarageGroup.Infra.Bot.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace GarageGroup.Internal.Timesheet;
@@ -12,7 +14,7 @@ static class Program
             useHostConfiguration: false,
             configure: Application.Configure)
         .ConfigureBotBuilder(
-            storageResolver: Application.ResolveCosmosStorage)
+            storageResolver: ServiceProviderServiceExtensions.GetRequiredService<ICosmosStorage>)
         .Build()
         .RunAsync();
 }

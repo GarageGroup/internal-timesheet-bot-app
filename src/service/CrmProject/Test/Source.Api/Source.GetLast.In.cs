@@ -1,20 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
 using GarageGroup.Infra;
+using Xunit;
 
 namespace GarageGroup.Internal.Timesheet.Service.CrmProject.Test;
 
 partial class CrmProjectApiSource
 {
-    public static IEnumerable<object[]> InputGetLastTestData
+    public static TheoryData<LastProjectSetGetIn, DbSelectQuery> InputGetLastTestData
         =>
-        [
-            [
-                new LastProjectSetGetIn(
+        new()
+        {
+            {
+                new(
                     userId: Guid.Parse("bef33be0-99f5-4018-ba80-3366ec9ec1fd"),
                     top: 7,
                     minDate: new(2023, 05, 27)),
-                new DbSelectQuery("gg_timesheetactivity", "t")
+                new("gg_timesheetactivity", "t")
                 {
                     Top = 7,
                     SelectedFields = new(
@@ -54,6 +55,6 @@ partial class CrmProjectApiSource
                         new("MaxCreatedOn", DbOrderType.Descending)
                     }
                 }
-            ]
-        ];
+            }
+        };
 }

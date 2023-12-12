@@ -2,22 +2,24 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using GarageGroup.Infra;
+using Xunit;
 
 namespace GarageGroup.Internal.Timesheet.Service.CrmProject.Test;
 
 partial class CrmProjectApiSource
 {
-    public static IEnumerable<object[]> OutputSearchTestData
+    public static TheoryData<DataverseSearchOut, ProjectSetSearchOut> OutputSearchTestData
         =>
-        [
-            [
-                new DataverseSearchOut(
+        new()
+        {
+            {
+                new(
                     totalRecordCount: 1,
                     value: default),
-                default(ProjectSetSearchOut)
-            ],
-            [
-                new DataverseSearchOut(
+                default
+            },
+            {
+                new(
                     totalRecordCount: 3,
                     value: new DataverseSearchItem[]
                     {
@@ -78,7 +80,7 @@ partial class CrmProjectApiSource
                             entityName: "lead",
                             extensionData: default)
                     }),
-                new ProjectSetSearchOut
+                new()
                 {
                     Projects = new ProjectSetGetItem[]
                     {
@@ -112,6 +114,6 @@ partial class CrmProjectApiSource
                             type: TimesheetProjectType.Lead)
                     }
                 }
-            ]
-        ];
+            }
+        };
 }

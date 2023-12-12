@@ -1,18 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
+using Xunit;
 
 namespace GarageGroup.Internal.Timesheet.Service.CrmTimesheet.Test;
 
 partial class CrmTimesheetApiSource
 {
-    public static IEnumerable<object[]> OutputGetTagSetTestData
+    public static TheoryData<FlatArray<DbTimesheetTag>, TimesheetTagSetGetOut> OutputGetTagSetTestData
         =>
-        [
-            [
-                default(FlatArray<DbTimesheetTag>),
-                default(TimesheetTagSetGetOut)
-            ],
-            [
+        new()
+        {
+            {
+                default,
+                default
+            },
+            {
                 new DbTimesheetTag[]
                 {
                     new()
@@ -24,9 +25,9 @@ partial class CrmTimesheetApiSource
                         Description = "Some text without tags"
                     }
                 },
-                default(TimesheetTagSetGetOut)
-            ],
-            [
+                default
+            },
+            {
                 new DbTimesheetTag[]
                 {
                     new()
@@ -58,10 +59,10 @@ partial class CrmTimesheetApiSource
                         Description = "Text#One"
                     }
                 },
-                new TimesheetTagSetGetOut
+                new()
                 {
                     Tags = new("#Task1", "#Task_01", "#Task02", "#SomeTag", "#One")
                 }
-            ]
-        ];
+            }
+        };
 }
