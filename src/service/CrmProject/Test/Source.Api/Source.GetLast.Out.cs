@@ -1,18 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
+using Xunit;
 
 namespace GarageGroup.Internal.Timesheet.Service.CrmProject.Test;
 
 partial class CrmProjectApiSource
 {
-    public static IEnumerable<object[]> OutputGetLastTestData
+    public static TheoryData<FlatArray<DbTimesheetProject>, LastProjectSetGetOut> OutputGetLastTestData
         =>
-        [
-            [
-                default(FlatArray<DbTimesheetProject>),
-                default(LastProjectSetGetOut)
-            ],
-            [
+        new()
+        {
+            {
+                default,
+                default
+            },
+            {
                 new DbTimesheetProject[]
                 {
                     new()
@@ -65,7 +66,7 @@ partial class CrmProjectApiSource
                         Subject = string.Empty,
                     }
                 },
-                new LastProjectSetGetOut
+                new()
                 {
                     Projects = new ProjectSetGetItem[]
                     {
@@ -78,6 +79,6 @@ partial class CrmProjectApiSource
                         new(Guid.Parse("f1d8d51b-cdb4-4d00-ac16-46b65e036d9f"), "Second incident name", TimesheetProjectType.Incident)
                     }
                 }
-            ]
-        ];
+            }
+        };
 }
