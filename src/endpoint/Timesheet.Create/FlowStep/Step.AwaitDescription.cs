@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,12 +18,12 @@ partial class TimesheetCreateFlowStep
         .AwaitText(
             static context => new(
                 messageText: context.BuildDescriptionMessageText(),
-                suggestions: new KeyValuePair<string, string>[][]
-                {
+                suggestions:
+                [
                     [
                         new("Пропустить", string.Empty)
                     ]
-                }),
+                ]),
             static (context, description) => string.IsNullOrEmpty(description) switch
             {
                 true => "Описание пропущено",

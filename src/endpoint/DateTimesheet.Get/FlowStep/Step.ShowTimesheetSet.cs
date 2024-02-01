@@ -89,7 +89,7 @@ partial class DateTimesheetFlowStep
             .Append("/newtimesheet - Списать время");
 
         var channelData = new TelegramChannelData(
-            parameters: new TelegramParameters(textBuilder.ToString())
+            parameters: new(textBuilder.ToString())
             {
                 ParseMode = TelegramParseMode.Html,
                 ReplyMarkup = new TelegramReplyKeyboardRemove()

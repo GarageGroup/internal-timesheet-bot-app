@@ -38,23 +38,23 @@ internal static partial class TimesheetCreateFlowStep
     {
         RussianCultureInfo = CultureInfo.GetCultureInfo("ru-RU");
 
-        AwailableCultures = new[]
-        {
+        AwailableCultures =
+        [
             CultureInfo.GetCultureInfo("ru-RU"),
             CultureInfo.InvariantCulture
-        };
+        ];
 
-        TelegramSuggestions = new KeyValuePair<string, decimal>[][]
-        {
+        TelegramSuggestions =
+        [
             [new("0,25", 0.25m), new("0,5", 0.5m), new("0,75", 0.75m), new("1", 1)],
             [new("1,25", 1.25m), new("1,5", 1.5m), new("2", 2), new("2,5", 2.5m)],
             [new("3", 3), new("4", 4), new("6", 6), new("8", 8)]
-        };
+        ];
 
-        TeamsSuggestions = new KeyValuePair<string, decimal>[][]
-        {
+        TeamsSuggestions =
+        [
             [new("0,25", 0.25m), new("0,5", 0.5m), new("0,75", 0.75m), new("1", 1), new("2", 2), new("8", 8)]
-        };
+        ];
     }
 
     private static DateOnly GetDateUtc(int daysAddedToNow)
