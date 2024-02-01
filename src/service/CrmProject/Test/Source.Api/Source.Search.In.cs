@@ -1,5 +1,4 @@
-﻿using System;
-using GarageGroup.Infra;
+﻿using GarageGroup.Infra;
 using Xunit;
 
 namespace GarageGroup.Internal.Timesheet.Service.CrmProject.Test;
@@ -13,7 +12,7 @@ partial class CrmProjectApiSource
             {
                 new(
                     searchText: null,
-                    userId: Guid.Parse("4812cb4b-3049-4f84-bfb6-aac8f0425028"),
+                    userId: new("4812cb4b-3049-4f84-bfb6-aac8f0425028"),
                     top: 3),
                 new("**")
                 {
@@ -24,7 +23,7 @@ partial class CrmProjectApiSource
             {
                 new(
                     searchText: string.Empty,
-                    userId: Guid.Parse("32b49b76-01ca-4312-b7d5-499cf3addc22"),
+                    userId: new("32b49b76-01ca-4312-b7d5-499cf3addc22"),
                     top: -2),
                 new("**")
                 {
@@ -35,7 +34,7 @@ partial class CrmProjectApiSource
             {
                 new(
                     searchText: "Some text",
-                    userId: Guid.Parse("32b49b76-01ca-4312-b7d5-499cf3addc22"),
+                    userId: new("32b49b76-01ca-4312-b7d5-499cf3addc22"),
                     top: 15),
                 new("*Some text*")
                 {

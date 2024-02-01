@@ -18,10 +18,12 @@ partial class CrmProjectApi
                 Top = @in.Top,
                 Filter = new DbCombinedFilter(DbLogicalOperator.And)
                 {
-                    Filters = new(
+                    Filters =
+                    [
                         DbTimesheetProject.BuildOwnerFilter(@in.UserId),
                         DbTimesheetProject.BuildMinDateFilter(@in.MinDate),
-                        AllowedProjectTypeSetFilter)
+                        AllowedProjectTypeSetFilter
+                    ]
                 },
                 Orders = DbTimesheetProject.DefaultOrders
             })

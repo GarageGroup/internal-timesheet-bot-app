@@ -36,7 +36,7 @@ partial class TimesheetCreateFlowStep
             return TeamsSuggestions;
         }
 
-        return Array.Empty<IReadOnlyCollection<KeyValuePair<string, decimal>>>();
+        return [];
     }
 
     private static Result<decimal, BotFlowFailure> ValidateHourValueOrFailure(decimal value)
