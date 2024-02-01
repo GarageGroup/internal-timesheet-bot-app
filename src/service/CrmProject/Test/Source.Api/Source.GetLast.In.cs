@@ -12,23 +12,25 @@ partial class CrmProjectApiSource
         {
             {
                 new(
-                    userId: Guid.Parse("bef33be0-99f5-4018-ba80-3366ec9ec1fd"),
+                    userId: new("bef33be0-99f5-4018-ba80-3366ec9ec1fd"),
                     top: 7,
                     minDate: new(2023, 05, 27)),
                 new("gg_timesheetactivity", "t")
                 {
                     Top = 7,
-                    SelectedFields = new(
+                    SelectedFields =
+                    [
                         "t.regardingobjectid AS ProjectId",
                         "t.regardingobjecttypecode AS ProjectTypeCode",
                         "MAX(t.regardingobjectidname) AS ProjectName",
                         "MAX(t.subject) AS Subject",
                         "MAX(t.gg_date) AS MaxDate",
-                        "MAX(t.createdon) AS MaxCreatedOn"),
+                        "MAX(t.createdon) AS MaxCreatedOn"
+                    ],
                     Filter = new DbCombinedFilter(DbLogicalOperator.And)
                     {
-                        Filters = new IDbFilter[]
-                        {
+                        Filters =
+                        [
                             new DbParameterFilter(
                                 fieldName: "t.ownerid",
                                 @operator: DbFilterOperator.Equal,
@@ -44,16 +46,18 @@ partial class CrmProjectApiSource
                                 @operator: DbArrayFilterOperator.In,
                                 fieldValues: new(3, 4, 112, 10912),
                                 parameterPrefix: "projectTypeCode")
-                        }
+                        ]
                     },
-                    GroupByFields = new(
+                    GroupByFields =
+                    [
                         "t.regardingobjectid",
-                        "t.regardingobjecttypecode"),
-                    Orders = new DbOrder[]
-                    {
+                        "t.regardingobjecttypecode"
+                    ],
+                    Orders =
+                    [
                         new("MaxDate", DbOrderType.Descending),
                         new("MaxCreatedOn", DbOrderType.Descending)
-                    }
+                    ]
                 }
             }
         };

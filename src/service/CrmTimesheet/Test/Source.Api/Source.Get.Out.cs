@@ -14,8 +14,7 @@ partial class CrmTimesheetApiSource
                 default
             },
             {
-                new DbTimesheet[]
-                {
+                [
                     new()
                     {
                         Duration = 1,
@@ -49,11 +48,11 @@ partial class CrmTimesheetApiSource
                         Duration = 0,
                         Description = string.Empty
                     }
-                },
-                new TimesheetSetGetOut
+                ],
+                new()
                 {
-                    Timesheets = new TimesheetSetGetItem[]
-                    {
+                    Timesheets =
+                    [
                         new(
                             duration : 1,
                             projectName : "SomeFirstProjectName",
@@ -74,7 +73,7 @@ partial class CrmTimesheetApiSource
                             duration : 0,
                             projectName : null,
                             description : string.Empty)
-                    }
+                    ]
                 }
             }
         };

@@ -16,7 +16,7 @@ partial class CrmTimesheetApiTest
         var api = new CrmTimesheetApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>(), mockSqlApi.Object, SomeOption);
 
         var input = new TimesheetSetGetIn(
-            userId: Guid.Parse("bd8b8e33-554e-e611-80dc-c4346bad0190"),
+            userId: new("bd8b8e33-554e-e611-80dc-c4346bad0190"),
             date: new(2022, 02, 05));
 
         var cancellationToken = new CancellationToken(false);
@@ -24,23 +24,25 @@ partial class CrmTimesheetApiTest
 
         var expectedQuery = new DbSelectQuery("gg_timesheetactivity", "t")
         {
-            SelectedFields = new(
+            SelectedFields =
+            [
                 "t.gg_duration AS Duration",
                 "t.regardingobjectidname AS ProjectName",
                 "t.subject AS Subject",
-                "t.gg_description AS Description"),
+                "t.gg_description AS Description"
+            ],
             Filter = new DbCombinedFilter(DbLogicalOperator.And)
             {
-                Filters = new DbParameterFilter[]
-                {
-                    new("t.ownerid", DbFilterOperator.Equal, Guid.Parse("bd8b8e33-554e-e611-80dc-c4346bad0190"), "ownerId"),
-                    new("t.gg_date", DbFilterOperator.Equal, "2022-02-05", "date")
-                }
+                Filters =
+                [
+                    new DbParameterFilter("t.ownerid", DbFilterOperator.Equal, Guid.Parse("bd8b8e33-554e-e611-80dc-c4346bad0190"), "ownerId"),
+                    new DbParameterFilter("t.gg_date", DbFilterOperator.Equal, "2022-02-05", "date")
+                ]
             },
-            Orders = new DbOrder[]
-            {
+            Orders =
+            [
                 new("t.createdon", DbOrderType.Ascending)
-            }
+            ]
         };
 
         mockSqlApi.Verify(a => a.QueryEntitySetOrFailureAsync<DbTimesheet>(expectedQuery, cancellationToken), Times.Once);

@@ -35,10 +35,10 @@ partial class CrmTimesheetApiTest
         var api = new CrmTimesheetApi(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
 
         var input = new TimesheetCreateIn(
-            userId: Guid.Parse("00889262-2cd5-4084-817b-d810626f2600"),
+            userId: new("00889262-2cd5-4084-817b-d810626f2600"),
             date: new(2021, 11, 07),
             project: new(
-                id: Guid.Parse("f7410932-b1ee-47b5-844f-7da94836c433"),
+                id: new("f7410932-b1ee-47b5-844f-7da94836c433"),
                 type: (TimesheetProjectType)1,
                 displayName: "Some name"),
             duration: 3,
@@ -60,10 +60,10 @@ partial class CrmTimesheetApiTest
         var api = new CrmTimesheetApi(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
 
         var input = new TimesheetCreateIn(
-            userId: Guid.Parse("4698fc58-770b-4a53-adcd-592eaded6f87"),
+            userId: new("4698fc58-770b-4a53-adcd-592eaded6f87"),
             date: new(2023, 05, 21),
             project: new(
-                id: Guid.Parse("5cef9828-c94b-4ca0-bab5-28c1a45d95ef"),
+                id: new("5cef9828-c94b-4ca0-bab5-28c1a45d95ef"),
                 type: TimesheetProjectType.Lead,
                 displayName: default),
             duration: 3,
@@ -73,7 +73,7 @@ partial class CrmTimesheetApiTest
         var cancellationToken = new CancellationToken(false);
         _ = await api.CreateAsync(input, cancellationToken);
 
-        mockDataverseApiClient.Verify(static a => a.Impersonate(Guid.Parse("4698fc58-770b-4a53-adcd-592eaded6f87")), Times.Once);
+        mockDataverseApiClient.Verify(static a => a.Impersonate(new("4698fc58-770b-4a53-adcd-592eaded6f87")), Times.Once);
     }
 
     [Theory]

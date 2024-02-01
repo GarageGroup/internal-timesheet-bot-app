@@ -30,8 +30,8 @@ partial class CrmTimesheetApiTest
         var api = new CrmTimesheetApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>(), mockSqlApi.Object, SomeOption);
 
         var input = new TimesheetTagSetGetIn(
-            userId: Guid.Parse("82ee3d26-17f1-4e2f-adb2-eeea5119a512"),
-            projectId: Guid.Parse("58482d23-ca3e-4499-8294-cc9b588cce73"),
+            userId: new("82ee3d26-17f1-4e2f-adb2-eeea5119a512"),
+            projectId: new("58482d23-ca3e-4499-8294-cc9b588cce73"),
             minDate: new(2023, 06, 15),
             maxDate: new(2023, 11, 03));
 
@@ -43,8 +43,8 @@ partial class CrmTimesheetApiTest
             SelectedFields = new("t.gg_description AS Description"),
             Filter = new DbCombinedFilter(DbLogicalOperator.And)
             {
-                Filters = new IDbFilter[]
-                {
+                Filters =
+                [
                     new DbParameterFilter(
                         "t.ownerid", DbFilterOperator.Equal, Guid.Parse("82ee3d26-17f1-4e2f-adb2-eeea5119a512"), "ownerId"),
                     new DbParameterFilter(
@@ -55,13 +55,13 @@ partial class CrmTimesheetApiTest
                         "t.gg_date", DbFilterOperator.GreaterOrEqual, "2023-06-15", "minDate"),
                     new DbParameterFilter(
                         "t.gg_date", DbFilterOperator.LessOrEqual, "2023-11-03", "maxDate")
-                }
+                ]
             },
-            Orders = new DbOrder[]
-            {
+            Orders =
+            [
                 new("t.gg_date", DbOrderType.Descending),
                 new("t.createdon", DbOrderType.Descending)
-            }
+            ]
         };
 
         mockSqlApi.Verify(a => a.QueryEntitySetOrFailureAsync<DbTimesheetTag>(expectedQuery, cancellationToken), Times.Once);

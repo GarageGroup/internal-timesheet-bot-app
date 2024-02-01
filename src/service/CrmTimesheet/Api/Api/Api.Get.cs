@@ -17,9 +17,11 @@ partial class CrmTimesheetApi
             {
                 Filter = new DbCombinedFilter(DbLogicalOperator.And)
                 {
-                    Filters = new(
+                    Filters =
+                    [
                         DbTimesheet.BuildOwnerFilter(@in.UserId),
-                        DbTimesheet.BuildDateFilter(@in.Date))
+                        DbTimesheet.BuildDateFilter(@in.Date)
+                    ]
                 },
                 Orders = DbTimesheet.DefaultOrders
             })

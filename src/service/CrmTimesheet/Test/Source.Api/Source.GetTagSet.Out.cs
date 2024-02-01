@@ -14,8 +14,7 @@ partial class CrmTimesheetApiSource
                 default
             },
             {
-                new DbTimesheetTag[]
-                {
+                [
                     new()
                     {
                         Description = null
@@ -24,12 +23,11 @@ partial class CrmTimesheetApiSource
                     {
                         Description = "Some text without tags"
                     }
-                },
+                ],
                 default
             },
             {
-                new DbTimesheetTag[]
-                {
+                [
                     new()
                     {
                         Description = "#Task1. Some first text"
@@ -58,7 +56,7 @@ partial class CrmTimesheetApiSource
                     {
                         Description = "Text#One"
                     }
-                },
+                ],
                 new()
                 {
                     Tags = new("#Task1", "#Task_01", "#Task02", "#SomeTag", "#One")

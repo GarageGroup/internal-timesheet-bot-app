@@ -35,13 +35,13 @@ partial class CrmProjectApiTest
 
         var input = new ProjectSetSearchIn(
             searchText: "Some search text",
-            userId: Guid.Parse("3589bc60-227f-4aa6-a5c3-4248304a1b49"),
+            userId: new("3589bc60-227f-4aa6-a5c3-4248304a1b49"),
             top: 3);
 
         var cancellationToken = new CancellationToken(false);
         _ = await api.SearchAsync(input, cancellationToken);
 
-        mockDataverseApiClient.Verify(static a => a.Impersonate(Guid.Parse("3589bc60-227f-4aa6-a5c3-4248304a1b49")), Times.Once);
+        mockDataverseApiClient.Verify(static a => a.Impersonate(new("3589bc60-227f-4aa6-a5c3-4248304a1b49")), Times.Once);
     }
 
     [Theory]
