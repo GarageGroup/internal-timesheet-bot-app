@@ -1,4 +1,7 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using GarageGroup.Infra;
 
 namespace GarageGroup.Internal.Timesheet;
@@ -22,4 +25,9 @@ internal sealed partial class CrmTimesheetApi(TDataverseApi dataverseApi, TSqlAp
 
     [GeneratedRegex($"{TagStartSymbol}\\w+", RegexOptions.CultureInvariant)]
     private static partial Regex CreateTagRegex();
+
+    public ValueTask<Result<Unit, Failure<TimesheetCreateFailureCode>>> DeleteAsync(TimesheetDeleteIn input, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
 }
