@@ -39,5 +39,6 @@ partial class CrmTimesheetApi
         new(
             duration: dbTimesheet.Duration,
             projectName: dbTimesheet.Subject.OrNullIfEmpty() ?? dbTimesheet.ProjectName, 
-            description: dbTimesheet.Description);
+            description: dbTimesheet.Description,
+            id: dbTimesheet.Id);
 }

@@ -16,8 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="EarlyFuncPack.Core.AsyncPipeline" Version="0.3.0" />
-    <PackageReference Include="GarageGroup.Infra.Dataverse.Api.Abstractions.EntityCreate" Version="3.12.0" />
-    <PackageReference Include="GarageGroup.Infra.Dataverse.Api.Abstractions.Impersonate" Version="2.1.1" />
+    <PackageReference Include="GarageGroup.Infra.Dataverse.Api.Abstractions" Version="3.14.0" />
     <PackageReference Include="GarageGroup.Infra.Sql.Api.Abstractions.QueryEntitySet" Version="2.2.0" />
     <PackageReference Include="GarageGroup.Infra.Sql.Api.Core.DbRequest" Version="2.3.0" />
     <PackageReference Include="PrimeFuncPack.Dependency.Core" Version="2.1.0" />

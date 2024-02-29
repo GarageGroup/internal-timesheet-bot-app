@@ -25,43 +25,44 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "endpoint", "endpoint", "{7D
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DateTimesheet.Get", "DateTimesheet.Get", "{A983929D-6468-4F3B-B70C-A550AD9F6426}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flow", "src\endpoint\DateTimesheet.Get\Flow.csproj", "{A62224A6-203C-4AA3-809E-D1730330DEBE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Flow", "src\endpoint\DateTimesheet.Get\Flow.csproj", "{A62224A6-203C-4AA3-809E-D1730330DEBE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Timesheet.Create", "Timesheet.Create", "{7012B7E9-F5CC-420D-A0A3-AB4349465E7C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flow", "src\endpoint\Timesheet.Create\Flow.csproj", "{F3B3B731-E72C-4E8D-B48D-F695D7921DA3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Flow", "src\endpoint\Timesheet.Create\Flow.csproj", "{F3B3B731-E72C-4E8D-B48D-F695D7921DA3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureFunc", "src\app\AzureFunc\AzureFunc.csproj", "{997B1FC9-5AAD-4295-8D20-77F0FD1FBA29}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureFunc", "src\app\AzureFunc\AzureFunc.csproj", "{997B1FC9-5AAD-4295-8D20-77F0FD1FBA29}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "service", "service", "{43D27A23-A5EE-4FD5-A7FE-40F567073A0A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{77EC7666-BD6E-4D74-BAE8-38E75952CBD5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Entity", "src\service\Shared\Entity\Entity.csproj", "{A7C4830A-FF6F-4AE7-9313-46DE45FF8251}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Entity", "src\service\Shared\Entity\Entity.csproj", "{A7C4830A-FF6F-4AE7-9313-46DE45FF8251}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CrmProject", "CrmProject", "{8675B278-D3FB-4674-9264-05BEFAA058B3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contract", "src\service\CrmProject\Contract\Contract.csproj", "{EE31539A-7C97-4AEE-8D17-C8A4BDA84B49}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Contract", "src\service\CrmProject\Contract\Contract.csproj", "{EE31539A-7C97-4AEE-8D17-C8A4BDA84B49}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "src\service\CrmProject\Api\Api.csproj", "{20FF6D5E-2D6D-4885-A08D-F9486A2877D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Api", "src\service\CrmProject\Api\Api.csproj", "{20FF6D5E-2D6D-4885-A08D-F9486A2877D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "src\service\CrmProject\Test\Test.csproj", "{790BFA4B-789D-4F24-BC85-99D3074AA75F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "src\service\CrmProject\Test\Test.csproj", "{790BFA4B-789D-4F24-BC85-99D3074AA75F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CrmTimesheet", "CrmTimesheet", "{68A33764-3D85-4805-85DF-AE31D9C67D74}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contract", "src\service\CrmTimesheet\Contract\Contract.csproj", "{2BF1F379-231A-4C17-9A9D-42090D90D584}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Contract", "src\service\CrmTimesheet\Contract\Contract.csproj", "{2BF1F379-231A-4C17-9A9D-42090D90D584}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "src\service\CrmTimesheet\Api\Api.csproj", "{7A8288BA-A475-4A0A-9257-D47E2EF5E358}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Api", "src\service\CrmTimesheet\Api\Api.csproj", "{7A8288BA-A475-4A0A-9257-D47E2EF5E358}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "src\service\CrmTimesheet\Test\Test.csproj", "{29D2A481-5ADB-4DE2-95BE-9FC9DB89133D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "src\service\CrmTimesheet\Test\Test.csproj", "{29D2A481-5ADB-4DE2-95BE-9FC9DB89133D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Timesheet.Delete", "Timesheet.Delete", "{943E2D51-FB8B-44A4-9336-FEF3952BB1C6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Flow", "src\endpoint\Timesheet.Delete\Flow.csproj", "{D569BBB1-164B-4386-9B43-1698CB41C9A9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{A62224A6-203C-4AA3-809E-D1730330DEBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -104,6 +105,13 @@ Global
 		{29D2A481-5ADB-4DE2-95BE-9FC9DB89133D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29D2A481-5ADB-4DE2-95BE-9FC9DB89133D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29D2A481-5ADB-4DE2-95BE-9FC9DB89133D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D569BBB1-164B-4386-9B43-1698CB41C9A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D569BBB1-164B-4386-9B43-1698CB41C9A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D569BBB1-164B-4386-9B43-1698CB41C9A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D569BBB1-164B-4386-9B43-1698CB41C9A9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{2388D7B3-F531-46FD-ACE2-457B8F409317} = {29C5E8DE-5450-4C46-97A7-A25DE54C3DFC}
@@ -123,5 +131,10 @@ Global
 		{2BF1F379-231A-4C17-9A9D-42090D90D584} = {68A33764-3D85-4805-85DF-AE31D9C67D74}
 		{7A8288BA-A475-4A0A-9257-D47E2EF5E358} = {68A33764-3D85-4805-85DF-AE31D9C67D74}
 		{29D2A481-5ADB-4DE2-95BE-9FC9DB89133D} = {68A33764-3D85-4805-85DF-AE31D9C67D74}
+		{943E2D51-FB8B-44A4-9336-FEF3952BB1C6} = {7D9CDEDB-482B-476A-BB7F-662F7F838FE1}
+		{D569BBB1-164B-4386-9B43-1698CB41C9A9} = {943E2D51-FB8B-44A4-9336-FEF3952BB1C6}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ABFD3626-C36B-4027-95E4-020B5A983788}
 	EndGlobalSection
 EndGlobal

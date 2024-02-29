@@ -13,7 +13,7 @@ partial class CrmTimesheetApiTest
     public static async Task GetTagSetAsync_InputIsNull_ExpectArgumentNullException()
     {
         var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(SomeDbTimesheetTagSet);
-        var api = new CrmTimesheetApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>(), mockSqlApi.Object, SomeOption);
+        var api = new CrmTimesheetApi(Mock.Of<IDataverseApiClient>(), mockSqlApi.Object, SomeOption);
 
         var ex = await Assert.ThrowsAsync<ArgumentNullException>(TestAsync);
         Assert.Equal("input", ex.ParamName);
@@ -27,7 +27,7 @@ partial class CrmTimesheetApiTest
     public static async Task GetTagSetAsync_InputIsNotNull_ExpectSqlApiCalledOnce()
     {
         var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(SomeDbTimesheetTagSet);
-        var api = new CrmTimesheetApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>(), mockSqlApi.Object, SomeOption);
+        var api = new CrmTimesheetApi(Mock.Of<IDataverseApiClient>(), mockSqlApi.Object, SomeOption);
 
         var input = new TimesheetTagSetGetIn(
             userId: new("82ee3d26-17f1-4e2f-adb2-eeea5119a512"),
@@ -74,7 +74,7 @@ partial class CrmTimesheetApiTest
         var dbFailure = sourceException.ToFailure("Some failure text");
 
         var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(dbFailure);
-        var api = new CrmTimesheetApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>(), mockSqlApi.Object, SomeOption);
+        var api = new CrmTimesheetApi(Mock.Of<IDataverseApiClient>(), mockSqlApi.Object, SomeOption);
 
         var actual = await api.GetTagSetAsync(SomeTimesheetTagSetGetInput, default);
         var expected = Failure.Create("Some failure text", sourceException);
@@ -88,7 +88,7 @@ partial class CrmTimesheetApiTest
         FlatArray<DbTimesheetTag> dbTimesheetTags, TimesheetTagSetGetOut expected)
     {
         var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(dbTimesheetTags);
-        var api = new CrmTimesheetApi(Mock.Of<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>(), mockSqlApi.Object, SomeOption);
+        var api = new CrmTimesheetApi(Mock.Of<IDataverseApiClient>(), mockSqlApi.Object, SomeOption);
 
         var actual = await api.GetTagSetAsync(SomeTimesheetTagSetGetInput, default);
         Assert.StrictEqual(expected, actual);

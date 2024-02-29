@@ -15,6 +15,6 @@ public interface ICrmTimesheetApi
     ValueTask<Result<Unit, Failure<TimesheetCreateFailureCode>>> CreateAsync(
         TimesheetCreateIn input, CancellationToken cancellationToken);
     
-    ValueTask<Result<Unit, Failure<TimesheetCreateFailureCode>>> DeleteAsync(
+    ValueTask<Result<Unit, Failure<TimesheetDeleteFailureCode>>> DeleteAsync(
         TimesheetDeleteIn input, CancellationToken cancellationToken);
 }

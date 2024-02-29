@@ -22,6 +22,11 @@ public static partial class CrmTimesheetApiTest
             description: "Some description",
             channel: TimesheetChannel.Telegram);
 
+    private static readonly TimesheetDeleteIn SomeTimesheetDeleteInput
+        =
+        new(
+            Guid.Parse("17bdba90-1161-4715-b4bf-b416200acc79"));
+
     private static readonly TimesheetSetGetIn SomeTimesheetSetGetInput
         =
         new(
@@ -89,12 +94,32 @@ public static partial class CrmTimesheetApiTest
         return mock;
     }
 
-    private static Mock<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>> BuildMockDataverseApiClient(
-        IDataverseEntityCreateSupplier dataverseCreateSupplier)
+    private static Mock<IDataverseApiClient> BuildMockDataverseApiClient(
+        in Result<Unit, Failure<DataverseFailureCode>> result)
     {
-        var mock = new Mock<IDataverseImpersonateSupplier<IDataverseEntityCreateSupplier>>();
+        var mock = new Mock<IDataverseApiClient>();
 
-        _ = mock.Setup(static a => a.Impersonate(It.IsAny<Guid>())).Returns(dataverseCreateSupplier);
+        _ = mock.Setup(static a => a.Impersonate(It.IsAny<Guid>())).Returns(mock.Object);
+
+        _ = mock
+            .Setup(static a => a.CreateEntityAsync(
+                It.IsAny<DataverseEntityCreateIn<IReadOnlyDictionary<string, object?>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
+
+        return mock;
+    }
+
+    private static Mock<IDataverseApiClient> BuildMockDeleteDataverseApiClient(
+        in Result<Unit, Failure<DataverseFailureCode>> result)
+    {
+        var mock = new Mock<IDataverseApiClient>();
+
+        _ = mock.Setup(static a => a.Impersonate(It.IsAny<Guid>())).Returns(mock.Object);
+
+        _ = mock
+            .Setup(static a => a.DeleteEntityAsync(
+                It.IsAny<DataverseEntityDeleteIn>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
 
         return mock;
     }

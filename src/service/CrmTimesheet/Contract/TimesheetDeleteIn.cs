@@ -10,5 +10,4 @@ public sealed record class TimesheetDeleteIn
     }
     
     public Guid TimesheetId { get; }
-    
 }
