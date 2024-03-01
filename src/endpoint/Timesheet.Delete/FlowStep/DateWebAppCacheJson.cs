@@ -1,4 +1,3 @@
-﻿namespace Flow.FlowStep
-{
-    internal sealed record DateWebAppCacheJson(string? ActivityId);
-}
+﻿namespace GarageGroup.Internal.Timesheet;
+
+internal sealed record DateWebAppCacheJson(string? ActivityId);

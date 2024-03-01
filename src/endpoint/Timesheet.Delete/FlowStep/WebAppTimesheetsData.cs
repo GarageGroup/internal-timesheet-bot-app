@@ -1,19 +1,13 @@
-﻿using GarageGroup.Internal.Timesheet;
-using Newtonsoft.Json;
-using System;
+﻿using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Flow.FlowStep
+namespace GarageGroup.Internal.Timesheet;
+
+internal sealed record WebAppTimesheetsData
 {
-    internal sealed record WebAppTimesheetsData
-    {
-        [JsonProperty("date")]
-        public string? Date { get; init; }
+    [JsonProperty("date")]
+    public string? Date { get; init; }
 
-        [JsonProperty("timesheets")]
-        public IReadOnlyCollection<TimesheetJson>? Timesheets { get; init; }
-    }
+    [JsonProperty("timesheets")]
+    public IReadOnlyCollection<TimesheetJson>? Timesheets { get; init; }
 }

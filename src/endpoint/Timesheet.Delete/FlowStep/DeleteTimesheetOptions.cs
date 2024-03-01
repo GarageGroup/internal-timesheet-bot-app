@@ -1,8 +1,9 @@
-﻿namespace Flow.FlowStep
+﻿using System;
+
+namespace GarageGroup.Internal.Timesheet;
+
+internal sealed record DeleteTimesheetOptions
 {
-    internal sealed record DeleteTimesheetOptions
-    {
-        public TimeSpan TimesheetInterval { get; init; }
-        public required string UrlWebApp { get; init; }
-    }
+    public required TimeSpan TimesheetInterval { get; init; }
+    public required string UrlWebApp { get; init; }
 }

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Web;
 using AdaptiveCards;
@@ -7,7 +10,7 @@ using Microsoft.Bot.Schema;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class DateTimesheetFlowStep
+partial class TimesheetDeleteFlowStep
 {
     internal static ChatFlow<DeleteTimesheetFlowState> ShowTimesheetSet(this ChatFlow<DeleteTimesheetFlowState> chatFlow)
         =>

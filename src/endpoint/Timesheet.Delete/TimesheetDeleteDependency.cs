@@ -1,14 +1,16 @@
-using Flow.FlowStep;
 using GarageGroup.Infra.Bot.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PrimeFuncPack;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace GarageGroup.Internal.Timesheet;
 
-public static class DateTimesheetDeleteDependency
+public static class TimesheetDeleteDependency
 {
-    public static IBotBuilder MapDateTimesheetDeleteFlow(
+    public static IBotBuilder MapTimesheetDeleteFlow(
         this Dependency<ICrmTimesheetApi> dependency, IBotBuilder botBuilder, string commandName)
     {
         ArgumentNullException.ThrowIfNull(dependency);

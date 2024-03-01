@@ -1,11 +1,15 @@
-﻿using Flow.FlowStep;
-using GarageGroup.Infra.Bot.Builder;
+﻿using GarageGroup.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace GarageGroup.Internal.Timesheet;
-partial class DateTimesheetFlowStep
+partial class TimesheetDeleteFlowStep
 {
     internal static ChatFlow<DeleteTimesheetFlowState> AwaitTimesheetWebApp(this ChatFlow<DeleteTimesheetFlowState> chatFlow)
         =>

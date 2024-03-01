@@ -1,10 +1,13 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
 using GarageGroup.Infra.Bot.Builder;
 using Microsoft.Extensions.Logging;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class DateTimesheetFlowStep
+partial class TimesheetDeleteFlowStep
 {
     internal static ChatFlow<DeleteTimesheetFlowState> DeleteTimesheet(
         this ChatFlow<DeleteTimesheetFlowState> chatFlow, ICrmTimesheetApi timesheetApi)
@@ -43,7 +46,7 @@ partial class DateTimesheetFlowStep
         (DeleteTimesheetFlowState State, ICrmTimesheetApi CrmTimesheetApi) input, CancellationToken cancellationToken)
     {
         var failures = new ConcurrentBag<(Failure<TimesheetDeleteFailureCode> Failure, Guid Id)>();
-        await Parallel.ForEachAsync(input.State.DeleteTimesheetsId.AsEnumerable(), InnerDeleteAsync);
+        await Parallel.ForEachAsync(input.State.DeleteTimesheetsId.AsEnumerable(), cancellationToken, InnerDeleteAsync);
 
         if (failures.IsEmpty)
         {

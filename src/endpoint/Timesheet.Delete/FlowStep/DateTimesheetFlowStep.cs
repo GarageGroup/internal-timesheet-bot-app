@@ -1,14 +1,11 @@
+using System;
 using System.Globalization;
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal static partial class DateTimesheetFlowStep
+internal static partial class TimesheetDeleteFlowStep
 {
     private const char HourSymbol = 'ч';
-
-    private const int DaysInRow = 3;
-
-    private const int DaysRowsCount = 3;
 
     private const string DatePlaceholder = "дд.мм.гг";
 
@@ -24,7 +21,7 @@ internal static partial class DateTimesheetFlowStep
 
     private static readonly CultureInfo RussianCultureInfo;
 
-    static DateTimesheetFlowStep()
+    static TimesheetDeleteFlowStep()
         =>
         RussianCultureInfo = CultureInfo.GetCultureInfo("ru-RU");
 
@@ -33,10 +30,6 @@ internal static partial class DateTimesheetFlowStep
         fixWidth
         ? value.ToString("#,##0.00", RussianCultureInfo) + HourSymbol
         : value.ToString("#,##0.##", RussianCultureInfo) + HourSymbol;
-
-    private static string ToStringRussianCulture(this DateOnly date, string format)
-        =>
-        date.ToString(format, RussianCultureInfo);
 
     private static string ToStringRussianCulture(this DateOnly date)
         =>

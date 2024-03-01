@@ -1,13 +1,15 @@
-using Flow.FlowStep;
 using GarageGroup.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class DateTimesheetFlowStep
+partial class TimesheetDeleteFlowStep
 {
     internal static ChatFlow<DeleteTimesheetFlowState> AwaitDateWebApp(this ChatFlow<DeleteTimesheetFlowState> chatFlow)
         =>
@@ -21,25 +23,25 @@ partial class DateTimesheetFlowStep
         if (context.StepState is DateWebAppCacheJson cache)
         {
             return await AsyncPipeline
-            .Pipe(
-                context, token)
-            .Pipe(
-                _ => ParseDate(context, cache))
-            .MapSuccess(
-                data => (data, context))
-            .Forward(
-                ValidateDate)
-            .MapSuccess(
-                date => (context, date, cache))
-            .FoldValue(
-                SuccessAsync,
-                async (botFailure, token) =>
-                {
-                    var activity = MessageFactory.Text(botFailure.UserMessage);
-                    await SendInsteadActivityAsync(context, cache.ActivityId, activity, token);
-                    return context.RepeatSameStateJump<DeleteTimesheetFlowState>();
-                })
-            .ToTask();
+                .Pipe(
+                    context, token)
+                .Pipe(
+                    _ => ParseDate(context, cache))
+                .MapSuccess(
+                    data => (data, context))
+                .Forward(
+                    ValidateDate)
+                .MapSuccess(
+                    date => (context, date, cache))
+                .FoldValue(
+                    SuccessAsync,
+                    async (botFailure, token) =>
+                    {
+                        var activity = MessageFactory.Text(botFailure.UserMessage);
+                        await SendInsteadActivityAsync(context, cache.ActivityId, activity, token);
+                        return context.RepeatSameStateJump<DeleteTimesheetFlowState>();
+                    })
+                .ToTask();
         }
 
         var activity = MessageFactory.Text($"Выбери дату или введите дату в формате {DatePlaceholder}");
@@ -99,7 +101,7 @@ partial class DateTimesheetFlowStep
             context.DeleteActivityAsync(activityId, token);
     }
 
-    private static object CreateChannelDataSelectDate(string url)
+    private static WebAppChannelData CreateChannelDataSelectDate(string url)
         => 
         new WebAppChannelData
         {

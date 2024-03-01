@@ -1,22 +1,21 @@
 ﻿using Newtonsoft.Json;
 
-namespace Flow.FlowStep
+namespace GarageGroup.Internal.Timesheet;
+
+internal sealed record MessageWebApp
 {
-    internal sealed record MessageWebApp
-    {
-        [JsonProperty("web_app_data")]
-        public WebAppData? WebAppData { get; init; }
-    }
+    [JsonProperty("web_app_data")]
+    public WebAppData? WebAppData { get; init; }
+}
 
-    internal sealed record WebAppResponse
-    {
-        [JsonProperty("message")]
-        public MessageWebApp? Message { get; init; }
-    }
+internal sealed record WebAppResponse
+{
+    [JsonProperty("message")]
+    public MessageWebApp? Message { get; init; }
+}
 
-    internal sealed record WebAppData
-    {
-        [JsonProperty("data")]
-        public string? Data { get; init; }
-    }
+internal sealed record WebAppData
+{
+    [JsonProperty("data")]
+    public string? Data { get; init; }
 }

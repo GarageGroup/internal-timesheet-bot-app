@@ -1,9 +1,12 @@
 using GarageGroup.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class DateTimesheetFlowStep
+partial class TimesheetDeleteFlowStep
 {
     internal static ChatFlow<DeleteTimesheetFlowState> ReadContextData(
         this ChatFlow<DeleteTimesheetFlowState> chatFlow, ConversationState conversationState)

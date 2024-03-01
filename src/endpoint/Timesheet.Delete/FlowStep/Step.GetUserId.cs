@@ -2,7 +2,7 @@ using GarageGroup.Infra.Bot.Builder;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class DateTimesheetFlowStep
+partial class TimesheetDeleteFlowStep
 {
     internal static ChatFlow<DeleteTimesheetFlowState> GetUserId(this ChatFlow<DeleteTimesheetFlowState> chatFlow)
         =>
