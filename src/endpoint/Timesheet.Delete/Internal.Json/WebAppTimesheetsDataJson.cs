@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal sealed record WebAppTimesheetsData
+internal sealed record WebAppTimesheetsDataJson
 {
     [JsonProperty("date")]
     public string? Date { get; init; }

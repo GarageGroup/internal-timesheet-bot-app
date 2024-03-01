@@ -11,10 +11,15 @@ partial class TimesheetDeleteFlowStep
     internal static ChatFlow<DeleteTimesheetFlowState> GetTimesheetSet(
         this ChatFlow<DeleteTimesheetFlowState> chatFlow, ICrmTimesheetApi timesheetApi)
         =>
-        chatFlow.SetTypingStatus().ForwardValue(timesheetApi.GetTimesheetSetOrBreakAsync);
+        chatFlow
+            .SetTypingStatus()
+            .ForwardValue(
+                timesheetApi.GetTimesheetSetOrBreakAsync);
 
     private static ValueTask<ChatFlowJump<DeleteTimesheetFlowState>> GetTimesheetSetOrBreakAsync(
-        this ICrmTimesheetApi timesheetApi, IChatFlowContext<DeleteTimesheetFlowState> context, CancellationToken cancellationToken)
+        this ICrmTimesheetApi timesheetApi, 
+        IChatFlowContext<DeleteTimesheetFlowState> context, 
+        CancellationToken cancellationToken)
         =>
         AsyncPipeline.Pipe(
             context.FlowState, cancellationToken)
@@ -65,10 +70,8 @@ partial class TimesheetDeleteFlowStep
         =>
         (failure.FailureCode switch
         {
-            TimesheetSetGetFailureCode.NotAllowed
-                => "Данная операция не разрешена для вашей учетной записи. Обратитесь к администратору",
-            _
-                => "Произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее"
+            TimesheetSetGetFailureCode.NotAllowed => "Данная операция не разрешена для вашей учетной записи. Обратитесь к администратору",
+            _ => "Произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее"
         })
         .Pipe(
             message => ChatFlowBreakState.From(message, failure.FailureMessage, failure.SourceException));

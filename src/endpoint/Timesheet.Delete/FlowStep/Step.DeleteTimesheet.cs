@@ -15,7 +15,9 @@ partial class TimesheetDeleteFlowStep
         chatFlow.ForwardValue(timesheetApi.Delete);
 
     private static ValueTask<ChatFlowJump<DeleteTimesheetFlowState>> Delete(
-        this ICrmTimesheetApi crmTimesheetApi, IChatFlowContext<DeleteTimesheetFlowState> context, CancellationToken cancellationToken)
+        this ICrmTimesheetApi crmTimesheetApi, 
+        IChatFlowContext<DeleteTimesheetFlowState> context, 
+        CancellationToken cancellationToken)
         =>
         AsyncPipeline.Pipe(
             context.FlowState, cancellationToken)
@@ -37,13 +39,14 @@ partial class TimesheetDeleteFlowStep
         foreach (var failure in deleteFailure.Failures)
         {
             logger.LogError(failure.Failure.SourceException, 
-                "Не удалось удалить timesheet. TimesheetId: {0}. FailureMessage: {1}. FailureCode: {2}"
-                , failure.Id, failure.Failure.FailureMessage, failure.Failure.FailureCode);
+                "Не удалось удалить timesheet. TimesheetId: {0}. FailureMessage: {1}. FailureCode: {2}", 
+                failure.Id, failure.Failure.FailureMessage, failure.Failure.FailureCode);
         }
     }
 
     private static async ValueTask<Result<Unit, DeleteFailure>> DeleteTimesheetAsync(
-        (DeleteTimesheetFlowState State, ICrmTimesheetApi CrmTimesheetApi) input, CancellationToken cancellationToken)
+        (DeleteTimesheetFlowState State, ICrmTimesheetApi CrmTimesheetApi) input, 
+        CancellationToken cancellationToken)
     {
         var failures = new ConcurrentBag<(Failure<TimesheetDeleteFailureCode> Failure, Guid Id)>();
         await Parallel.ForEachAsync(input.State.DeleteTimesheetsId.AsEnumerable(), cancellationToken, InnerDeleteAsync);

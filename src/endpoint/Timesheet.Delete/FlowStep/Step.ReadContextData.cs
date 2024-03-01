@@ -15,7 +15,9 @@ partial class TimesheetDeleteFlowStep
             conversationState.ReadContextDataAsync);
 
     private static async Task<DeleteTimesheetFlowState> ReadContextDataAsync(
-        this ConversationState conversationState, IChatFlowContext<DeleteTimesheetFlowState> context, CancellationToken cancellationToken)
+        this ConversationState conversationState, 
+        IChatFlowContext<DeleteTimesheetFlowState> context, 
+        CancellationToken cancellationToken)
     {
         var contextData = await conversationState.GetContextDataAsync(context, cancellationToken).ConfigureAwait(false);
 
@@ -32,7 +34,9 @@ partial class TimesheetDeleteFlowStep
     }
 
     private static Task<Dictionary<string, string?>?> GetContextDataAsync(
-        this ConversationState conversationState, ITurnContext context, CancellationToken cancellationToken)
+        this ConversationState conversationState, 
+        ITurnContext context, 
+        CancellationToken cancellationToken)
         =>
         conversationState.GetContextDataPropertyAccessor().GetAsync(context, default, cancellationToken);
 

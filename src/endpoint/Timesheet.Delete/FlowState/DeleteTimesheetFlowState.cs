@@ -38,5 +38,10 @@ internal sealed record class DeleteTimesheetFlowState
 
     public FlatArray<Guid> DeleteTimesheetsId { get; init; }
 
-    public required DeleteTimesheetOptions Options { get; init; }
+    public DeleteTimesheetOptions Options { get; init; }
+
+    public DeleteTimesheetFlowState(DeleteTimesheetOptions options)
+    {
+        Options = options;
+    }
 }

@@ -31,9 +31,11 @@ public static class TimesheetDeleteDependency
         =>
         new ()
         {
-            TimesheetInterval = TimeSpan.Parse(configuration["DeleteTimesheetOptions:TimesheetInterval"] 
-                ?? throw new InvalidOperationException("TimesheetInterval is missing")),
-            UrlWebApp = configuration["DeleteTimesheetOptions:UrlWebApp"] 
-                ?? throw new InvalidOperationException("UrlWebApp is missing")
+            TimesheetInterval = TimeSpan.Parse(configuration.GetRequiredString("DeleteTimesheetOptions:TimesheetInterval")),
+            UrlWebApp = configuration.GetRequiredString("DeleteTimesheetOptions:UrlWebApp")
         };
+
+    private static string GetRequiredString(this IConfiguration configuration, string nameConfiguration)
+        =>
+        configuration[nameConfiguration] ?? throw new InvalidOperationException($"{nameConfiguration} is missing");
 }

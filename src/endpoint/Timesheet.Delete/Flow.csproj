@@ -12,6 +12,7 @@
 	
 	<ItemGroup>
 		<ProjectReference Include="..\..\service\CrmTimesheet\Contract\Contract.csproj" />
+		<ProjectReference Include="..\WebApp.Models\WebAppModels\WebAppModels.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -23,26 +23,26 @@ partial class TimesheetDeleteFlowStep
         if (context.StepState is DateWebAppCacheJson cache)
         {
             return await AsyncPipeline
-            .Pipe(
-                context, token)
-            .Pipe(
-                _ => ParseTimesheet(context))
-            .MapSuccess(
-                data => (context, data))
-            .FoldValue(
-                SuccessSelectTimesheetAsync,
-                async (botFailure, token) =>
-                {
-                    var activity = MessageFactory.Text(botFailure.UserMessage);
-                    await SendInsteadActivityAsync(context, cache.ActivityId, activity, token);
-                    return context.RepeatSameStateJump<DeleteTimesheetFlowState>();
-                })
-            .ToTask();
+                .Pipe(
+                    context, token)
+                .Pipe(
+                    _ => ParseTimesheet(context))
+                .MapSuccess(
+                    data => (context, data))
+                .FoldValue(
+                    SuccessSelectTimesheetAsync,
+                    async (botFailure, token) =>
+                    {
+                        var activity = MessageFactory.Text(botFailure.UserMessage);
+                        await SendInsteadActivityAsync(context, cache.ActivityId, activity, token);
+                        return context.RepeatSameStateJump<DeleteTimesheetFlowState>();
+                    })
+                .ToTask();
         }
 
         var activity = MessageFactory.Text("Выбери списания времени, которые нужно удалить");
 
-        var webAppData = new WebAppTimesheetsData
+        var webAppData = new WebAppTimesheetsDataJson
         {
             Date = context.FlowState.Date.ToString(),
             Timesheets = context.FlowState.Timesheets,
@@ -58,7 +58,9 @@ partial class TimesheetDeleteFlowStep
         return ChatFlowJump.Repeat<DeleteTimesheetFlowState>(new DateWebAppCacheJson(resourse?.Id));
     }
 
-    private static async ValueTask<ChatFlowJump<DeleteTimesheetFlowState>> SuccessSelectTimesheetAsync((IChatFlowContext<DeleteTimesheetFlowState> Context, FlatArray<Guid> TimesheetsId) input, CancellationToken cancellationToken = default)
+    private static async ValueTask<ChatFlowJump<DeleteTimesheetFlowState>> SuccessSelectTimesheetAsync(
+        (IChatFlowContext<DeleteTimesheetFlowState> Context, FlatArray<Guid> TimesheetsId) input, 
+        CancellationToken cancellationToken = default)
     {
         await Task.Yield();
         return input.Context.FlowState with
@@ -70,7 +72,7 @@ partial class TimesheetDeleteFlowStep
     private static Result<FlatArray<Guid>, BotFlowFailure> ParseTimesheet(IChatFlowContext<DeleteTimesheetFlowState> context)
     {
         var json = JsonConvert.SerializeObject(context.Activity.ChannelData);
-        var dataWebApp = JsonConvert.DeserializeObject<WebAppResponse>(json);
+        var dataWebApp = JsonConvert.DeserializeObject<WebAppResponseJson>(json);
 
         if (dataWebApp?.Message?.WebAppData is null)
         {
@@ -91,20 +93,20 @@ partial class TimesheetDeleteFlowStep
 
     private static object CreateChannelDataSelectTimesheet(string url, string data)
         =>
-        new WebAppChannelData
+        new WebAppChannelDataJson
         {
             Method = "sendMessage",
-            Parameters = new Parameters
+            Parameters = new ParametersJson
             {
-                ReplyMarkup = new ReplyMarkup
+                ReplyMarkup = new ReplyMarkupJson
                 {
                     KeyboardButtons =
                     [
                         [
-                            new KeyboardButton
+                            new KeyboardButtonJson
                             {
                                 Text = "Выбрать списание",
-                                WebApp = new WebApp
+                                WebApp = new WebAppJson
                                 {
                                     Url = $"{url}/selectTimesheet?data={data}"
                                 }

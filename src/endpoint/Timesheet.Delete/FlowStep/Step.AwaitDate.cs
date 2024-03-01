@@ -52,10 +52,12 @@ partial class TimesheetDeleteFlowStep
         return ChatFlowJump.Repeat<DeleteTimesheetFlowState>(new DateWebAppCacheJson(resourse?.Id));
     }
 
-    private static Result<DateOnly, BotFlowFailure> ParseDate(IChatFlowContext<DeleteTimesheetFlowState> context, DateWebAppCacheJson cache)
+    private static Result<DateOnly, BotFlowFailure> ParseDate(
+        IChatFlowContext<DeleteTimesheetFlowState> context, 
+        DateWebAppCacheJson cache)
     {
         var json = JsonConvert.SerializeObject(context.Activity.ChannelData);
-        var dataWebApp = JsonConvert.DeserializeObject<WebAppResponse>(json);
+        var dataWebApp = JsonConvert.DeserializeObject<WebAppResponseJson>(json);
 
         if (dataWebApp?.Message?.WebAppData is null)
         {
@@ -65,18 +67,20 @@ partial class TimesheetDeleteFlowStep
         return DateOnly.TryParse(dataWebApp.Message.WebAppData.Data, out var dateWebAppData) ? dateWebAppData : BotFlowFailure.From("Не удалось распознать дату"); 
     }
 
-    private static Result<DateOnly, BotFlowFailure> ValidateDate((DateOnly Date, IChatFlowContext<DeleteTimesheetFlowState> Context) inputDate)
+    private static Result<DateOnly, BotFlowFailure> ValidateDate(
+        (DateOnly Date, IChatFlowContext<DeleteTimesheetFlowState> Context) inputDate)
     {
         if (inputDate.Date < DateOnly.FromDateTime(DateTime.Now.Subtract(inputDate.Context.FlowState.Options.TimesheetInterval)))
         {
-            return BotFlowFailure.From(
-                $"Дата не входит в допустимый интервал ({inputDate.Context.FlowState.Options.TimesheetInterval.Days} дней)");
+            return BotFlowFailure.From($"Дата не входит в допустимый интервал ({inputDate.Context.FlowState.Options.TimesheetInterval.Days} дней)");
         }
 
         return inputDate.Date;
     }
 
-    private static async ValueTask<ChatFlowJump<DeleteTimesheetFlowState>> SuccessAsync((IChatFlowContext<DeleteTimesheetFlowState> Context, DateOnly Date, DateWebAppCacheJson Cache) input, CancellationToken cancellationToken = default)
+    private static async ValueTask<ChatFlowJump<DeleteTimesheetFlowState>> SuccessAsync(
+        (IChatFlowContext<DeleteTimesheetFlowState> Context, DateOnly Date, DateWebAppCacheJson Cache) input,
+        CancellationToken cancellationToken = default)
     {
         var activity = MessageFactory.Text($"Дата: {input.Date}");
         await SendInsteadActivityAsync(input.Context, input.Cache.ActivityId, activity, cancellationToken);
@@ -86,7 +90,11 @@ partial class TimesheetDeleteFlowStep
         };
     }
 
-    private static Task SendInsteadActivityAsync(this ITurnContext context, string? activityId, IActivity activity, CancellationToken token)
+    private static Task SendInsteadActivityAsync(
+        this ITurnContext context, 
+        string? activityId, 
+        IActivity activity, 
+        CancellationToken token)
     {
         return string.IsNullOrEmpty(activityId) || context.IsNotMsteamsChannel()
             ? SendActivityAsync()
@@ -101,22 +109,22 @@ partial class TimesheetDeleteFlowStep
             context.DeleteActivityAsync(activityId, token);
     }
 
-    private static WebAppChannelData CreateChannelDataSelectDate(string url)
+    private static WebAppChannelDataJson CreateChannelDataSelectDate(string url)
         => 
-        new WebAppChannelData
+        new WebAppChannelDataJson
         {
             Method = "sendMessage",
-            Parameters = new Parameters
+            Parameters = new ParametersJson
             {
-                ReplyMarkup = new ReplyMarkup
+                ReplyMarkup = new ReplyMarkupJson
                 {
                     KeyboardButtons =
                     [
                         [
-                            new KeyboardButton
+                            new KeyboardButtonJson
                             {
                                 Text = "Выбрать дату",
-                                WebApp = new WebApp
+                                WebApp = new WebAppJson
                                 {
                                     Url = $"{url}/selectDate"
                                 }
