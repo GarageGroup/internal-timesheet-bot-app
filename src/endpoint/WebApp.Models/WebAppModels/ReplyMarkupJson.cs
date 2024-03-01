@@ -8,7 +8,7 @@ public sealed record ReplyMarkupJson
     public KeyboardButtonJson[][]? KeyboardButtons { get; init; }
 
     [JsonProperty("resize_keyboard")]
-    public bool ResizeKeyboar { get; init; }
+    public bool ResizeKeyboard { get; init; }
 
     [JsonProperty("one_time_keyboard")]
     public bool OneTimeKeyboard { get; init; }

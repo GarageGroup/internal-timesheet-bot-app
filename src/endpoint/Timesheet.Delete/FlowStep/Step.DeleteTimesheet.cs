@@ -58,10 +58,10 @@ partial class TimesheetDeleteFlowStep
 
         return new DeleteFailure(failures.ToFlatArray());
 
-        async ValueTask InnerDeleteAsync(Guid id, CancellationToken cancellationToken)
+        async ValueTask InnerDeleteAsync(Guid id, CancellationToken token)
         {
             var timesheetDeleteIn = new TimesheetDeleteIn(id);
-            var result = await input.CrmTimesheetApi.DeleteAsync(timesheetDeleteIn, cancellationToken);
+            var result = await input.CrmTimesheetApi.DeleteAsync(timesheetDeleteIn, token);
             
             if (result.IsFailure)
             {
@@ -74,7 +74,7 @@ partial class TimesheetDeleteFlowStep
         =>
         ("Не удалось удалить одну или несколько записей")
         .Pipe(
-            message => ChatFlowBreakState.From(message));
+            ChatFlowBreakState.From);
 
     internal readonly record struct DeleteFailure(FlatArray<(Failure<TimesheetDeleteFailureCode> Failure, Guid Id)> Failures);
 }

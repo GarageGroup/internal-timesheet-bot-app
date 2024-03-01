@@ -31,10 +31,10 @@ partial class TimesheetDeleteFlowStep
                     data => (context, data))
                 .FoldValue(
                     SuccessSelectTimesheetAsync,
-                    async (botFailure, token) =>
+                    async (botFailure, cancellationToken) =>
                     {
                         var activity = MessageFactory.Text(botFailure.UserMessage);
-                        await SendInsteadActivityAsync(context, cache.ActivityId, activity, token);
+                        await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken);
                         return context.RepeatSameStateJump<DeleteTimesheetFlowState>();
                     })
                 .ToTask();
@@ -53,9 +53,9 @@ partial class TimesheetDeleteFlowStep
 
         activity.ChannelData = JObject.FromObject(CreateChannelDataSelectTimesheet(context.FlowState.Options.UrlWebApp, base64Timesheets));
 
-        var resourse = await turnContext.SendActivityAsync(activity, token).ConfigureAwait(false);
+        var resource = await turnContext.SendActivityAsync(activity, token).ConfigureAwait(false);
 
-        return ChatFlowJump.Repeat<DeleteTimesheetFlowState>(new DateWebAppCacheJson(resourse?.Id));
+        return ChatFlowJump.Repeat<DeleteTimesheetFlowState>(new DateWebAppCacheJson(resource?.Id));
     }
 
     private static async ValueTask<ChatFlowJump<DeleteTimesheetFlowState>> SuccessSelectTimesheetAsync(
@@ -113,7 +113,7 @@ partial class TimesheetDeleteFlowStep
                             }
                         ]
                     ],
-                    ResizeKeyboar = true,
+                    ResizeKeyboard = true,
                     InputFieldPlaceholder = "Чтобы выбрать списания, нажмите кнопку"
                 }
             }
