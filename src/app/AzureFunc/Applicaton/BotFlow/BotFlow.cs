@@ -6,6 +6,8 @@ partial class Application
 
     private const string DateTimesheetGetCommand = "datetimesheet";
 
+    private const string TimesheetDeleteCommand = "deletetimesheet";
+
     private const string BotInfoCommand = "info";
 
     private const string StopCommand = "stop";

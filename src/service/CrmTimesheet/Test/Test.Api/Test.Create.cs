@@ -13,8 +13,7 @@ partial class CrmTimesheetApiTest
     [Fact]
     public static async Task CreateAsync_InputIsNull_ExpectArgumentNullException()
     {
-        var mockDataverseCreateSupplier = BuildMockDataverseCreateSupplier(Result.Success<Unit>(default));
-        var mockDataverseApiClient = BuildMockDataverseApiClient(mockDataverseCreateSupplier.Object);
+        var mockDataverseApiClient = BuildMockDataverseApiClient(Result.Success<Unit>(default));
 
         var api = new CrmTimesheetApi(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
         var ex = await Assert.ThrowsAsync<ArgumentNullException>(TestAsync);
@@ -29,8 +28,7 @@ partial class CrmTimesheetApiTest
     [Fact]
     public static async Task CreateAsync_InputProjectTypeIsInvalid_ExpectUnknownFailureCode()
     {
-        var mockDataverseCreateSupplier = BuildMockDataverseCreateSupplier(Result.Success<Unit>(default));
-        var mockDataverseApiClient = BuildMockDataverseApiClient(mockDataverseCreateSupplier.Object);
+        var mockDataverseApiClient = BuildMockDataverseApiClient(Result.Success<Unit>(default));
 
         var api = new CrmTimesheetApi(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
 
@@ -54,8 +52,7 @@ partial class CrmTimesheetApiTest
     [Fact]
     public static async Task CreateAsync_InputIsValid_ExpectDataverseImpersonateCalledOnce()
     {
-        var mockDataverseCreateSupplier = BuildMockDataverseCreateSupplier(Result.Success<Unit>(default));
-        var mockDataverseApiClient = BuildMockDataverseApiClient(mockDataverseCreateSupplier.Object);
+        var mockDataverseApiClient = BuildMockDataverseApiClient(Result.Success<Unit>(default));
 
         var api = new CrmTimesheetApi(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
 
@@ -81,15 +78,14 @@ partial class CrmTimesheetApiTest
     public static async Task CreateAsync_InputIsNotNull_ExpectDataverseCreateCalledOnce(
         TimesheetCreateIn input, CrmTimesheetApiOption option, DataverseEntityCreateIn<IReadOnlyDictionary<string, object?>> expectedInput)
     {
-        var mockDataverseCreateSupplier = BuildMockDataverseCreateSupplier(Result.Success<Unit>(default));
-        var mockDataverseApiClient = BuildMockDataverseApiClient(mockDataverseCreateSupplier.Object);
+        var mockDataverseApiClient = BuildMockDataverseApiClient(Result.Success<Unit>(default));
 
         var api = new CrmTimesheetApi(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), option);
 
         var cancellationToken = new CancellationToken(false);
         _ = await api.CreateAsync(input, cancellationToken);
 
-        mockDataverseCreateSupplier.Verify(
+        mockDataverseApiClient.Verify(
             a => a.CreateEntityAsync(It.Is<DataverseEntityCreateIn<IReadOnlyDictionary<string, object?>>>(
                 actual => AreDeepEqual(expectedInput, actual)), cancellationToken),
             Times.Once);
@@ -112,8 +108,7 @@ partial class CrmTimesheetApiTest
         var sourceException = new Exception("Some error message");
         var dataverseFailure = sourceException.ToFailure(sourceFailureCode, "Some failure message");
 
-        var mockDataverseCreateSupplier = BuildMockDataverseCreateSupplier(dataverseFailure);
-        var mockDataverseApiClient = BuildMockDataverseApiClient(mockDataverseCreateSupplier.Object);
+        var mockDataverseApiClient = BuildMockDataverseApiClient(dataverseFailure);
 
         var api = new CrmTimesheetApi(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
 
@@ -127,7 +122,7 @@ partial class CrmTimesheetApiTest
     public static async Task CreateAsync_DataverseResultIsSuccess_ExpectSuccess()
     {
         var mockDataverseCreateSupplier = BuildMockDataverseCreateSupplier(Result.Success<Unit>(default));
-        var mockDataverseApiClient = BuildMockDataverseApiClient(mockDataverseCreateSupplier.Object);
+        var mockDataverseApiClient = BuildMockDataverseApiClient(Result.Success<Unit>(default));
 
         var api = new CrmTimesheetApi(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
 
