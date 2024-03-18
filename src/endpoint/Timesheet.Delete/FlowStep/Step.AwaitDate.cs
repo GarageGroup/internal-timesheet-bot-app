@@ -2,7 +2,6 @@ using GarageGroup.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,7 +47,7 @@ partial class TimesheetDeleteFlowStep
         var activity = MessageFactory.Text($"Выбери дату или введите дату в формате {DatePlaceholder}");
 
         var daysInterval = context.FlowState.Options.TimesheetInterval.Days;
-        activity.ChannelData = JObject.FromObject(CreateChannelDataSelectDate(context.FlowState.Options.UrlWebApp, daysInterval));
+        activity.ChannelData = CreateChannelDataSelectDate(context.FlowState.Options.UrlWebApp, daysInterval);
 
         var resource = await turnContext.SendActivityAsync(activity, token).ConfigureAwait(false);
 

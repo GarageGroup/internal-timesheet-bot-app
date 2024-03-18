@@ -37,7 +37,7 @@ partial class TimesheetDeleteFlowStep
                         await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken).ConfigureAwait(false);
                         return context.RepeatSameStateJump<DeleteTimesheetFlowState>();
                     })
-                .ToTask()
+                .ToValueTask()
                 .ConfigureAwait(false);
         }
 
