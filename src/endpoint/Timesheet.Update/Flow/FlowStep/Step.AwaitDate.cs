@@ -2,7 +2,6 @@ using GarageGroup.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,15 +37,18 @@ partial class TimesheetUpdateFlowStep
                     async (botFailure, cancellationToken) =>
                     {
                         var activity = MessageFactory.Text(botFailure.UserMessage);
-                        await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken);
+                        await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken).ConfigureAwait(false);
                         return context.RepeatSameStateJump<UpdateTimesheetFlowState>();
                     })
                 .ToValueTask()
                 .ConfigureAwait(false);
         }
 
+        
         var activity = MessageFactory.Text($"Выбери дату или введите дату в формате {DatePlaceholder}");
-        activity.ChannelData = JObject.FromObject(CreateChannelDataSelectDate(context.FlowState.Options.UrlWebApp));
+
+        var daysInterval = context.FlowState.Options.TimesheetInterval.Days;
+        activity.ChannelData = CreateChannelDataSelectDate(context.FlowState.Options.UrlWebApp, daysInterval);
 
         var resource = await turnContext.SendActivityAsync(activity, token).ConfigureAwait(false);
 
@@ -110,7 +112,7 @@ partial class TimesheetUpdateFlowStep
             context.DeleteActivityAsync(activityId, token);
     }
 
-    private static WebAppChannelDataJson CreateChannelDataSelectDate(string url)
+    private static WebAppChannelDataJson CreateChannelDataSelectDate(string url, int daysInterval)
         => 
         new()
         {
@@ -127,7 +129,7 @@ partial class TimesheetUpdateFlowStep
                                 Text = "Выбрать дату",
                                 WebApp = new WebAppJson
                                 {
-                                    Url = $"{url}/selectDate"
+                                    Url = $"{url}/selectDate?days={daysInterval}"
                                 }
                             }
                         ]

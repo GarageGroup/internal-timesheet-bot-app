@@ -2,7 +2,6 @@
 using Microsoft.Bot.Builder;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,11 +9,13 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace GarageGroup.Internal.Timesheet;
+
 partial class TimesheetUpdateFlowStep
 {
     internal static ChatFlow<UpdateTimesheetFlowState> AwaitTimesheetWebApp(this ChatFlow<UpdateTimesheetFlowState> chatFlow, ICrmProjectApi crmProjectApi)
         =>
-        chatFlow.ForwardValue(crmProjectApi.SelectTimesheet);
+        chatFlow.ForwardValue(
+            crmProjectApi.SelectTimesheet);
 
     private static async ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> SelectTimesheet(
         this ICrmProjectApi crmProjectApi,
@@ -22,9 +23,8 @@ partial class TimesheetUpdateFlowStep
         CancellationToken token)
     {
         var turnContext = (ITurnContext)context;
-        var cache = context.StepState as DateWebAppCacheJson;
 
-        if (cache != null)
+        if (context.StepState is DateWebAppCacheJson cache)
         {
             var json = JsonConvert.SerializeObject(context.Activity.ChannelData);
             var channelDataResponse = JsonConvert.DeserializeObject<ChannelDataResposeJson>(json);
@@ -49,13 +49,13 @@ partial class TimesheetUpdateFlowStep
         return await SelectDate(context, turnContext, token).ConfigureAwait(false);
     }
 
-    private static async Task<ChatFlowJump<UpdateTimesheetFlowState>> ProcessingMessagesWebApp(
-        ICrmProjectApi crmProjectApi, 
-        IChatFlowContext<UpdateTimesheetFlowState> context, 
-        DateWebAppCacheJson cache, 
+    private static ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> ProcessingMessagesWebApp(
+        ICrmProjectApi crmProjectApi,
+        IChatFlowContext<UpdateTimesheetFlowState> context,
+        DateWebAppCacheJson cache,
         CancellationToken token)
         =>
-        await AsyncPipeline
+        AsyncPipeline
             .Pipe(
                 context, token)
             .Pipe(
@@ -69,8 +69,7 @@ partial class TimesheetUpdateFlowStep
                     var activity = MessageFactory.Text(botFailure.UserMessage);
                     await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken).ConfigureAwait(false);
                     return context.RepeatSameStateJump<UpdateTimesheetFlowState>();
-                })
-            .ToValueTask();
+                });
 
 
     private static async ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> SelectDate(
@@ -144,8 +143,8 @@ partial class TimesheetUpdateFlowStep
     private static async ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> SuccessSelectTimesheetAsync(
         (IChatFlowContext<UpdateTimesheetFlowState> Context, UpdateTimesheetJson Timesheet, ICrmProjectApi CrmProjectApi, DateWebAppCacheJson Cache) input,
         CancellationToken cancellationToken = default)
-    {
-        return (input.Timesheet, input.Cache) switch
+        =>
+        (input.Timesheet, input.Cache) switch
         {
             { Timesheet: { IsEditProject: true } } => await SelectProjectForLasted(input, cancellationToken).ConfigureAwait(false),
             { Cache: { Status: UpdateStatus.ProjectIsEdited, EditedProject: { } } } => input.Context.FlowState with
@@ -161,7 +160,7 @@ partial class TimesheetUpdateFlowStep
                     TimesheetUpdate = input.Timesheet
                 }
         };
-    }
+    
 
     private static ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> SelectProjectForLasted(
         (IChatFlowContext<UpdateTimesheetFlowState> Context, UpdateTimesheetJson Timesheet, ICrmProjectApi CrmProjectApi, DateWebAppCacheJson Cache) input, 

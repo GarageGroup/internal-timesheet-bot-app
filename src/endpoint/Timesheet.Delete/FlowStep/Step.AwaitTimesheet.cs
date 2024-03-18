@@ -34,10 +34,11 @@ partial class TimesheetDeleteFlowStep
                     async (botFailure, cancellationToken) =>
                     {
                         var activity = MessageFactory.Text(botFailure.UserMessage);
-                        await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken);
+                        await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken).ConfigureAwait(false);
                         return context.RepeatSameStateJump<DeleteTimesheetFlowState>();
                     })
-                .ToTask();
+                .ToTask()
+                .ConfigureAwait(false);
         }
 
         var activity = MessageFactory.Text("Выбери списания времени, которые нужно удалить");

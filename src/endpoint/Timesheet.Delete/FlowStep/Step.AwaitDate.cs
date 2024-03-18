@@ -38,7 +38,7 @@ partial class TimesheetDeleteFlowStep
                     async (botFailure, cancellationToken) =>
                     {
                         var activity = MessageFactory.Text(botFailure.UserMessage);
-                        await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken);
+                        await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken).ConfigureAwait(false);
                         return context.RepeatSameStateJump<DeleteTimesheetFlowState>();
                     })
                 .ToValueTask()
@@ -46,7 +46,9 @@ partial class TimesheetDeleteFlowStep
         }
 
         var activity = MessageFactory.Text($"Выбери дату или введите дату в формате {DatePlaceholder}");
-        activity.ChannelData = JObject.FromObject(CreateChannelDataSelectDate(context.FlowState.Options.UrlWebApp));
+
+        var daysInterval = context.FlowState.Options.TimesheetInterval.Days;
+        activity.ChannelData = JObject.FromObject(CreateChannelDataSelectDate(context.FlowState.Options.UrlWebApp, daysInterval));
 
         var resource = await turnContext.SendActivityAsync(activity, token).ConfigureAwait(false);
 
@@ -110,7 +112,7 @@ partial class TimesheetDeleteFlowStep
             context.DeleteActivityAsync(activityId, token);
     }
 
-    private static WebAppChannelDataJson CreateChannelDataSelectDate(string url)
+    private static WebAppChannelDataJson CreateChannelDataSelectDate(string url, int daysInterval)
         => 
         new()
         {
@@ -127,7 +129,7 @@ partial class TimesheetDeleteFlowStep
                                 Text = "Выбрать дату",
                                 WebApp = new WebAppJson
                                 {
-                                    Url = $"{url}/selectDate"
+                                    Url = $"{url}/selectDate?days={daysInterval}"
                                 }
                             }
                         ]
