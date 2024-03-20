@@ -31,7 +31,7 @@ partial class UpdateTimesheetFlow
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
         
-        await chatFlow.RunFlow(context.ConversationState, crmProjectApi, timesheetApi, options).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
+        await chatFlow.RunFlow(crmProjectApi, timesheetApi, options).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 

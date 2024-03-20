@@ -29,7 +29,7 @@ partial class DeleteTimesheetFlow
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
         
-        await chatFlow.RunFlow(context.ConversationState, timesheetApi, options).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
+        await chatFlow.RunFlow(timesheetApi, options).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 

@@ -7,8 +7,7 @@ namespace GarageGroup.Internal.Timesheet;
 internal static partial class UpdateTimesheetFlow
 {
     private static ChatFlow<Unit> RunFlow(
-        this ChatFlow chatFlow, 
-        ConversationState conversationState,
+        this ChatFlow chatFlow,
         ICrmProjectApi crmProjectApi,
         ICrmTimesheetApi timesheetApi, 
         UpdateTimesheetOptions options)
@@ -16,8 +15,6 @@ internal static partial class UpdateTimesheetFlow
         chatFlow.Start(
             () => new UpdateTimesheetFlowState(options))
         .GetUserId()
-        .ReadContextData(
-            conversationState)
         .AwaitDateWebApp()
         .GetTimesheetSet(
             timesheetApi)

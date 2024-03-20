@@ -8,15 +8,12 @@ internal static partial class DeleteTimesheetFlow
 {
     private static ChatFlow<Unit> RunFlow(
         this ChatFlow chatFlow, 
-        ConversationState conversationState, 
         ICrmTimesheetApi timesheetApi, 
         DeleteTimesheetOptions options)
         =>
         chatFlow.Start(
             () => new DeleteTimesheetFlowState(options))
         .GetUserId()
-        .ReadContextData(
-            conversationState)
         .AwaitDateWebApp()
         .GetTimesheetSet(
             timesheetApi)
