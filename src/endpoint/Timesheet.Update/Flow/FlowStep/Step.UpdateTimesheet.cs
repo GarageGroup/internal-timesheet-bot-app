@@ -59,8 +59,6 @@ partial class TimesheetUpdateFlowStep
     }
 
     private static ChatFlowBreakState ToBreakState(Failure<TimesheetUpdateFailureCode> failure)
-         =>
-         ("Ну удалось изменить запись.")
-         .Pipe(
-             message => ChatFlowBreakState.From(message, failure.FailureMessage, failure.SourceException));
+        =>
+        ChatFlowBreakState.From("Ну удалось изменить запись.", failure.FailureMessage, failure.SourceException);
 }

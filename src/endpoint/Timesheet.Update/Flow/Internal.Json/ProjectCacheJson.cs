@@ -9,5 +9,4 @@ internal sealed record ProjectCacheJson
     public string? Name { get; init; }
 
     public string? Data { get; init; }
-
 }
