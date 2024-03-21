@@ -36,7 +36,8 @@ partial class Application
         .UseBotInfoFlow()
         .UseTimesheetCreateFlow()
         .UseDateTimesheetGetFlow()
-        .UseDateTimesheetDeleteFlow()
+        .UseTimesheetDeleteFlow()
+        .UseTimesheetUpdateFlow()
         .UseBotMenuFlow()
         .Build();
 }

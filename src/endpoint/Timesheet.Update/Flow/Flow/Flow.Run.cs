@@ -5,16 +5,18 @@ using System.Threading.Tasks;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class DeleteTimesheetFlow
+partial class UpdateTimesheetFlow
 {
     internal static async ValueTask<Unit> RunAsync(
         this IBotContext context, 
-        string commandName, 
+        string commandName,
+        ICrmProjectApi crmProjectApi,
         ICrmTimesheetApi timesheetApi, 
-        DeleteTimesheetOptions options, 
+        UpdateTimesheetOptions options, 
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(crmProjectApi);
         ArgumentNullException.ThrowIfNull(timesheetApi);
 
         var turnContext = context.TurnContext;
@@ -29,13 +31,13 @@ partial class DeleteTimesheetFlow
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
         
-        await chatFlow.RunFlow(timesheetApi, options).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
+        await chatFlow.RunFlow(crmProjectApi, timesheetApi, options).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private static async Task<ChatFlow?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
     {
-        var chatFlow = context.CreateChatFlow("TimesheetDelete");
+        var chatFlow = context.CreateChatFlow("TimesheetUpdate");
         if (await chatFlow.IsStartedAsync(cancellationToken).ConfigureAwait(false))
         {
             return chatFlow;

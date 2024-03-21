@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class TimesheetDeleteFlowStep
+partial class TimesheetUpdateFlowStep
 {
-    internal static ChatFlow<DeleteTimesheetFlowState> AwaitDateWebApp(this ChatFlow<DeleteTimesheetFlowState> chatFlow)
+    internal static ChatFlow<UpdateTimesheetFlowState> AwaitDateWebApp(this ChatFlow<UpdateTimesheetFlowState> chatFlow)
         =>
         chatFlow.ForwardValue(SelectDate);
 
-    private static async ValueTask<ChatFlowJump<DeleteTimesheetFlowState>> SelectDate(
-        IChatFlowContext<DeleteTimesheetFlowState> context, CancellationToken token)
+    private static async ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> SelectDate(
+        IChatFlowContext<UpdateTimesheetFlowState> context, CancellationToken token)
     {
         var turnContext = (ITurnContext)context;
 
@@ -38,12 +38,13 @@ partial class TimesheetDeleteFlowStep
                     {
                         var activity = MessageFactory.Text(botFailure.UserMessage);
                         await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken).ConfigureAwait(false);
-                        return context.RepeatSameStateJump<DeleteTimesheetFlowState>();
+                        return context.RepeatSameStateJump<UpdateTimesheetFlowState>();
                     })
                 .ToValueTask()
                 .ConfigureAwait(false);
         }
 
+        
         var activity = MessageFactory.Text($"Выбери дату или введите дату в формате {DatePlaceholder}");
 
         var daysInterval = context.FlowState.Options.TimesheetInterval.Days;
@@ -51,10 +52,10 @@ partial class TimesheetDeleteFlowStep
 
         var resource = await turnContext.SendActivityAsync(activity, token).ConfigureAwait(false);
 
-        return ChatFlowJump.Repeat<DeleteTimesheetFlowState>(new DateWebAppCacheJson(resource?.Id));
+        return ChatFlowJump.Repeat<UpdateTimesheetFlowState>(new DateWebAppCacheJson(resource?.Id));
     }
 
-    private static Result<DateOnly, BotFlowFailure> ParseDate(IChatFlowContext<DeleteTimesheetFlowState> context)
+    private static Result<DateOnly, BotFlowFailure> ParseDate(IChatFlowContext<UpdateTimesheetFlowState> context)
     {
         var json = JsonConvert.SerializeObject(context.Activity.ChannelData);
         var dataWebApp = JsonConvert.DeserializeObject<WebAppResponseJson>(json);
@@ -68,7 +69,7 @@ partial class TimesheetDeleteFlowStep
     }
 
     private static Result<DateOnly, BotFlowFailure> ValidateDate(
-        (DateOnly Date, IChatFlowContext<DeleteTimesheetFlowState> Context) inputDate)
+        (DateOnly Date, IChatFlowContext<UpdateTimesheetFlowState> Context) inputDate)
     {
         if (inputDate.Date < DateOnly.FromDateTime(DateTime.Now.Subtract(inputDate.Context.FlowState.Options.TimesheetInterval)))
         {
@@ -78,8 +79,8 @@ partial class TimesheetDeleteFlowStep
         return inputDate.Date;
     }
 
-    private static async ValueTask<ChatFlowJump<DeleteTimesheetFlowState>> SuccessAsync(
-        (IChatFlowContext<DeleteTimesheetFlowState> Context, DateOnly Date, DateWebAppCacheJson Cache) input,
+    private static async ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> SuccessAsync(
+        (IChatFlowContext<UpdateTimesheetFlowState> Context, DateOnly Date, DateWebAppCacheJson Cache) input,
         CancellationToken cancellationToken = default)
     {
         var activity = MessageFactory.Text($"Дата: {input.Date}");

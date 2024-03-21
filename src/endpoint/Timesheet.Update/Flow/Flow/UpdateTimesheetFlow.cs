@@ -4,21 +4,23 @@ using System;
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal static partial class DeleteTimesheetFlow
+internal static partial class UpdateTimesheetFlow
 {
     private static ChatFlow<Unit> RunFlow(
-        this ChatFlow chatFlow, 
+        this ChatFlow chatFlow,
+        ICrmProjectApi crmProjectApi,
         ICrmTimesheetApi timesheetApi, 
-        DeleteTimesheetOptions options)
+        UpdateTimesheetOptions options)
         =>
         chatFlow.Start(
-            () => new DeleteTimesheetFlowState(options))
+            () => new UpdateTimesheetFlowState(options))
         .GetUserId()
         .AwaitDateWebApp()
         .GetTimesheetSet(
             timesheetApi)
-        .AwaitTimesheetWebApp()
-        .DeleteTimesheet(
+        .AwaitTimesheetWebApp(
+            crmProjectApi)
+        .UpdateTimesheet(
             timesheetApi)
         .GetTimesheetSet(
             timesheetApi)

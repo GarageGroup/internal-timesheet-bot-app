@@ -27,6 +27,17 @@ public static partial class CrmTimesheetApiTest
         new(
             Guid.Parse("17bdba90-1161-4715-b4bf-b416200acc79"));
 
+    private static readonly TimesheetUpdateIn SomeTimesheetUpdateInput
+        =
+        new(
+            project: new(
+                id: new("3dd8b1e0-3281-49f5-842b-cd1556113823"),
+                type: TimesheetProjectType.Project,
+                displayName: "Some project name"),
+            duration: 8,
+            description: "Some description",
+            timesheetId: Guid.Parse("80108b86-61ae-47ea-bd61-6d0c126a42b4"));
+
     private static readonly TimesheetSetGetIn SomeTimesheetSetGetInput
         =
         new(
@@ -114,11 +125,22 @@ public static partial class CrmTimesheetApiTest
     {
         var mock = new Mock<IDataverseApiClient>();
 
-        _ = mock.Setup(static a => a.Impersonate(It.IsAny<Guid>())).Returns(mock.Object);
-
         _ = mock
             .Setup(static a => a.DeleteEntityAsync(
                 It.IsAny<DataverseEntityDeleteIn>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
+
+        return mock;
+    }
+
+    private static Mock<IDataverseApiClient> BuildMockUpdateDataverseApiClient(
+        in Result<Unit, Failure<DataverseFailureCode>> result)
+    {
+        var mock = new Mock<IDataverseApiClient>();
+
+        _ = mock
+            .Setup(static a => a.UpdateEntityAsync(
+                It.IsAny<DataverseEntityUpdateIn<IReadOnlyDictionary<string, object?>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
 
         return mock;

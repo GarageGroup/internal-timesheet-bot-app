@@ -4,7 +4,7 @@ namespace GarageGroup.Internal.Timesheet;
 
 partial class Application
 {
-    private static IBotBuilder UseDateTimesheetDeleteFlow(this IBotBuilder botBuilder)
+    private static IBotBuilder UseTimesheetDeleteFlow(this IBotBuilder botBuilder)
         =>
         UseCrmTimesheetApi().MapTimesheetDeleteFlow(botBuilder, TimesheetDeleteCommand);
 }

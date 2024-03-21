@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\endpoint\DateTimesheet.Get\Flow.csproj" />
     <ProjectReference Include="..\..\endpoint\Timesheet.Create\Flow.csproj" />
     <ProjectReference Include="..\..\endpoint\Timesheet.Delete\Flow.csproj" />
+    <ProjectReference Include="..\..\endpoint\Timesheet.Update\Flow\Flow.csproj" />
     <ProjectReference Include="..\..\service\CrmProject\Api\Api.csproj" />
     <ProjectReference Include="..\..\service\CrmTimesheet\Api\Api.csproj" />
   </ItemGroup>

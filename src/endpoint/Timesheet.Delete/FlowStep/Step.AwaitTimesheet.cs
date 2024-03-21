@@ -34,10 +34,11 @@ partial class TimesheetDeleteFlowStep
                     async (botFailure, cancellationToken) =>
                     {
                         var activity = MessageFactory.Text(botFailure.UserMessage);
-                        await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken);
+                        await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken).ConfigureAwait(false);
                         return context.RepeatSameStateJump<DeleteTimesheetFlowState>();
                     })
-                .ToTask();
+                .ToValueTask()
+                .ConfigureAwait(false);
         }
 
         var activity = MessageFactory.Text("Выбери списания времени, которые нужно удалить");
@@ -74,12 +75,12 @@ partial class TimesheetDeleteFlowStep
         var json = JsonConvert.SerializeObject(context.Activity.ChannelData);
         var dataWebApp = JsonConvert.DeserializeObject<WebAppResponseJson>(json);
 
-        if (dataWebApp?.Message?.WebAppData is null)
+        if (string.IsNullOrEmpty(dataWebApp?.Message?.WebAppData?.Data))
         {
             return BotFlowFailure.From("Выберете списания времени через сайт (кнопка ниже)");
         }
 
-        var timesheets = JsonConvert.DeserializeObject<List<TimesheetJson>>(dataWebApp.Message.WebAppData.Data!);
+        var timesheets = JsonConvert.DeserializeObject<List<TimesheetJson>>(dataWebApp.Message.WebAppData.Data);
 
         if (timesheets != null)
         {
@@ -108,7 +109,7 @@ partial class TimesheetDeleteFlowStep
                                 Text = "Выбрать списание",
                                 WebApp = new WebAppJson
                                 {
-                                    Url = $"{url}/selectTimesheet?data={data}"
+                                    Url = $"{url}/selectDeleteTimesheet?data={data}"
                                 }
                             }
                         ]
