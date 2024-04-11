@@ -9,10 +9,14 @@ internal static partial class TimesheetCreateChatFlow
         this ChatFlow chatFlow,
         IBotContext botContext,
         ICrmProjectApi crmProjectApi,
-        ICrmTimesheetApi crmTimesheetApi)
+        ICrmTimesheetApi crmTimesheetApi,
+        TimesheetEditOption option)
         =>
         chatFlow.Start<TimesheetCreateFlowState>(
-            static () => new())
+            () => new()
+            {
+                UrlWebApp = option.UrlWebApp
+            })
         .GetUserId()
         .AwaitProject(
             crmProjectApi)

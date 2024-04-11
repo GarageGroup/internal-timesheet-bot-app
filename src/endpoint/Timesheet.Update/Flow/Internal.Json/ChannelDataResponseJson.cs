@@ -2,7 +2,7 @@
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal sealed record ChannelDataResposeJson
+internal sealed record ChannelDataResponseJson
 {
     [JsonProperty("message")]
     public MessageResponseJson? Message { get; init; }

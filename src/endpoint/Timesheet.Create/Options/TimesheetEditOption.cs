@@ -2,7 +2,7 @@
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal sealed record DeleteTimesheetOptions
+internal sealed record TimesheetEditOption
 {
     public required TimeSpan TimesheetInterval { get; init; }
 

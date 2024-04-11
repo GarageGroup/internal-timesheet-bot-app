@@ -13,10 +13,11 @@
   <ItemGroup>
   	<PackageReference Include="EarlyFuncPack.Core.AsyncPipeline" Version="0.3.0" />
   	<PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Extensions" Version="0.3.0" />
-  	<PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Step.Card" Version="0.2.0" />
-  	<PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Step.Date" Version="0.2.0" />
+  	<PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Step.Card" Version="0.3.0-build.2" />
+  	<PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Step.Date" Version="0.3.0" />
   	<PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Step.Lookup" Version="0.2.0" />
   	<PackageReference Include="GarageGroup.Infra.Bot.Builder.ChatFlow.Step.Value" Version="0.2.1" />
+  	<PackageReference Include="GarageGroup.Infra.Bot.Builder.Telegram.ChannelData" Version="0.2.0" />
   	<PackageReference Include="PrimeFuncPack.Dependency.Core" Version="2.1.0" />
   	<PackageReference Include="PrimeFuncPack.Primitives.Pipeline" Version="2.0.3" />
   </ItemGroup>
@@ -24,7 +25,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\service\CrmProject\Contract\Contract.csproj" />
     <ProjectReference Include="..\..\..\service\CrmTimesheet\Contract\Contract.csproj" />
-    <ProjectReference Include="..\..\WebApp.Models\WebAppModels\WebAppModels.csproj" />
   </ItemGroup>
 
 </Project>

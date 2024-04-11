@@ -26,9 +26,9 @@ partial class CrmTimesheetApi
             .BuildEntityOrFailure())
         .Map(
             @in => new DataverseEntityUpdateIn<IReadOnlyDictionary<string, object?>>(
-            entityPluralName: TimesheetJson.EntityPluralName,
-            entityKey: new DataversePrimaryKey(input.TimesheetId),
-            entityData: @in),
+                entityPluralName: TimesheetJson.EntityPluralName,
+                entityKey: new DataversePrimaryKey(input.TimesheetId),
+                entityData: @in),
             static failure => failure.WithFailureCode(TimesheetUpdateFailureCode.Unknown))
         .ForwardValue(
             dataverseApi.UpdateEntityAsync,

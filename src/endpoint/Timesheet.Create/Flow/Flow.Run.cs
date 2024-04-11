@@ -12,6 +12,7 @@ partial class TimesheetCreateChatFlow
         string commandName,
         ICrmProjectApi crmProjectApi,
         ICrmTimesheetApi crmTimesheetApi,
+        TimesheetEditOption option,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -30,7 +31,7 @@ partial class TimesheetCreateChatFlow
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        await chatFlow.RunFlow(context, crmProjectApi, crmTimesheetApi).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
+        await chatFlow.RunFlow(context, crmProjectApi, crmTimesheetApi, option).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 

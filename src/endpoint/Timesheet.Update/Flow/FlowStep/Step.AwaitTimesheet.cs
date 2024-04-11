@@ -1,5 +1,6 @@
 ﻿using GarageGroup.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -12,46 +13,52 @@ namespace GarageGroup.Internal.Timesheet;
 
 partial class TimesheetUpdateFlowStep
 {
-    internal static ChatFlow<UpdateTimesheetFlowState> AwaitTimesheetWebApp(this ChatFlow<UpdateTimesheetFlowState> chatFlow, ICrmProjectApi crmProjectApi)
+    internal static ChatFlow<TimesheetUpdateFlowState> AwaitTimesheetWebApp(this ChatFlow<TimesheetUpdateFlowState> chatFlow, ICrmProjectApi crmProjectApi)
         =>
         chatFlow.ForwardValue(
             crmProjectApi.SelectTimesheet);
 
-    private static async ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> SelectTimesheet(
+    private static async ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> SelectTimesheet(
         this ICrmProjectApi crmProjectApi,
-        IChatFlowContext<UpdateTimesheetFlowState> context, 
+        IChatFlowContext<TimesheetUpdateFlowState> context,
         CancellationToken token)
     {
-        var turnContext = (ITurnContext)context;
+        var jsonChannelData = JsonConvert.SerializeObject(context.Activity.ChannelData);
+        var channelDataResponse = JsonConvert.DeserializeObject<ChannelDataResponseJson>(jsonChannelData);
 
-        if (context.StepState is DateWebAppCacheJson cache)
+        if(context.StepState is DateWebAppCacheJson cache)
         {
-            var json = JsonConvert.SerializeObject(context.Activity.ChannelData);
-            var channelDataResponse = JsonConvert.DeserializeObject<ChannelDataResposeJson>(json);
-
-            return (cache, channelDataResponse) switch
-            {
-                ({ Status: UpdateStatus.EditTimesheet }, { Message: { Text: null } }) => await ProcessingMessagesWebApp(crmProjectApi, context, cache, token).ConfigureAwait(false),
-                ({ Status: UpdateStatus.EditingProject }, { CallbackQuery: { } }) => await EditProjectForLasted(context, cache, channelDataResponse, token).ConfigureAwait(false),
-                ({ Status: UpdateStatus.EditingProject }, { Message: { } }) => await SelectProjectForSearch(context, crmProjectApi, cache, channelDataResponse.Message, token).ConfigureAwait(false),
-                ({ Status: UpdateStatus.ProjectIsEdited, EditedProject: { } }, { Message: { } }) => context.FlowState with
-                {
-                    TimesheetUpdate = cache.EditTimesheetState,
-                    ProjectId = cache.EditedProject.Id,
-                    ProjectName = cache.EditedProject.Name,
-                    ProjectType = GetProjectType(cache.EditedProject),
-                    UpdateProject = true
-                },
-                _ => ChatFlowJump.Break<UpdateTimesheetFlowState>(ChatFlowBreakState.From(UnknownErrorText))
-            };
+            return await UpdateTimesheetProcess(crmProjectApi, context, channelDataResponse, cache, token).ConfigureAwait(false);
         }
 
-        return await SelectDate(context, turnContext, token).ConfigureAwait(false);
+        var newCache = new DateWebAppCacheJson(context.Activity.Id);
+
+        return await UpdateTimesheetProcess(crmProjectApi, context, channelDataResponse, newCache, token).ConfigureAwait(false);
     }
 
-    private static ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> ProcessingMessagesWebApp(
+    private static async ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> UpdateTimesheetProcess(ICrmProjectApi crmProjectApi, IChatFlowContext<TimesheetUpdateFlowState> context, ChannelDataResponseJson? channelDataResponse, DateWebAppCacheJson cache, CancellationToken token)
+        =>
+        (cache, channelDataResponse) switch
+        {
+            ({ Status: UpdateStatus.EditTimesheet }, { Message.Text: null }) => await ProcessingMessagesWebApp(crmProjectApi, context, cache, token).ConfigureAwait(false),
+            ({ Status: UpdateStatus.EditingProject }, { CallbackQuery: { } }) => await EditProjectForLasted(context, cache, channelDataResponse, token).ConfigureAwait(false),
+            ({ Status: UpdateStatus.EditingProject }, { Message: { } }) => await SelectProjectForSearch(context, crmProjectApi, cache, channelDataResponse.Message, token).ConfigureAwait(false),
+            ({ Status: UpdateStatus.ProjectIsEdited, EditedProject: { } }, { Message.Text: { } }) => context.FlowState with
+            {
+                TimesheetUpdate = cache.EditTimesheetState,
+                ProjectId = cache.EditedProject.Id,
+                ProjectName = cache.EditedProject.Name,
+                ProjectType = GetProjectType(cache.EditedProject),
+                UpdateProject = true
+            },
+            ({ Status: UpdateStatus.ProjectIsEdited, EditedProject: { } }, { Message: { } }) => await ProcessingMessagesWebApp(crmProjectApi, context, cache, token).ConfigureAwait(false),
+            _ => ChatFlowJump.Break<TimesheetUpdateFlowState>(ChatFlowBreakState.From(UnknownErrorText))
+        };
+    
+
+    private static ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> ProcessingMessagesWebApp(
         ICrmProjectApi crmProjectApi,
-        IChatFlowContext<UpdateTimesheetFlowState> context,
+        IChatFlowContext<TimesheetUpdateFlowState> context,
         DateWebAppCacheJson cache,
         CancellationToken token)
         =>
@@ -68,12 +75,12 @@ partial class TimesheetUpdateFlowStep
                 {
                     var activity = MessageFactory.Text(botFailure.UserMessage);
                     await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken).ConfigureAwait(false);
-                    return context.RepeatSameStateJump<UpdateTimesheetFlowState>();
+                    return context.RepeatSameStateJump<TimesheetUpdateFlowState>();
                 });
 
 
-    private static async ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> SelectDate(
-        IChatFlowContext<UpdateTimesheetFlowState> context, ITurnContext turnContext, CancellationToken token)
+    private static async ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> SelectDate(
+        IChatFlowContext<TimesheetUpdateFlowState> context, ITurnContext turnContext, CancellationToken token)
     {
         var activity = MessageFactory.Text("Выбери списание времени, которое нужно изменить");
 
@@ -86,28 +93,28 @@ partial class TimesheetUpdateFlowStep
         var webAppDataJson = JsonConvert.SerializeObject(webAppData);
         var base64Timesheets = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(webAppDataJson));
 
-        activity.ChannelData = CreateChannelDataSelectTimesheet(context.FlowState.Options.UrlWebApp, base64Timesheets);
+        activity.ChannelData = CreateChannelDataSelectTimesheet(context.FlowState.UrlWebApp, base64Timesheets);
 
         var resource = await turnContext.SendActivityAsync(activity, token).ConfigureAwait(false);
 
-        return ChatFlowJump.Repeat<UpdateTimesheetFlowState>(new DateWebAppCacheJson(resource?.Id));
+        return ChatFlowJump.Repeat<TimesheetUpdateFlowState>(new DateWebAppCacheJson(resource?.Id));
     }
 
-    private static async ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> EditProjectForLasted(
-        IChatFlowContext<UpdateTimesheetFlowState> context,
+    private static async ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> EditProjectForLasted(
+        IChatFlowContext<TimesheetUpdateFlowState> context,
         DateWebAppCacheJson cache,
-        ChannelDataResposeJson channelDataResponse,
+        ChannelDataResponseJson channelDataResponse,
         CancellationToken token)
     {
         var project = cache.Projects?.ToList().FirstOrDefault(x => x.Id == channelDataResponse?.CallbackQuery?.ProjectId);
 
         if (project is null)
         {
-            return ChatFlowJump.Break<UpdateTimesheetFlowState>(ChatFlowBreakState.From(UnknownErrorText));
+            return ChatFlowJump.Break<TimesheetUpdateFlowState>(ChatFlowBreakState.From(UnknownErrorText));
         }
         if (cache.EditTimesheetState is null)
         {
-            return ChatFlowJump.Break<UpdateTimesheetFlowState>(ChatFlowBreakState.From(UnknownErrorText));
+            return ChatFlowJump.Break<TimesheetUpdateFlowState>(ChatFlowBreakState.From(UnknownErrorText));
         }
 
         var webAppData = cache.EditTimesheetState with
@@ -118,12 +125,12 @@ partial class TimesheetUpdateFlowStep
         var webAppDataJson = JsonConvert.SerializeObject(webAppData);
         var base64Timesheet = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(webAppDataJson));
 
-        return await SendActivityProgectChange(context, cache, project, base64Timesheet, token).ConfigureAwait(false);
+        return await SendActivityProjectChange(context, cache, project, base64Timesheet, token).ConfigureAwait(false);
     }
 
-    private static async ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> SendActivityProgectChange(
-        IChatFlowContext<UpdateTimesheetFlowState> context,
-        DateWebAppCacheJson cache, 
+    private static async ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> SendActivityProjectChange(
+        IChatFlowContext<TimesheetUpdateFlowState> context,
+        DateWebAppCacheJson cache,
         ProjectCacheJson project,
         string base64Timesheet,
         CancellationToken token)
@@ -132,38 +139,62 @@ partial class TimesheetUpdateFlowStep
         await turnContext.DeleteActivityAsync(cache.ActivityId, token).ConfigureAwait(false);
 
         var activityEditProject = MessageFactory.Text($"Проект успешно сменен на {project.Name}");
-        activityEditProject.ChannelData = CreateChannelDataEditTimesheetForm(context.FlowState.Options.UrlWebApp, base64Timesheet);
+        activityEditProject.ChannelData = CreateChannelDataEditTimesheetForm(context.FlowState.UrlWebApp, base64Timesheet);
 
         var resource = await turnContext.SendActivityAsync(activityEditProject, token).ConfigureAwait(false);
 
-        return ChatFlowJump.Repeat<UpdateTimesheetFlowState>(
+        return ChatFlowJump.Repeat<TimesheetUpdateFlowState>(
             new DateWebAppCacheJson(resource.Id, UpdateStatus.ProjectIsEdited, default, project, cache.EditTimesheetState));
     }
 
-    private static async ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> SuccessSelectTimesheetAsync(
-        (IChatFlowContext<UpdateTimesheetFlowState> Context, UpdateTimesheetJson Timesheet, ICrmProjectApi CrmProjectApi, DateWebAppCacheJson Cache) input,
+    private static async ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> SuccessSelectTimesheetAsync(
+        (IChatFlowContext<TimesheetUpdateFlowState> Context, UpdateTimesheetJson Timesheet, ICrmProjectApi CrmProjectApi, DateWebAppCacheJson Cache) input,
         CancellationToken cancellationToken = default)
         =>
         (input.Timesheet, input.Cache) switch
         {
-            { Timesheet: { IsEditProject: true } } => await SelectProjectForLasted(input, cancellationToken).ConfigureAwait(false),
-            { Cache: { Status: UpdateStatus.ProjectIsEdited, EditedProject: { } } } => input.Context.FlowState with
-                {
-                    TimesheetUpdate = input.Timesheet,
-                    ProjectId = input.Cache.EditedProject.Id,
-                    ProjectName = input.Cache.EditedProject.Name,
-                    ProjectType = GetProjectType(input.Cache.EditedProject),
-                    UpdateProject = true
-                },
-            _ => input.Context.FlowState with
-                {
-                    TimesheetUpdate = input.Timesheet
-                }
+            { Timesheet.IsEditProject: true } => await SelectProjectForLasted(input, cancellationToken).ConfigureAwait(false),
+            { Cache: { Status: UpdateStatus.ProjectIsEdited, EditedProject: { } } } => await ContinueEditingCallback(input, cancellationToken).ConfigureAwait(false),
+            _ => await EditTimesheetCallback(input, cancellationToken).ConfigureAwait(false)
         };
-    
 
-    private static ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> SelectProjectForLasted(
-        (IChatFlowContext<UpdateTimesheetFlowState> Context, UpdateTimesheetJson Timesheet, ICrmProjectApi CrmProjectApi, DateWebAppCacheJson Cache) input, 
+    private static async ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> EditTimesheetCallback(
+        (IChatFlowContext<TimesheetUpdateFlowState> Context, UpdateTimesheetJson Timesheet, ICrmProjectApi CrmProjectApi, DateWebAppCacheJson Cache) input,
+        CancellationToken cancellationToken = default)
+    {
+        var turnContext = (ITurnContext)input.Context;
+        await turnContext.DeleteActivityAsync(turnContext.Activity.Id, cancellationToken);
+
+        return input.Context.FlowState with
+        {
+            TimesheetUpdate = input.Timesheet
+        };
+    }
+
+    private static async ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> ContinueEditingCallback(
+        (IChatFlowContext<TimesheetUpdateFlowState> Context, UpdateTimesheetJson Timesheet, ICrmProjectApi CrmProjectApi, DateWebAppCacheJson Cache) input,
+        CancellationToken cancellationToken = default)
+    {
+        var turnContext = (ITurnContext)input.Context;
+        await turnContext.DeleteActivityAsync(turnContext.Activity.Id, cancellationToken);
+
+        if (input.Cache.EditedProject is not null)
+        {
+            return input.Context.FlowState with
+            {
+                TimesheetUpdate = input.Timesheet,
+                ProjectId = input.Cache.EditedProject.Id,
+                ProjectName = input.Cache.EditedProject.Name,
+                ProjectType = GetProjectType(input.Cache.EditedProject),
+                UpdateProject = true
+            };
+        }
+
+        return ChatFlowJump.Break<TimesheetUpdateFlowState>(ChatFlowBreakState.From(UnknownErrorText));
+    }
+
+    private static ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> SelectProjectForLasted(
+        (IChatFlowContext<TimesheetUpdateFlowState> Context, UpdateTimesheetJson Timesheet, ICrmProjectApi CrmProjectApi, DateWebAppCacheJson Cache) input,
         CancellationToken cancellationToken)
         =>
         AsyncPipeline.Pipe(
@@ -172,18 +203,18 @@ partial class TimesheetUpdateFlowStep
             input.CrmProjectApi.GetLastProjectsAsync)
         .PipeValue(
             (lastProjects, token) => SendActivitySelectProject(input.Context, input.Timesheet, lastProjects.Items, input.Cache.ActivityId, token));
-    
 
-    private static async ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> SelectProjectForSearch(
-        IChatFlowContext<UpdateTimesheetFlowState> context, 
-        ICrmProjectApi crmProjectApi, 
+
+    private static async ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> SelectProjectForSearch(
+        IChatFlowContext<TimesheetUpdateFlowState> context,
+        ICrmProjectApi crmProjectApi,
         DateWebAppCacheJson cache,
         MessageResponseJson inputText,
         CancellationToken cancellationToken)
     {
         if (inputText.Text is null || cache.EditTimesheetState is null)
         {
-            return ChatFlowJump.Break<UpdateTimesheetFlowState>(ChatFlowBreakState.From(UnknownErrorText));
+            return ChatFlowJump.Break<TimesheetUpdateFlowState>(ChatFlowBreakState.From(UnknownErrorText));
         }
         var projects = await crmProjectApi.SearchProjectsAsync(context, inputText.Text, cancellationToken);
 
@@ -191,7 +222,7 @@ partial class TimesheetUpdateFlowStep
         {
             var activity = MessageFactory.Text(projects.FailureOrThrow().UserMessage);
             await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken);
-            return context.RepeatSameStateJump<UpdateTimesheetFlowState>();
+            return context.RepeatSameStateJump<TimesheetUpdateFlowState>();
         }
 
         var searchProjects = projects.SuccessOrThrow();
@@ -199,8 +230,8 @@ partial class TimesheetUpdateFlowStep
         return await SendActivitySelectProject(context, cache.EditTimesheetState, searchProjects.Items, cache.ActivityId, cancellationToken).ConfigureAwait(false);
     }
 
-    private static async ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> SendActivitySelectProject(
-        IChatFlowContext<UpdateTimesheetFlowState> context, 
+    private static async ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> SendActivitySelectProject(
+        IChatFlowContext<TimesheetUpdateFlowState> context,
         UpdateTimesheetJson timesheet,
         FlatArray<LookupValue> projects,
         string? activityId,
@@ -227,7 +258,7 @@ partial class TimesheetUpdateFlowStep
         var editableTimesheet = context.FlowState.Timesheets?.First(t => t.Id == timesheet.Id);
         if (editableTimesheet is null)
         {
-            return ChatFlowJump.Break<UpdateTimesheetFlowState>(ChatFlowBreakState.From(UnknownErrorText));
+            return ChatFlowJump.Break<TimesheetUpdateFlowState>(ChatFlowBreakState.From(UnknownErrorText));
         }
 
         var editTimesheet = new UpdateTimesheetJson
@@ -238,49 +269,41 @@ partial class TimesheetUpdateFlowStep
             IsEditProject = true
         };
 
-        return ChatFlowJump.Repeat<UpdateTimesheetFlowState>(
+        return ChatFlowJump.Repeat<TimesheetUpdateFlowState>(
             new DateWebAppCacheJson(resource.Id, UpdateStatus.EditingProject, projectsList, null, editTimesheet));
     }
 
-    private static ChannelDataJson CreateChannelDataEditProject(FlatArray<LookupValue> projects)
+    private static TelegramChannelData CreateChannelDataEditProject(FlatArray<LookupValue> projects)
     {
-        var buttons = new List<List<InlineKeyboardButtonJson>>();
+        var buttons = new List<List<TelegramInlineKeyboardButton>>();
         foreach (var project in projects)
         {
-            buttons.Add(new List<InlineKeyboardButtonJson>
-            {
-                new InlineKeyboardButtonJson
+            buttons.Add(
+            [
+                new TelegramInlineKeyboardButton(project.Name)
                 {
-                    Text = project.Name,
                     CallbackData = project.Id.ToString()
                 }
-            });
+            ]);
         }
 
-        return new ChannelDataJson
-        {
-            Method = "sendMessage",
-            Parameters = new ParameterJson
+        return new TelegramChannelData(
+            parameters: new()
             {
-                ReplyMarkup = new InlineKeyboardMarkupJson
-                {
-                    InlineKeyboard = buttons.Select(b => b.ToArray()).ToArray()
-                },
-            }
-        };
+                ReplyMarkup = new TelegramInlineKeyboardMarkup(buttons.Select(b => b.ToArray()).ToArray())
+            });
     }
 
-    private static Result<UpdateTimesheetJson, BotFlowFailure> ParseTimesheet(IChatFlowContext<UpdateTimesheetFlowState> context)
+    private static Result<UpdateTimesheetJson, BotFlowFailure> ParseTimesheet(IChatFlowContext<TimesheetUpdateFlowState> context)
     {
-        var json = JsonConvert.SerializeObject(context.Activity.ChannelData);
-        var dataWebApp = JsonConvert.DeserializeObject<WebAppResponseJson>(json);
+        var dataWebApp = TelegramWebAppResponse.FromChannelData(context.Activity.ChannelData);
 
-        if (string.IsNullOrEmpty(dataWebApp?.Message?.WebAppData?.Data))
+        if (string.IsNullOrEmpty(dataWebApp.Message?.WebAppData?.Data))
         {
             return BotFlowFailure.From("Выберете списание времени через сайт (кнопка ниже)");
         }
 
-        var timesheet = JsonConvert.DeserializeObject<UpdateTimesheetJson>(dataWebApp.Message.WebAppData.Data);
+        var timesheet = JsonConvert.DeserializeObject<UpdateTimesheetJson>((dataWebApp.Message?.WebAppData?.Data).OrEmpty());
 
         if (timesheet != null)
         {
@@ -292,68 +315,49 @@ partial class TimesheetUpdateFlowStep
         }
     }
 
-    private static object CreateChannelDataEditTimesheetForm(string url, string data)
+    private static object CreateChannelDataEditTimesheetForm(string? url, string data)
         =>
-        new WebAppChannelDataJson
-        {
-            Method = "sendMessage",
-            Parameters = new ParametersJson
+        new TelegramChannelData(
+            parameters: new TelegramParameters()
             {
-                ReplyMarkup = new ReplyMarkupJson
-                {
-                    KeyboardButtons =
+                ReplyMarkup = new TelegramReplyKeyboardMarkup(
                     [
                         [
-                            new KeyboardButtonJson
+                            new("Продолжить редактирование")
                             {
-                                Text = "Продолжить редактирование",
-                                WebApp = new WebAppJson
-                                {
-                                    Url = $"{url}/updateTimesheetForm?data={data}"
-                                }
+                                WebApp = new TelegramWebApp($"{url}/updateTimesheetForm?data={data}")
                             },
-                            new KeyboardButtonJson
-                            {
-                                Text = "Закончить редактирование"
-                            }
+                            new("Закончить редактирование")
                         ]
-                    ],
+                    ])
+                {
                     ResizeKeyboard = true,
                     InputFieldPlaceholder = "Выберете следующий шаг"
-                }
-            }
-        };
+                },
+            });
 
-    private static object CreateChannelDataSelectTimesheet(string url, string data)
+    private static object CreateChannelDataSelectTimesheet(string? url, string data)
         =>
-        new WebAppChannelDataJson
-        {
-            Method = "sendMessage",
-            Parameters = new ParametersJson
+        new TelegramChannelData(
+            parameters: new TelegramParameters()
             {
-                ReplyMarkup = new ReplyMarkupJson
-                {
-                    KeyboardButtons =
+                ReplyMarkup = new TelegramReplyKeyboardMarkup(
                     [
                         [
-                            new KeyboardButtonJson
+                            new("Выбрать списание")
                             {
-                                Text = "Выбрать списание",
-                                WebApp = new WebAppJson
-                                {
-                                    Url = $"{url}/selectUpdateTimesheet?data={data}"
-                                }
+                                WebApp = new TelegramWebApp($"{url}/selectUpdateTimesheet?data={data}")
                             }
                         ]
-                    ],
+                    ])
+                {
                     ResizeKeyboard = true,
                     InputFieldPlaceholder = "Чтобы выбрать списание, нажмите кнопку"
-                }
-            }
-        };
+                },
+            });
 
     private static ValueTask<LookupValueSetOption> GetLastProjectsAsync(
-        this ICrmProjectApi crmProjectApi, IChatFlowContext<UpdateTimesheetFlowState> context, CancellationToken cancellationToken)
+        this ICrmProjectApi crmProjectApi, IChatFlowContext<TimesheetUpdateFlowState> context, CancellationToken cancellationToken)
         =>
         AsyncPipeline.Pipe(
             context.FlowState, cancellationToken)
@@ -372,7 +376,7 @@ partial class TimesheetUpdateFlowStep
             context.LogFailure);
 
     private static ValueTask<Result<LookupValueSetOption, BotFlowFailure>> SearchProjectsAsync(
-        this ICrmProjectApi crmProjectApi, IChatFlowContext<UpdateTimesheetFlowState> context, string searchText, CancellationToken token)
+        this ICrmProjectApi crmProjectApi, IChatFlowContext<TimesheetUpdateFlowState> context, string searchText, CancellationToken token)
         =>
         AsyncPipeline.Pipe(
             context.FlowState, token)
@@ -426,4 +430,23 @@ partial class TimesheetUpdateFlowStep
         })
         .Pipe(
             message => BotFlowFailure.From(message, failure.FailureMessage));
+
+    private static Task SendInsteadActivityAsync(
+        this ITurnContext context,
+        string? activityId,
+        IActivity activity,
+        CancellationToken token)
+    {
+        return string.IsNullOrEmpty(activityId) || context.IsNotMsteamsChannel()
+            ? SendActivityAsync()
+            : Task.WhenAll(DeleteActivityAsync(), SendActivityAsync());
+
+        Task SendActivityAsync()
+            =>
+            context.SendActivityAsync(activity, token);
+
+        Task DeleteActivityAsync()
+            =>
+            context.DeleteActivityAsync(activityId, token);
+    }
 }

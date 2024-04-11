@@ -1,4 +1,5 @@
 ﻿using GarageGroup.Infra.Bot.Builder;
+using Newtonsoft.Json;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ partial class UpdateTimesheetFlow
         string commandName,
         ICrmProjectApi crmProjectApi,
         ICrmTimesheetApi timesheetApi, 
-        UpdateTimesheetOptions options, 
+        TimesheetUpdateOption option, 
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -30,8 +31,10 @@ partial class UpdateTimesheetFlow
         {
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
-        
-        await chatFlow.RunFlow(crmProjectApi, timesheetApi, options).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
+
+        var timesheet = GetWebAppUpdateResponseJson(context);
+
+        await chatFlow.RunFlow(context ,crmProjectApi, timesheetApi, timesheet, option).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -43,11 +46,19 @@ partial class UpdateTimesheetFlow
             return chatFlow;
         }
 
-        if (context.TurnContext.RecognizeCommandOrAbsent(commandName).IsPresent)
+        var timesheet = GetWebAppUpdateResponseJson(context);
+
+        if (timesheet is not null && timesheet.Command?.Equals(commandName) is true)
         {
             return chatFlow;
         }
 
         return null;
+    }
+
+    private static UpdateTimesheetJson? GetWebAppUpdateResponseJson(IBotContext context)
+    {
+        var dataWebApp = TelegramWebAppResponse.FromChannelData(context.TurnContext.Activity.ChannelData);
+        return JsonConvert.DeserializeObject<UpdateTimesheetJson>((dataWebApp.Message?.WebAppData?.Data).OrEmpty());
     }
 }

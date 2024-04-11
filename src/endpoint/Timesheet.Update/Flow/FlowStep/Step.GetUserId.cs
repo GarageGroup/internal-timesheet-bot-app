@@ -4,7 +4,7 @@ namespace GarageGroup.Internal.Timesheet;
 
 partial class TimesheetUpdateFlowStep
 {
-    internal static ChatFlow<UpdateTimesheetFlowState> GetUserId(this ChatFlow<UpdateTimesheetFlowState> chatFlow)
+    internal static ChatFlow<TimesheetUpdateFlowState> GetUserId(this ChatFlow<TimesheetUpdateFlowState> chatFlow)
         =>
         chatFlow.GetDataverseUserOrBreak(
             "Произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее",

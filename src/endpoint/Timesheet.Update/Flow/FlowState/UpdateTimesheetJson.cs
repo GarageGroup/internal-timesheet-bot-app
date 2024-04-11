@@ -19,4 +19,10 @@ internal sealed record class UpdateTimesheetJson
 
     [JsonProperty("isEditProject")]
     public bool IsEditProject { get; init; }
+
+    [JsonProperty("date")]
+    public string? Date { get; init; }
+
+    [JsonProperty("command")]
+    public string? Command { get; init; }
 }

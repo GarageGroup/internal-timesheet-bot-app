@@ -1,4 +1,5 @@
 ﻿using GarageGroup.Infra.Bot.Builder;
+using Newtonsoft.Json;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,10 +9,9 @@ namespace GarageGroup.Internal.Timesheet;
 partial class DeleteTimesheetFlow
 {
     internal static async ValueTask<Unit> RunAsync(
-        this IBotContext context, 
-        string commandName, 
-        ICrmTimesheetApi timesheetApi, 
-        DeleteTimesheetOptions options, 
+        this IBotContext context,
+        string commandName,
+        ICrmTimesheetApi timesheetApi,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -28,8 +28,14 @@ partial class DeleteTimesheetFlow
         {
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
-        
-        await chatFlow.RunFlow(timesheetApi, options).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
+
+        var timesheets = GetWebAppDeleteResponseJson(context);
+        if (timesheets is null)
+        {
+            return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        await chatFlow.RunFlow(context, timesheetApi, timesheets).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -41,11 +47,19 @@ partial class DeleteTimesheetFlow
             return chatFlow;
         }
 
-        if (context.TurnContext.RecognizeCommandOrAbsent(commandName).IsPresent)
+        var timesheets = GetWebAppDeleteResponseJson(context);
+
+        if (timesheets is not null && timesheets.Command?.Equals(commandName) is true)
         {
             return chatFlow;
         }
 
         return null;
+    }
+
+    private static WebAppDeleteResponseJson? GetWebAppDeleteResponseJson(IBotContext context)
+    {
+        var dataWebApp = TelegramWebAppResponse.FromChannelData(context.TurnContext.Activity.ChannelData);
+        return JsonConvert.DeserializeObject<WebAppDeleteResponseJson>((dataWebApp.Message?.WebAppData?.Data).OrEmpty());
     }
 }

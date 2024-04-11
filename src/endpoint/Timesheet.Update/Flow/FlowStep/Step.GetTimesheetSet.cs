@@ -8,17 +8,17 @@ namespace GarageGroup.Internal.Timesheet;
 
 partial class TimesheetUpdateFlowStep
 {
-    internal static ChatFlow<UpdateTimesheetFlowState> GetTimesheetSet(
-        this ChatFlow<UpdateTimesheetFlowState> chatFlow, ICrmTimesheetApi timesheetApi)
+    internal static ChatFlow<TimesheetUpdateFlowState> GetTimesheetSet(
+        this ChatFlow<TimesheetUpdateFlowState> chatFlow, ICrmTimesheetApi timesheetApi)
         =>
         chatFlow
             .SetTypingStatus()
             .ForwardValue(
                 timesheetApi.GetTimesheetSetOrBreakAsync);
 
-    private static ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> GetTimesheetSetOrBreakAsync(
+    private static ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> GetTimesheetSetOrBreakAsync(
         this ICrmTimesheetApi timesheetApi, 
-        IChatFlowContext<UpdateTimesheetFlowState> context, 
+        IChatFlowContext<TimesheetUpdateFlowState> context, 
         CancellationToken cancellationToken)
         =>
         AsyncPipeline.Pipe(
@@ -38,9 +38,9 @@ partial class TimesheetUpdateFlowStep
             })
         .Fold(
             SuccessGetTimesheetAsync,
-            ChatFlowJump.Break<UpdateTimesheetFlowState>);
+            ChatFlowJump.Break<TimesheetUpdateFlowState>);
 
-    private static ChatFlowJump<UpdateTimesheetFlowState> SuccessGetTimesheetAsync(UpdateTimesheetFlowState state)
+    private static ChatFlowJump<TimesheetUpdateFlowState> SuccessGetTimesheetAsync(TimesheetUpdateFlowState state)
     {
         if (state.Timesheets?.Count == 0)
         {
@@ -50,7 +50,7 @@ partial class TimesheetUpdateFlowStep
                 .Append(TelegramBotLine)
                 .Append("/newtimesheet - Списать время");
 
-            return ChatFlowJump.Break<UpdateTimesheetFlowState>(ChatFlowBreakState.From(textBuilder.ToString()));
+            return ChatFlowJump.Break<TimesheetUpdateFlowState>(ChatFlowBreakState.From(textBuilder.ToString()));
         }
 
         return ChatFlowJump.Next(state);

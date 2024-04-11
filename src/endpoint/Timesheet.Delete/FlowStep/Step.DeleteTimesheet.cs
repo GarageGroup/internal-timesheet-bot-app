@@ -3,24 +3,25 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra.Bot.Builder;
+using Microsoft.Bot.Builder;
 using Microsoft.Extensions.Logging;
 
 namespace GarageGroup.Internal.Timesheet;
 
 partial class TimesheetDeleteFlowStep
 {
-    internal static ChatFlow<DeleteTimesheetFlowState> DeleteTimesheet(
-        this ChatFlow<DeleteTimesheetFlowState> chatFlow, ICrmTimesheetApi timesheetApi)
+    internal static ChatFlow<TimesheetDeleteFlowState> DeleteTimesheet(
+        this ChatFlow<TimesheetDeleteFlowState> chatFlow, ICrmTimesheetApi timesheetApi)
         =>
         chatFlow.ForwardValue(timesheetApi.Delete);
 
-    private static ValueTask<ChatFlowJump<DeleteTimesheetFlowState>> Delete(
+    private static ValueTask<ChatFlowJump<TimesheetDeleteFlowState>> Delete(
         this ICrmTimesheetApi crmTimesheetApi, 
-        IChatFlowContext<DeleteTimesheetFlowState> context, 
+        IChatFlowContext<TimesheetDeleteFlowState> context, 
         CancellationToken cancellationToken)
         =>
         AsyncPipeline.Pipe(
-            context.FlowState, cancellationToken)
+            context, cancellationToken)
         .Pipe(
             state => (state, crmTimesheetApi))
         .PipeValue(
@@ -32,7 +33,7 @@ partial class TimesheetDeleteFlowStep
             ToBreakState)
         .Fold(
             ChatFlowJump.Next,
-            ChatFlowJump.Break<DeleteTimesheetFlowState>);
+            ChatFlowJump.Break<TimesheetDeleteFlowState>);
 
     private static void LogDeleteFailures (this ILogger logger, DeleteFailure deleteFailure)
     {
@@ -45,11 +46,14 @@ partial class TimesheetDeleteFlowStep
     }
 
     private static async ValueTask<Result<Unit, DeleteFailure>> DeleteTimesheetAsync(
-        (DeleteTimesheetFlowState State, ICrmTimesheetApi CrmTimesheetApi) input, 
+        (IChatFlowContext<TimesheetDeleteFlowState> Context, ICrmTimesheetApi CrmTimesheetApi) input, 
         CancellationToken cancellationToken)
     {
+        var turnContext = (ITurnContext)input.Context;
+        await turnContext.DeleteActivityAsync(turnContext.Activity.Id, cancellationToken);
+
         var failures = new ConcurrentBag<(Failure<TimesheetDeleteFailureCode> Failure, Guid Id)>();
-        await Parallel.ForEachAsync(input.State.DeleteTimesheetsId.AsEnumerable(), cancellationToken, InnerDeleteAsync);
+        await Parallel.ForEachAsync(input.Context.FlowState.DeleteTimesheetsId.AsEnumerable(), cancellationToken, InnerDeleteAsync);
 
         if (failures.IsEmpty)
         {

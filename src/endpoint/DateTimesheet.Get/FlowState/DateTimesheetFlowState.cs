@@ -35,4 +35,10 @@ internal sealed record class DateTimesheetFlowState
 
     [JsonProperty("timesheets")]
     public IReadOnlyCollection<TimesheetJson>? Timesheets { get; init; }
+
+    [JsonProperty("urlwebapp")]
+    public string? UrlWebApp { get; init; }
+
+    [JsonProperty("timesheetinterval")]
+    public TimeSpan TimesheetInterval { get; init; }
 }

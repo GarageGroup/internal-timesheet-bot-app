@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using System;
 
 namespace GarageGroup.Internal.Timesheet;
 
@@ -12,4 +13,7 @@ internal sealed record class TimesheetJson
 
     [JsonProperty("description")]
     public string? Description { get; init; }
+
+    [JsonProperty("id")]
+    public Guid Id { get; init; }
 }

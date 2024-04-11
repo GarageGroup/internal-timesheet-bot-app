@@ -40,7 +40,8 @@ partial class DateTimesheetFlowStep
         {
             Duration = timesheet.Duration,
             ProjectName = timesheet.ProjectName,
-            Description = timesheet.Description
+            Description = timesheet.Description,
+            Id = timesheet.Id
         };
 
     private static ChatFlowBreakState ToBreakState(Failure<TimesheetSetGetFailureCode> failure)

@@ -9,14 +9,14 @@ namespace GarageGroup.Internal.Timesheet;
 
 partial class TimesheetUpdateFlowStep
 {
-    internal static ChatFlow<UpdateTimesheetFlowState> UpdateTimesheet(
-        this ChatFlow<UpdateTimesheetFlowState> chatFlow, ICrmTimesheetApi timesheetApi)
+    internal static ChatFlow<TimesheetUpdateFlowState> UpdateTimesheet(
+        this ChatFlow<TimesheetUpdateFlowState> chatFlow, ICrmTimesheetApi timesheetApi)
         =>
         chatFlow.ForwardValue(timesheetApi.Update);
 
-    private static ValueTask<ChatFlowJump<UpdateTimesheetFlowState>> Update(
+    private static ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> Update(
         this ICrmTimesheetApi crmTimesheetApi,
-        IChatFlowContext<UpdateTimesheetFlowState> context,
+        IChatFlowContext<TimesheetUpdateFlowState> context,
         CancellationToken cancellationToken)
         =>
         AsyncPipeline.Pipe(
@@ -34,9 +34,9 @@ partial class TimesheetUpdateFlowStep
             ToBreakState)
         .Fold(
             ChatFlowJump.Next,
-            ChatFlowJump.Break<UpdateTimesheetFlowState>);
+            ChatFlowJump.Break<TimesheetUpdateFlowState>);
 
-    private static Result<TimesheetUpdateIn, Failure<TimesheetUpdateFailureCode>> MapTimesheetUpdateIn(UpdateTimesheetFlowState state)
+    private static Result<TimesheetUpdateIn, Failure<TimesheetUpdateFailureCode>> MapTimesheetUpdateIn(TimesheetUpdateFlowState state)
     {
         var editedTimesheet = state.TimesheetUpdate;
         var timesheet = state.Timesheets?.FirstOrDefault(t => t.Id == editedTimesheet?.Id);

@@ -5,13 +5,22 @@ using Newtonsoft.Json;
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal sealed record class DeleteTimesheetFlowState
+internal sealed record class TimesheetUpdateFlowState
 {
     [JsonIgnore]
     public DateOnly? Date { get; init; }
 
     [JsonProperty("userId")]
     public Guid UserId { get; init; }
+
+    [JsonProperty("projectId")]
+    public Guid ProjectId { get; init; }
+
+    [JsonProperty("projectType")]
+    public TimesheetProjectType ProjectType { get; init; }
+
+    [JsonProperty("projectName")]
+    public string? ProjectName { get; init; }
 
     [JsonProperty("dateText")]
     public string? DateText
@@ -30,18 +39,13 @@ internal sealed record class DeleteTimesheetFlowState
         }
     }
 
-    [JsonProperty("messageText")]
-    public string? MessageText { get; init; }
-
     [JsonProperty("timesheets")]
     public IReadOnlyCollection<TimesheetJson>? Timesheets { get; init; }
 
-    public FlatArray<Guid> DeleteTimesheetsId { get; init; }
+    public UpdateTimesheetJson? TimesheetUpdate { get; init; }
 
-    public DeleteTimesheetOptions Options { get; init; }
+    public bool UpdateProject { get; init; }
 
-    public DeleteTimesheetFlowState(DeleteTimesheetOptions options)
-    {
-        Options = options;
-    }
+    [JsonProperty("urlwebapp")]
+    public string? UrlWebApp { get; init; }
 }

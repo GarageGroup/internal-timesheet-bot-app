@@ -1,28 +1,25 @@
 ﻿using GarageGroup.Infra.Bot.Builder;
-using Microsoft.Bot.Builder;
 using System;
+using System.Linq;
 
 namespace GarageGroup.Internal.Timesheet;
 
 internal static partial class DeleteTimesheetFlow
 {
     private static ChatFlow<Unit> RunFlow(
-        this ChatFlow chatFlow, 
-        ICrmTimesheetApi timesheetApi, 
-        DeleteTimesheetOptions options)
+        this ChatFlow chatFlow,
+        IBotContext botContext,
+        ICrmTimesheetApi timesheetApi,
+        WebAppDeleteResponseJson timesheets)
         =>
-        chatFlow.Start(
-            () => new DeleteTimesheetFlowState(options))
-        .GetUserId()
-        .AwaitDateWebApp()
-        .GetTimesheetSet(
-            timesheetApi)
-        .AwaitTimesheetWebApp()
+        chatFlow.Start<TimesheetDeleteFlowState>(
+            () => new()
+            {
+                DeleteTimesheetsId = timesheets.Timesheets,
+                Date = DateOnly.Parse(timesheets.Date.OrEmpty())
+            })
         .DeleteTimesheet(
             timesheetApi)
-        .GetTimesheetSet(
-            timesheetApi)
-        .ShowTimesheetSet()
-        .MapFlowState(
-            Unit.From);
+        .ShowDateTimesheet(
+            botContext);
 }

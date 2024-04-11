@@ -1,12 +1,13 @@
+using AdaptiveCards;
+using GarageGroup.Infra.Bot.Builder;
+using Microsoft.Bot.Builder;
+using Microsoft.Bot.Schema;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Web;
-using AdaptiveCards;
-using GarageGroup.Infra.Bot.Builder;
-using Microsoft.Bot.Builder;
-using Microsoft.Bot.Schema;
 
 namespace GarageGroup.Internal.Timesheet;
 
@@ -18,30 +19,6 @@ partial class DateTimesheetFlowStep
             CreateActivity)
         .MapFlowState(
             Unit.From);
-
-    private static IActivity? CreateSuccessActivity(IChatFlowContext<DateTimesheetFlowState> context)
-    {
-        if (string.IsNullOrEmpty(context.FlowState.MessageText))
-        {
-            return null;
-        }
-
-        if (context.IsNotTelegramChannel())
-        {
-            return MessageFactory.Text(context.FlowState.MessageText);
-        }
-
-        var telegramActivity = context.Activity.CreateReply();
-
-        telegramActivity.ChannelData = new TelegramChannelData(
-            parameters: new TelegramParameters(context.FlowState.MessageText)
-            {
-                DisableNotification = true
-            })
-            .ToJObject();
-
-        return telegramActivity;
-    }
 
     private static IActivity CreateActivity(IChatFlowContext<DateTimesheetFlowState> context)
     {
@@ -64,7 +41,7 @@ partial class DateTimesheetFlowStep
         return MessageFactory.Text(text);
     }
 
-    private static IActivity CreateTextActivity(this ITurnContext turnContext, string text)
+    private static IActivity CreateTextActivity(this IChatFlowContext<DateTimesheetFlowState> turnContext, string text)
         =>
         turnContext.IsNotTelegramChannel() ? MessageFactory.Text(text) : turnContext.CreateTelegramTextActivity(text);
 
@@ -80,7 +57,7 @@ partial class DateTimesheetFlowStep
         }
         .ToActivity();
 
-    private static IActivity CreateTelegramTextActivity(this ITurnContext context, string text)
+    private static IActivity CreateTelegramTextActivity(this IChatFlowContext<DateTimesheetFlowState> context, string text)
     {
         var textBuilder = new StringBuilder(text)
             .Append(TelegramBotLine)
@@ -88,12 +65,30 @@ partial class DateTimesheetFlowStep
             .Append(TelegramBotLine)
             .Append("/newtimesheet - Списать время");
 
-        var channelData = new TelegramChannelData(
+        TelegramChannelData channelData;
+
+        if (context.FlowState.Timesheets?.Count is not > 0)
+        {
+            channelData = new TelegramChannelData(
             parameters: new(textBuilder.ToString())
             {
                 ParseMode = TelegramParseMode.Html,
                 ReplyMarkup = new TelegramReplyKeyboardRemove()
             });
+        }
+        else
+        {
+            var webAppData = new WebAppTimesheetsDataJson
+            {
+                Date = context.FlowState.Date.ToString(),
+                Timesheets = context.FlowState.Timesheets,
+            };
+
+            var webAppDataJson = JsonConvert.SerializeObject(webAppData);
+            var base64Timesheets = Convert.ToBase64String(Encoding.UTF8.GetBytes(webAppDataJson));
+
+            channelData = CreateChannelDataSelectTimesheet(textBuilder.ToString(), context.FlowState.UrlWebApp.OrEmpty(), base64Timesheets, context.FlowState.TimesheetInterval.Days);
+        }
 
         var telegramActivity = context.Activity.CreateReply();
         telegramActivity.ChannelData = channelData.ToJObject();
@@ -313,4 +308,25 @@ partial class DateTimesheetFlowStep
     private static decimal GetDurationSum(this DateTimesheetFlowState flowState)
         =>
         flowState.Timesheets?.Count > 0 ? flowState.Timesheets.Sum(static x => x.Duration) : default;
+
+    private static TelegramChannelData CreateChannelDataSelectTimesheet(string message, string url, string data, int daysInterval)
+        =>
+        new(
+            parameters: new(message)
+            {
+                ParseMode = TelegramParseMode.Html,
+                ReplyMarkup = new TelegramReplyKeyboardMarkup(
+                    [
+                        [
+                            new("Редактировать")
+                            {
+                                WebApp = new($"{url}/selectUpdateTimesheet?data={data}&days={daysInterval}")
+                            }
+                        ]
+                    ])
+                {
+                    ResizeKeyboard = true,
+                    InputFieldPlaceholder = "Выберете действие",
+                }
+            });
 }

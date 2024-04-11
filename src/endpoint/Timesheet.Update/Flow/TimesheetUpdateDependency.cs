@@ -28,7 +28,7 @@ public static class TimesheetUpdateDependency
                 cancellationToken);
     }
 
-    private static UpdateTimesheetOptions ResolveOptions(this IConfiguration configuration)
+    private static TimesheetUpdateOption ResolveOptions(this IConfiguration configuration)
         =>
         new ()
         {
