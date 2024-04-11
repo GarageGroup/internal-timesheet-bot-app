@@ -10,7 +10,7 @@ internal sealed record class TimesheetDeleteFlowState
     public DateOnly Date { get; init; }
 
     [JsonIgnore]
-    public FlatArray<Guid> DeleteTimesheetsId { get; init; }
+    public FlatArray<Guid> TimesheetIds { get; init; }
 
     [JsonProperty("dateText")]
     public string DateText

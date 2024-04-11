@@ -17,9 +17,9 @@ internal static partial class TimesheetCreateChatFlow
                 UrlWebApp = option.UrlWebApp
             })
         .GetUserId()
+        .AwaitDate()
         .AwaitProject(
             crmProjectApi)
-        .AwaitDate()
         .AwaitHourValue()
         .AwaitDescription(
             crmTimesheetApi)

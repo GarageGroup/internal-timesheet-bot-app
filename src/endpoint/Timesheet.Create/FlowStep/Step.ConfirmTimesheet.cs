@@ -1,6 +1,4 @@
 ﻿using GarageGroup.Infra.Bot.Builder;
-using Microsoft.Bot.Builder;
-using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
 using System;
 using System.Text;
@@ -14,20 +12,9 @@ partial class TimesheetCreateFlowStep
         =>
         chatFlow.AwaitConfirmation(
             CreateTimesheetConfirmationOption, GetWebAppData)
-        .SetTypingStatus(
-            GetTempActivity)
         .Forward(
-            NextOrRestart);
-
-    private static IActivity? GetTempActivity(IChatFlowContext<TimesheetCreateFlowState> context)
-    {
-        if (context.FlowState.Project is null)
-        {
-            return MessageFactory.Text("Изменение проекта...");
-        }
-
-        return null;
-    }
+            NextOrRestart)
+        .SetTypingStatus();
 
     private static ConfirmationCardOption CreateTimesheetConfirmationOption(IChatFlowContext<TimesheetCreateFlowState> context)
         =>
@@ -60,21 +47,12 @@ partial class TimesheetCreateFlowStep
 
         if (updateTimesheet.Duration <= 0 || updateTimesheet.Duration > MaxValue)
         {
-            return BotFlowFailure.From($"Длительность должна быть в интервале 0-{MaxValue} часа");
-        }
-
-        if (updateTimesheet.IsEditProject is true)
-        {
-            return context.FlowState with
-            {
-                Project = null,
-                Description = updateTimesheet.Description is null ? context.FlowState.Description : new(updateTimesheet.Description),
-                ValueHours = updateTimesheet.Duration ?? context.FlowState.ValueHours,
-            };
+            return BotFlowFailure.From($"Длительность должна быть в интервале между 0 и {MaxValue} часа");
         }
 
         return context.FlowState with
         {
+            Project = updateTimesheet.IsEditProject ? null : context.FlowState.Project,
             Description = updateTimesheet.Description is null ? context.FlowState.Description : new(updateTimesheet.Description),
             ValueHours = updateTimesheet.Duration ?? context.FlowState.ValueHours,
         };

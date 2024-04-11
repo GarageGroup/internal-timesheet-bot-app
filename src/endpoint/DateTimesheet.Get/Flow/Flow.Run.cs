@@ -29,17 +29,18 @@ partial class TimesheetSetGetChatFlow
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task<ChatFlowStarter<DateTimesheetFlowState>?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
+    private static async Task<ChatFlowStarter<DateTimesheetFlowState>?> GetChatFlowAsync(
+        this IBotContext context, string commandName, CancellationToken cancellationToken)
     {
-        var chatFlow = context.CreateChatFlow<DateTimesheetFlowState>("TimesheetSetGet");
-        if (await chatFlow.IsStartedAsync(cancellationToken).ConfigureAwait(false))
+        var starter = context.GetChatFlowStarter<DateTimesheetFlowState>("TimesheetSetGet");
+        if (await starter.IsStartedAsync(cancellationToken).ConfigureAwait(false))
         {
-            return chatFlow;
+            return starter;
         }
 
         if (context.TurnContext.RecognizeCommandOrAbsent(commandName).IsPresent)
         {
-            return chatFlow;
+            return starter;
         }
 
         return null;

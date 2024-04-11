@@ -40,17 +40,16 @@ partial class UpdateTimesheetFlow
 
     private static async Task<ChatFlowStarter<TimesheetUpdateFlowState>?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
     {
-        var chatFlow = context.CreateChatFlow<TimesheetUpdateFlowState>("TimesheetUpdate");
-        if (await chatFlow.IsStartedAsync(cancellationToken).ConfigureAwait(false))
+        var starter = context.GetChatFlowStarter<TimesheetUpdateFlowState>("TimesheetUpdate");
+        if (await starter.IsStartedAsync(cancellationToken).ConfigureAwait(false))
         {
-            return chatFlow;
+            return starter;
         }
 
         var timesheet = GetWebAppUpdateResponseJson(context);
-
         if (timesheet is not null && timesheet.Command?.Equals(commandName) is true)
         {
-            return chatFlow;
+            return starter;
         }
 
         return null;

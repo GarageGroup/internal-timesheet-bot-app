@@ -22,7 +22,7 @@ partial class TimesheetCreateFlowStep
         .HandleCancellation()
         .Pipe(
             flowState => new TimesheetCreateIn(
-                userId: flowState.UserId,
+                userId: flowState.UserId.GetValueOrDefault(),
                 date: flowState.Date.GetValueOrDefault(),
                 project: new(
                     id: flowState.Project?.Id ?? default,

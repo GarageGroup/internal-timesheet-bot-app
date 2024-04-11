@@ -63,19 +63,23 @@ partial class DateTimesheetFlowStep
             .Append(TelegramBotLine)
             .Append("/newtimesheet - Списать время");
 
-        TelegramChannelData channelData;
+        var telegramActivity = context.Activity.CreateReply();
+        telegramActivity.ChannelData = BuildChannelData().ToJObject();
 
-        if (context.FlowState.Timesheets?.Count is not > 0)
+        return telegramActivity;
+
+        TelegramChannelData BuildChannelData()
         {
-            channelData = new TelegramChannelData(
-            parameters: new(textBuilder.ToString())
+            if (context.FlowState.Timesheets?.Count is not > 0)
             {
-                ParseMode = TelegramParseMode.Html,
-                ReplyMarkup = new TelegramReplyKeyboardRemove()
-            });
-        }
-        else
-        {
+                return new(
+                    parameters: new(textBuilder.ToString())
+                    {
+                        ParseMode = TelegramParseMode.Html,
+                        ReplyMarkup = new TelegramReplyKeyboardRemove()
+                    });
+            }
+
             var webAppData = new WebAppTimesheetsDataJson
             {
                 Date = context.FlowState.Date.ToString(),
@@ -83,15 +87,29 @@ partial class DateTimesheetFlowStep
             };
 
             var webAppDataJson = JsonConvert.SerializeObject(webAppData);
-            var base64Timesheets = Convert.ToBase64String(Encoding.UTF8.GetBytes(webAppDataJson));
+            var data = Convert.ToBase64String(Encoding.UTF8.GetBytes(webAppDataJson));
 
-            channelData = CreateChannelDataSelectTimesheet(textBuilder.ToString(), context.FlowState.UrlWebApp.OrEmpty(), base64Timesheets, context.FlowState.TimesheetInterval.Days);
+            var daysInterval = context.FlowState.TimesheetInterval.Days;
+
+            return new(
+                parameters: new(textBuilder.ToString())
+                {
+                    ParseMode = TelegramParseMode.Html,
+                    ReplyMarkup = new TelegramReplyKeyboardMarkup(
+                        [
+                            [
+                                new("Редактировать")
+                                {
+                                    WebApp = new($"{context.FlowState.UrlWebApp}/selectUpdateTimesheet?data={data}&days={daysInterval}")
+                                }
+                            ]
+                        ])
+                    {
+                        OneTimeKeyboard = true,
+                        ResizeKeyboard = true
+                    }
+                });
         }
-
-        var telegramActivity = context.Activity.CreateReply();
-        telegramActivity.ChannelData = channelData.ToJObject();
-
-        return telegramActivity;
     }
 
     private static List<AdaptiveElement> CreateAdaptiveBody(IChatFlowContext<DateTimesheetFlowState> context)
@@ -306,25 +324,4 @@ partial class DateTimesheetFlowStep
     private static decimal GetDurationSum(this DateTimesheetFlowState flowState)
         =>
         flowState.Timesheets?.Count > 0 ? flowState.Timesheets.Sum(static x => x.Duration) : default;
-
-    private static TelegramChannelData CreateChannelDataSelectTimesheet(string message, string url, string data, int daysInterval)
-        =>
-        new(
-            parameters: new(message)
-            {
-                ParseMode = TelegramParseMode.Html,
-                ReplyMarkup = new TelegramReplyKeyboardMarkup(
-                    [
-                        [
-                            new("Редактировать")
-                            {
-                                WebApp = new($"{url}/selectUpdateTimesheet?data={data}&days={daysInterval}")
-                            }
-                        ]
-                    ])
-                {
-                    ResizeKeyboard = true,
-                    InputFieldPlaceholder = "Выберете действие",
-                }
-            });
 }

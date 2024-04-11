@@ -7,7 +7,7 @@ namespace GarageGroup.Internal.Timesheet;
 internal sealed record class TimesheetCreateFlowState
 {
     [JsonProperty("userId")]
-    public Guid UserId { get; init; }
+    public Guid? UserId { get; init; }
 
     [JsonProperty("project")]
     public TimesheetProjectState? Project { get; init; }

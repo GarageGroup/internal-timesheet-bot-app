@@ -84,7 +84,7 @@ partial class TimesheetCreateFlowStep
             context.FlowState, cancellationToken)
         .Pipe(
             static state => new TimesheetTagSetGetIn(
-                userId: state.UserId,
+                userId: state.UserId.GetValueOrDefault(),
                 projectId: state.Project?.Id ?? default,
                 minDate: state.Date.GetValueOrDefault().AddDays(-DescriptionTagDays),
                 maxDate: state.Date.GetValueOrDefault()))

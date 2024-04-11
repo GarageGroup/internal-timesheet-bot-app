@@ -35,17 +35,18 @@ partial class TimesheetCreateChatFlow
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task<ChatFlowStarter<TimesheetCreateFlowState>?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
+    private static async Task<ChatFlowStarter<TimesheetCreateFlowState>?> GetChatFlowAsync(
+        this IBotContext context, string commandName, CancellationToken cancellationToken)
     {
-        var chatFlow = context.CreateChatFlow<TimesheetCreateFlowState>("TimesheetCreate");
-        if (await chatFlow.IsStartedAsync(cancellationToken).ConfigureAwait(false))
+        var starter = context.GetChatFlowStarter<TimesheetCreateFlowState>("TimesheetCreate");
+        if (await starter.IsStartedAsync(cancellationToken).ConfigureAwait(false))
         {
-            return chatFlow;
+            return starter;
         }
 
         if (context.TurnContext.RecognizeCommandOrAbsent(commandName).IsPresent)
         {
-            return chatFlow;
+            return starter;
         }
 
         return null;

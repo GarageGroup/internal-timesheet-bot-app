@@ -39,19 +39,19 @@ partial class DeleteTimesheetFlow
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task<ChatFlowStarter<TimesheetDeleteFlowState>?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
+    private static async Task<ChatFlowStarter<TimesheetDeleteFlowState>?> GetChatFlowAsync(
+        this IBotContext context, string commandName, CancellationToken cancellationToken)
     {
-        var chatFlow = context.CreateChatFlow<TimesheetDeleteFlowState>("TimesheetDelete");
-        if (await chatFlow.IsStartedAsync(cancellationToken).ConfigureAwait(false))
+        var starter = context.GetChatFlowStarter<TimesheetDeleteFlowState>("TimesheetDelete");
+        if (await starter.IsStartedAsync(cancellationToken).ConfigureAwait(false))
         {
-            return chatFlow;
+            return starter;
         }
 
         var timesheets = GetWebAppDeleteResponseJson(context);
-
-        if (timesheets is not null && timesheets.Command?.Equals(commandName) is true)
+        if (timesheets?.Timesheets?.Length > 0 && string.Equals(timesheets.Command, commandName, StringComparison.InvariantCultureIgnoreCase))
         {
-            return chatFlow;
+            return starter;
         }
 
         return null;

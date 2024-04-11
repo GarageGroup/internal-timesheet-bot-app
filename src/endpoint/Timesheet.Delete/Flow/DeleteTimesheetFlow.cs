@@ -14,7 +14,7 @@ internal static partial class DeleteTimesheetFlow
         chatFlow.Start(
             () => new()
             {
-                DeleteTimesheetsId = timesheets.Timesheets,
+                TimesheetIds = timesheets.Timesheets,
                 Date = DateOnly.Parse(timesheets.Date.OrEmpty())
             })
         .DeleteTimesheet(

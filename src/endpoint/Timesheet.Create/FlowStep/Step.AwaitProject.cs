@@ -33,7 +33,7 @@ partial class TimesheetCreateFlowStep
         .HandleCancellation()
         .Pipe(
             static flowState => new LastProjectSetGetIn(
-                userId: flowState.UserId,
+                userId: flowState.UserId.GetValueOrDefault(),
                 top: MaxProjectsCount,
                 minDate: GetDateUtc(-ProjectDays)))
         .PipeValue(
@@ -53,7 +53,7 @@ partial class TimesheetCreateFlowStep
         .Pipe(
             flowState => new ProjectSetSearchIn(
                 searchText: searchText,
-                userId: flowState.UserId,
+                userId: flowState.UserId.GetValueOrDefault(),
                 top: MaxProjectsCount))
         .PipeValue(
             crmProjectApi.SearchAsync)
