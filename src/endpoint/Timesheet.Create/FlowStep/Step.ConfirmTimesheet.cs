@@ -31,7 +31,7 @@ partial class TimesheetCreateFlowStep
                 new(string.Empty, context.FlowState.Description?.Value)
             ])
         {
-            TelegramWebApp = new($"{context.FlowState.UrlWebApp}/updateTimesheetForm?data={CreateBase64Data(context.FlowState)}")
+            TelegramWebApp = new($"{context.FlowState.UrlWebApp}/updateTimesheetForm?data={context.FlowState.CreateBase64Data()}")
         };
 
     private static Result<TimesheetCreateFlowState, BotFlowFailure> GetWebAppData(
@@ -68,9 +68,9 @@ partial class TimesheetCreateFlowStep
         return context.FlowState;
     }
 
-    private static string CreateBase64Data(TimesheetCreateFlowState state)
+    private static string CreateBase64Data(this TimesheetCreateFlowState state)
     {
-        var timesheet = new EditTimesheetJson()
+        var timesheet = new EditTimesheetJson
         {
             Description = state.Description?.Value.OrEmpty(),
             Duration = state.ValueHours,
@@ -78,7 +78,6 @@ partial class TimesheetCreateFlowStep
         };
 
         var webAppDataJson = JsonConvert.SerializeObject(timesheet);
-
         return Convert.ToBase64String(Encoding.UTF8.GetBytes(webAppDataJson));
     }
 }
