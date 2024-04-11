@@ -35,13 +35,13 @@ partial class DeleteTimesheetFlow
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        await chatFlow.RunFlow(context, timesheetApi, timesheets).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
+        await chatFlow.RunFlow(context, timesheetApi, timesheets).GetFlowStateAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task<ChatFlow?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
+    private static async Task<ChatFlowStarter<TimesheetDeleteFlowState>?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
     {
-        var chatFlow = context.CreateChatFlow("TimesheetDelete");
+        var chatFlow = context.CreateChatFlow<TimesheetDeleteFlowState>("TimesheetDelete");
         if (await chatFlow.IsStartedAsync(cancellationToken).ConfigureAwait(false))
         {
             return chatFlow;

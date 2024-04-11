@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra.Bot.Builder;
@@ -8,13 +7,13 @@ namespace GarageGroup.Internal.Timesheet;
 
 partial class TimesheetDeleteFlowStep
 {
-    internal static ChatFlow<Unit> ShowDateTimesheet(
+    internal static ChatFlow<TimesheetDeleteFlowState> ShowDateTimesheet(
         this ChatFlow<TimesheetDeleteFlowState> chatFlow, IBotContext botContext)
         =>
         chatFlow.Next(
             botContext.RunDateTimesheetCommandAsync);
 
-    private static async Task<Unit> RunDateTimesheetCommandAsync(
+    private static async Task<TimesheetDeleteFlowState> RunDateTimesheetCommandAsync(
         this IBotContext botContext, IChatFlowContext<TimesheetDeleteFlowState> context, CancellationToken cancellationToken)
     {
         var contextData = new Dictionary<string, string?>
@@ -47,6 +46,6 @@ partial class TimesheetDeleteFlowStep
             await stateProperty.DeleteAsync(context, cancellationToken).ConfigureAwait(false);
         }
 
-        return default;
+        return context.FlowState;
     }
 }

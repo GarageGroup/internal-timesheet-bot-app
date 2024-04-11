@@ -31,13 +31,13 @@ partial class TimesheetCreateChatFlow
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        await chatFlow.RunFlow(context, crmProjectApi, crmTimesheetApi, option).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
+        await chatFlow.RunFlow(context, crmProjectApi, crmTimesheetApi, option).GetFlowStateAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task<ChatFlow?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
+    private static async Task<ChatFlowStarter<TimesheetCreateFlowState>?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
     {
-        var chatFlow = context.CreateChatFlow("TimesheetCreate");
+        var chatFlow = context.CreateChatFlow<TimesheetCreateFlowState>("TimesheetCreate");
         if (await chatFlow.IsStartedAsync(cancellationToken).ConfigureAwait(false))
         {
             return chatFlow;

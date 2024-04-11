@@ -16,7 +16,10 @@ partial class TimesheetCreateFlowStep
         chatFlow.AwaitValue(
             static context => new(
                 messageText: "Введите время работы в часах",
-                suggestions: context.GetHourValueSuggestions()),
+                suggestions: context.GetHourValueSuggestions())
+            {
+                SkipStep = context.FlowState.ValueHours is not null,
+            },
             static text => ParseDecimalOrAbsent(text).Fold(ValidateHourValueOrFailure, CreateUnexpectedValueFailureResult),
             static (context, value) => $"Время работы в часах: {context.EncodeTextWithStyle(value.ToStringRussianCulture(), BotTextStyle.Bold)}",
             (state, value) => state with

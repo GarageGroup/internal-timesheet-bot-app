@@ -52,7 +52,7 @@ partial class TimesheetUpdateFlowStep
                 UpdateProject = true
             },
             ({ Status: UpdateStatus.ProjectIsEdited, EditedProject: { } }, { Message: { } }) => await ProcessingMessagesWebApp(crmProjectApi, context, cache, token).ConfigureAwait(false),
-            _ => ChatFlowJump.Break<TimesheetUpdateFlowState>(ChatFlowBreakState.From(UnknownErrorText))
+            _ => ChatFlowBreakState.From(UnknownErrorText)
         };
     
 
@@ -75,7 +75,7 @@ partial class TimesheetUpdateFlowStep
                 {
                     var activity = MessageFactory.Text(botFailure.UserMessage);
                     await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken).ConfigureAwait(false);
-                    return context.RepeatSameStateJump<TimesheetUpdateFlowState>();
+                    return context.RepeatSameStateJump();
                 });
 
 
@@ -110,11 +110,11 @@ partial class TimesheetUpdateFlowStep
 
         if (project is null)
         {
-            return ChatFlowJump.Break<TimesheetUpdateFlowState>(ChatFlowBreakState.From(UnknownErrorText));
+            return ChatFlowBreakState.From(UnknownErrorText);
         }
         if (cache.EditTimesheetState is null)
         {
-            return ChatFlowJump.Break<TimesheetUpdateFlowState>(ChatFlowBreakState.From(UnknownErrorText));
+            return ChatFlowBreakState.From(UnknownErrorText);
         }
 
         var webAppData = cache.EditTimesheetState with
@@ -190,7 +190,7 @@ partial class TimesheetUpdateFlowStep
             };
         }
 
-        return ChatFlowJump.Break<TimesheetUpdateFlowState>(ChatFlowBreakState.From(UnknownErrorText));
+        return ChatFlowBreakState.From(UnknownErrorText);
     }
 
     private static ValueTask<ChatFlowJump<TimesheetUpdateFlowState>> SelectProjectForLasted(
@@ -214,7 +214,7 @@ partial class TimesheetUpdateFlowStep
     {
         if (inputText.Text is null || cache.EditTimesheetState is null)
         {
-            return ChatFlowJump.Break<TimesheetUpdateFlowState>(ChatFlowBreakState.From(UnknownErrorText));
+            return ChatFlowBreakState.From(UnknownErrorText);
         }
         var projects = await crmProjectApi.SearchProjectsAsync(context, inputText.Text, cancellationToken);
 
@@ -222,7 +222,7 @@ partial class TimesheetUpdateFlowStep
         {
             var activity = MessageFactory.Text(projects.FailureOrThrow().UserMessage);
             await SendInsteadActivityAsync(context, cache.ActivityId, activity, cancellationToken);
-            return context.RepeatSameStateJump<TimesheetUpdateFlowState>();
+            return context.RepeatSameStateJump();
         }
 
         var searchProjects = projects.SuccessOrThrow();
@@ -258,7 +258,7 @@ partial class TimesheetUpdateFlowStep
         var editableTimesheet = context.FlowState.Timesheets?.First(t => t.Id == timesheet.Id);
         if (editableTimesheet is null)
         {
-            return ChatFlowJump.Break<TimesheetUpdateFlowState>(ChatFlowBreakState.From(UnknownErrorText));
+            return ChatFlowBreakState.From(UnknownErrorText);
         }
 
         var editTimesheet = new UpdateTimesheetJson

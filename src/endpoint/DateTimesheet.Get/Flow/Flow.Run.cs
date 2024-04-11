@@ -25,13 +25,13 @@ partial class TimesheetSetGetChatFlow
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        await chatFlow.RunFlow(context.ConversationState, timesheetApi, options).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
+        await chatFlow.RunFlow(context.ConversationState, timesheetApi, options).GetFlowStateAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task<ChatFlow?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
+    private static async Task<ChatFlowStarter<DateTimesheetFlowState>?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
     {
-        var chatFlow = context.CreateChatFlow("TimesheetSetGet");
+        var chatFlow = context.CreateChatFlow<DateTimesheetFlowState>("TimesheetSetGet");
         if (await chatFlow.IsStartedAsync(cancellationToken).ConfigureAwait(false))
         {
             return chatFlow;

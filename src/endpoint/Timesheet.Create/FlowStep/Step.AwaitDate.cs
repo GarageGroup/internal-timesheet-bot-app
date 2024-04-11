@@ -18,7 +18,10 @@ partial class TimesheetCreateFlowStep
                 invalidDateText: "Не удалось распознать дату",
                 defaultDate: GetNow(),
                 placeholder: DatePlaceholder,
-                suggestions: context.CreateSuggestions()),
+                suggestions: context.CreateSuggestions())
+            {
+                SkipStep = context.FlowState.Date is not null
+            },
             static (context, date) => "Дата списания: " + context.EncodeTextWithStyle(date.ToStringRussianCulture(), BotTextStyle.Bold),
             static (_, date) => (date <= GetNow()) switch
             {

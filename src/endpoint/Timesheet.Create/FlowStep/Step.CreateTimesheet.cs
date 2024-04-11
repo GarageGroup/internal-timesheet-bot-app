@@ -23,13 +23,13 @@ partial class TimesheetCreateFlowStep
         .Pipe(
             flowState => new TimesheetCreateIn(
                 userId: flowState.UserId,
-                date: flowState.Date,
+                date: flowState.Date.GetValueOrDefault(),
                 project: new(
-                    id: flowState.ProjectId,
-                    type: flowState.ProjectType,
-                    displayName: flowState.ProjectName),
-                duration: flowState.ValueHours,
-                description: flowState.Description,
+                    id: flowState.Project?.Id ?? default,
+                    type: flowState.Project?.Type ?? default,
+                    displayName: flowState.Project?.Name ?? default),
+                duration: flowState.ValueHours.GetValueOrDefault(),
+                description: flowState.Description?.Value,
                 channel: context.GetChannel()))
         .PipeValue(
             crmTimesheetApi.CreateAsync)

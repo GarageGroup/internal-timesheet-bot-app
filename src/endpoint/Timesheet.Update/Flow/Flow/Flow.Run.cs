@@ -34,13 +34,13 @@ partial class UpdateTimesheetFlow
 
         var timesheet = GetWebAppUpdateResponseJson(context);
 
-        await chatFlow.RunFlow(context ,crmProjectApi, timesheetApi, timesheet, option).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
+        await chatFlow.RunFlow(context ,crmProjectApi, timesheetApi, timesheet, option).GetFlowStateAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task<ChatFlow?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
+    private static async Task<ChatFlowStarter<TimesheetUpdateFlowState>?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
     {
-        var chatFlow = context.CreateChatFlow("TimesheetUpdate");
+        var chatFlow = context.CreateChatFlow<TimesheetUpdateFlowState>("TimesheetUpdate");
         if (await chatFlow.IsStartedAsync(cancellationToken).ConfigureAwait(false))
         {
             return chatFlow;

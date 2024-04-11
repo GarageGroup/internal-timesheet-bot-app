@@ -1,18 +1,17 @@
-﻿using System;
-using GarageGroup.Infra.Bot.Builder;
+﻿using GarageGroup.Infra.Bot.Builder;
 
 namespace GarageGroup.Internal.Timesheet;
 
 internal static partial class TimesheetCreateChatFlow
 {
-    internal static ChatFlow<Unit> RunFlow(
-        this ChatFlow chatFlow,
+    internal static ChatFlow<TimesheetCreateFlowState> RunFlow(
+        this ChatFlowStarter<TimesheetCreateFlowState> chatFlow,
         IBotContext botContext,
         ICrmProjectApi crmProjectApi,
         ICrmTimesheetApi crmTimesheetApi,
         TimesheetEditOption option)
         =>
-        chatFlow.Start<TimesheetCreateFlowState>(
+        chatFlow.Start(
             () => new()
             {
                 UrlWebApp = option.UrlWebApp

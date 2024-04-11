@@ -17,9 +17,12 @@ partial class TimesheetCreateFlowStep
             BuildProjectResultMessage,
             static (state, project) => state with
             {
-                ProjectType = project.GetProjectType(),
-                ProjectId = project.Id,
-                ProjectName = project.Name
+                Project = new()
+                {
+                    Type = project.GetProjectType(),
+                    Id = project.Id,
+                    Name = project.Name
+                }                
             });
 
     private static ValueTask<LookupValueSetOption> GetLastProjectsAsync(

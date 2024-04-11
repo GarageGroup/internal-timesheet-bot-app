@@ -13,12 +13,10 @@ namespace GarageGroup.Internal.Timesheet;
 
 partial class DateTimesheetFlowStep
 {
-    internal static ChatFlow<Unit> ShowTimesheetSet(this ChatFlow<DateTimesheetFlowState> chatFlow)
+    internal static ChatFlow<DateTimesheetFlowState> ShowTimesheetSet(this ChatFlow<DateTimesheetFlowState> chatFlow)
         =>
         chatFlow.ReplaceActivityOrSkip(
-            CreateActivity)
-        .MapFlowState(
-            Unit.From);
+            CreateActivity);
 
     private static IActivity CreateActivity(IChatFlowContext<DateTimesheetFlowState> context)
     {
