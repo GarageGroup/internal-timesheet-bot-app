@@ -39,6 +39,7 @@ partial class DateTimesheetFlowStep
         new()
         {
             Duration = timesheet.Duration,
+            ProjectType = timesheet.ProjectType,
             ProjectName = timesheet.ProjectName,
             Description = timesheet.Description,
             Id = timesheet.Id

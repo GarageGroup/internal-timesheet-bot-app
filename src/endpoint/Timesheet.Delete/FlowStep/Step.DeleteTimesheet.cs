@@ -29,7 +29,8 @@ partial class TimesheetDeleteFlowStep
         .Pipe(
             static context => context.FlowState.TimesheetIds.Map(BuildDeletionInput))
         .PipeParallelValue(
-            crmTimesheetApi.DeleteAsync)
+            crmTimesheetApi.DeleteAsync,
+            ParallelOption)
         .Map(
             _ => context.FlowState,
             static failure => failure.SourceException.ToChatFlowBreakState("Не удалось удалить одну или несколько записей", failure.FailureMessage))

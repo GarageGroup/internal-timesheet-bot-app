@@ -1,12 +1,15 @@
 ﻿using Newtonsoft.Json;
 using System;
 
-namespace GarageGroup.Internal.Timesheet;
+namespace GarageGroup.Internal.Timesheet.Internal.Json;
 
-internal sealed record class UpdateTimesheetJson
+internal sealed record class WebAppUpdateTimesheetDataJson
 {
     [JsonProperty("duration")]
     public decimal? Duration { get; init; }
+
+    [JsonProperty("projectType")]
+    public TimesheetProjectType ProjectType { get; set; }
 
     [JsonProperty("projectName")]
     public string? ProjectName { get; init; }

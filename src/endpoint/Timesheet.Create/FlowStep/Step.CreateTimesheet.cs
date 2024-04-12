@@ -8,11 +8,20 @@ namespace GarageGroup.Internal.Timesheet;
 
 partial class TimesheetCreateFlowStep
 {
-    internal static ChatFlow<TimesheetCreateFlowState> CreateTimesheet(
+    internal static ChatFlow<TimesheetCreateFlowState> CreateOrUpdateTimesheet(
         this ChatFlow<TimesheetCreateFlowState> chatFlow, ICrmTimesheetApi crmTimesheetApi)
         =>
         chatFlow.ForwardValue(
-            crmTimesheetApi.CreateTimesheetAsync);
+            crmTimesheetApi.CreateOrUpdateTimesheetAsync);
+
+    private static ValueTask<ChatFlowJump<TimesheetCreateFlowState>> CreateOrUpdateTimesheetAsync(
+        this ICrmTimesheetApi crmTimesheetApi, IChatFlowContext<TimesheetCreateFlowState> context, CancellationToken cancellationToken)
+        =>
+        context.FlowState.TimesheetId switch
+        {
+            null => crmTimesheetApi.CreateTimesheetAsync(context, cancellationToken),
+            _ => crmTimesheetApi.UpdateTimesheetAsync(context, cancellationToken)
+        }; 
 
     private static ValueTask<ChatFlowJump<TimesheetCreateFlowState>> CreateTimesheetAsync(
         this ICrmTimesheetApi crmTimesheetApi, IChatFlowContext<TimesheetCreateFlowState> context, CancellationToken cancellationToken)
@@ -33,6 +42,31 @@ partial class TimesheetCreateFlowStep
                 channel: context.GetChannel()))
         .PipeValue(
             crmTimesheetApi.CreateAsync)
+        .Map(
+            _ => context.FlowState,
+            ToBreakState)
+        .Fold(
+            ChatFlowJump.Next,
+            ChatFlowJump.Break<TimesheetCreateFlowState>);
+
+    private static ValueTask<ChatFlowJump<TimesheetCreateFlowState>> UpdateTimesheetAsync(
+        this ICrmTimesheetApi crmTimesheetApi,
+        IChatFlowContext<TimesheetCreateFlowState> context,
+        CancellationToken cancellationToken)
+        =>
+        AsyncPipeline.Pipe(
+            context.FlowState, cancellationToken)
+        .Pipe(
+            state => new TimesheetUpdateIn(
+                project: state.UpdateProject is false ? null : new TimesheetProjectIn(
+                    id: state.Project?.Id ?? default,
+                    type: state.Project?.Type ?? default,
+                    displayName: state.Project?.Name),
+                duration: state.ValueHours,
+                description: state.Description is null ? default : Optional.Present(state.Description.Value.OrEmpty()),
+                timesheetId: state.TimesheetId ?? default))
+        .PipeValue(
+            crmTimesheetApi.UpdateAsync)
         .Map(
             _ => context.FlowState,
             ToBreakState)
@@ -76,4 +110,8 @@ partial class TimesheetCreateFlowStep
         })
         .Pipe(
             message => ChatFlowBreakState.From(message, failure.FailureMessage, failure.SourceException));
+
+    private static ChatFlowBreakState ToBreakState(Failure<TimesheetUpdateFailureCode> failure)
+        =>
+        ChatFlowBreakState.From("Ну удалось изменить запись.", failure.FailureMessage, failure.SourceException);
 }

@@ -2,6 +2,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra.Bot.Builder;
+using GarageGroup.Internal.Timesheet.Internal.Json;
+using Newtonsoft.Json;
 
 namespace GarageGroup.Internal.Timesheet;
 
@@ -31,7 +33,9 @@ partial class TimesheetCreateChatFlow
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        await chatFlow.RunFlow(context, crmProjectApi, crmTimesheetApi, option).GetFlowStateAsync(cancellationToken).ConfigureAwait(false);
+        var timesheetData = GetWebAppUpdateResponseJson(context);
+
+        await chatFlow.RunFlow(context, crmProjectApi, crmTimesheetApi, option, timesheetData).GetFlowStateAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -49,6 +53,19 @@ partial class TimesheetCreateChatFlow
             return starter;
         }
 
+        var timesheet = GetWebAppUpdateResponseJson(context);
+        if (timesheet is not null && timesheet.Command?.Equals("updatetimesheet") is true)
+        {
+            await context.TurnContext.DeleteActivityAsync(context.TurnContext.Activity.Id, cancellationToken).ConfigureAwait(false);
+            return starter;
+        }
+
         return null;
+    }
+
+    private static WebAppUpdateTimesheetDataJson? GetWebAppUpdateResponseJson(IBotContext context)
+    {
+        var dataWebApp = TelegramWebAppResponse.FromChannelData(context.TurnContext.Activity.ChannelData);
+        return JsonConvert.DeserializeObject<WebAppUpdateTimesheetDataJson>((dataWebApp.Message?.WebAppData?.Data).OrEmpty());
     }
 }

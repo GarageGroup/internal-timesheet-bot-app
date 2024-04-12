@@ -19,7 +19,7 @@ partial class TimesheetCreateFlowStep
         var contextData = new Dictionary<string, string?>
         {
             ["dateText"] = context.FlowState.DateText,
-            ["messageText"] = "Списание времени создано успешно"
+            ["messageText"] = context.FlowState.TimesheetId is null ? "Списание времени создано успешно" : "Списание времени изменено успешно"
         };
 
         var stateProperty = botContext.ConversationState.CreateProperty<Dictionary<string, string?>>("timesheetData");

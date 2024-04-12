@@ -22,10 +22,25 @@ partial class TimesheetCreateFlowStep
                     Type = project.GetProjectType(),
                     Id = project.Id,
                     Name = project.Name
-                }                
+                }
             });
 
     private static ValueTask<LookupValueSetOption> GetLastProjectsAsync(
+        this ICrmProjectApi crmProjectApi, IChatFlowContext<TimesheetCreateFlowState> context, CancellationToken cancellationToken)
+    {
+        if (context.FlowState.Project is not null)
+        {
+            return new(
+                result: new(default)
+                {
+                    SkipStep = true
+                });
+        }
+
+        return crmProjectApi.InnerGetLastProjectsAsync(context, cancellationToken);
+    } 
+
+    private static ValueTask<LookupValueSetOption> InnerGetLastProjectsAsync(
         this ICrmProjectApi crmProjectApi, IChatFlowContext<TimesheetCreateFlowState> context, CancellationToken cancellationToken)
         =>
         AsyncPipeline.Pipe(

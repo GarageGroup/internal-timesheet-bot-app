@@ -19,10 +19,10 @@ partial class TimesheetCreateFlowStep
     private static ConfirmationCardOption CreateTimesheetConfirmationOption(IChatFlowContext<TimesheetCreateFlowState> context)
         =>
         new(
-            questionText: "Списать время?",
-            confirmButtonText: "Списать",
+            questionText: context.FlowState.TimesheetId is null ? "Списать время?" : "Сохранить изменения?",
+            confirmButtonText: context.FlowState.TimesheetId is null ? "Списать" : "Сохранить",
             cancelButtonText: "Отменить",
-            cancelText: "Списание времени было отменено",
+            cancelText: context.FlowState.TimesheetId is null ? "Списание времени было отменено" : "Изменение времени было отменено",
             fieldValues:
             [
                 new((context.FlowState.Project?.Type.ToStringRussianCulture()).OrEmpty(), context.FlowState.Project?.Name),
@@ -38,7 +38,7 @@ partial class TimesheetCreateFlowStep
         IChatFlowContext<TimesheetCreateFlowState> context, 
         string webAppData)
     {
-        var updateTimesheet = JsonConvert.DeserializeObject<EditTimesheetJson>(webAppData);
+        var updateTimesheet = JsonConvert.DeserializeObject<WebAppCreateTimesheetDataJson>(webAppData);
 
         if (updateTimesheet is null)
         {
@@ -53,6 +53,7 @@ partial class TimesheetCreateFlowStep
         return context.FlowState with
         {
             Project = updateTimesheet.IsEditProject ? null : context.FlowState.Project,
+            UpdateProject = updateTimesheet.IsEditProject, // WARNING
             Description = updateTimesheet.Description is null ? context.FlowState.Description : new(updateTimesheet.Description),
             ValueHours = updateTimesheet.Duration ?? context.FlowState.ValueHours,
         };
@@ -70,7 +71,7 @@ partial class TimesheetCreateFlowStep
 
     private static string CreateBase64Data(this TimesheetCreateFlowState state)
     {
-        var timesheet = new EditTimesheetJson
+        var timesheet = new WebAppCreateTimesheetDataJson
         {
             Description = state.Description?.Value.OrEmpty(),
             Duration = state.ValueHours,

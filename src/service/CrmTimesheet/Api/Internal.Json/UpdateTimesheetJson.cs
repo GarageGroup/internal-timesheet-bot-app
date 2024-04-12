@@ -13,7 +13,7 @@ internal sealed record class UpdateTimesheetJson
 
     public required decimal? Duration { get; init; }
 
-    public required string? Description { get; init; }
+    public required Optional<string> Description { get; init; }
 
     public Guid Id { get; init; }
 
@@ -21,17 +21,17 @@ internal sealed record class UpdateTimesheetJson
     {
         var entityData = new Dictionary<string, object?>();
 
-        if (Duration != null)
+        if (Duration is not null)
         {
             entityData["gg_duration"] = Duration; 
         }
 
-        if (Description != null)
+        if (Description.IsPresent)
         {
-            entityData["gg_description"] = Description;
+            entityData["gg_description"] = Description.OrThrow().OrNullIfEmpty();
         }
 
-        if (ProjectId != null && ProjectType != null && ProjectDisplayName != null)
+        if (ProjectId is not null && ProjectType is not null && ProjectDisplayName is not null)
         {
             _ = ProjectType switch
             {
@@ -50,7 +50,7 @@ internal sealed record class UpdateTimesheetJson
 
         if (entityData.Count == 0)
         {
-            return Failure.Create("Нет ни одного поля для изменения");
+            return Failure.Create("There is not a single field to change");
         }
 
         return entityData;

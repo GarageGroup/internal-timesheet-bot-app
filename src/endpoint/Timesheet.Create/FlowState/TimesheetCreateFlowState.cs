@@ -6,6 +6,9 @@ namespace GarageGroup.Internal.Timesheet;
 
 internal sealed record class TimesheetCreateFlowState
 {
+    [JsonProperty("timesheetId")]
+    public Guid? TimesheetId { get; set; }
+
     [JsonProperty("userId")]
     public Guid? UserId { get; init; }
 
@@ -33,4 +36,7 @@ internal sealed record class TimesheetCreateFlowState
 
     [JsonProperty("urlwebapp")]
     public string? UrlWebApp { get; init; }
+
+    [JsonProperty("updateProject")]
+    public bool UpdateProject { get; init; }
 }
