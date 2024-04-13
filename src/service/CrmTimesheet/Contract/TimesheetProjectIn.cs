@@ -3,9 +3,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace GarageGroup.Internal.Timesheet;
 
-public sealed record class TimesheetProjectIn
+public sealed record class TimesheetProject
 {
-    public TimesheetProjectIn(Guid id, TimesheetProjectType type, [AllowNull] string displayName)
+    public TimesheetProject(Guid id, TimesheetProjectType type, [AllowNull] string displayName)
     {
         Id = id;
         Type = type;

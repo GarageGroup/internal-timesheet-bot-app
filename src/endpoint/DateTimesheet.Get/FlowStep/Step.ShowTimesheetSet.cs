@@ -89,7 +89,7 @@ partial class DateTimesheetFlowStep
             var webAppDataJson = JsonConvert.SerializeObject(webAppData);
             var data = Convert.ToBase64String(Encoding.UTF8.GetBytes(webAppDataJson));
 
-            var daysInterval = context.FlowState.TimesheetInterval.Days;
+            var daysInterval = context.FlowState.AllowedIntervalInDays;
 
             return new(
                 parameters: new(textBuilder.ToString())

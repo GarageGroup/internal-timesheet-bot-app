@@ -8,10 +8,11 @@ namespace GarageGroup.Internal.Timesheet;
 partial class TimesheetSetGetChatFlow
 {
     internal static async ValueTask<Unit> RunAsync(
-        this IBotContext context, string commandName, ICrmTimesheetApi timesheetApi, TimesheetEditOption options, CancellationToken cancellationToken)
+        this IBotContext context, string commandName, ICrmTimesheetApi timesheetApi, DateTimesheetEditOption option, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(timesheetApi);
+        ArgumentNullException.ThrowIfNull(option);
 
         var turnContext = context.TurnContext;
         if (turnContext.IsNotMessageType())
@@ -25,7 +26,7 @@ partial class TimesheetSetGetChatFlow
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        await chatFlow.RunFlow(context.ConversationState, timesheetApi, options).GetFlowStateAsync(cancellationToken).ConfigureAwait(false);
+        await chatFlow.RunFlow(context.ConversationState, timesheetApi, option).GetFlowStateAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 

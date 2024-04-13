@@ -61,7 +61,7 @@ internal static partial class TimesheetCreateFlowStep
         =>
         DateOnly.FromDateTime(DateTime.UtcNow.AddDays(daysAddedToNow));
 
-    private static DateOnly GetNow()
+    private static DateOnly GetToday()
         =>
         DateOnly.FromDateTime(DateTime.Now);
 

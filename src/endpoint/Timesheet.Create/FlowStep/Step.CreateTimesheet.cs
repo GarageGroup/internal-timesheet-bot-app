@@ -58,13 +58,14 @@ partial class TimesheetCreateFlowStep
             context.FlowState, cancellationToken)
         .Pipe(
             state => new TimesheetUpdateIn(
-                project: state.UpdateProject is false ? null : new TimesheetProjectIn(
+                timesheetId: state.TimesheetId.GetValueOrDefault(),
+                date: state.Date.GetValueOrDefault(),
+                project: new(
                     id: state.Project?.Id ?? default,
                     type: state.Project?.Type ?? default,
                     displayName: state.Project?.Name),
-                duration: state.ValueHours,
-                description: state.Description is null ? default : Optional.Present(state.Description.Value.OrEmpty()),
-                timesheetId: state.TimesheetId ?? default))
+                duration: state.ValueHours.GetValueOrDefault(),
+                description: state.Description?.Value))
         .PipeValue(
             crmTimesheetApi.UpdateAsync)
         .Map(
@@ -113,5 +114,13 @@ partial class TimesheetCreateFlowStep
 
     private static ChatFlowBreakState ToBreakState(Failure<TimesheetUpdateFailureCode> failure)
         =>
-        ChatFlowBreakState.From("Ну удалось изменить запись.", failure.FailureMessage, failure.SourceException);
+        (failure.FailureCode switch
+        {
+            TimesheetUpdateFailureCode.NotFound
+                => "Списание времени не найдено. Возможно оно уже было удалено ранее",
+            _
+                => "При изменении списания времени произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее"
+        })
+        .Pipe(
+            message => ChatFlowBreakState.From(message, failure.FailureMessage, failure.SourceException));
 }

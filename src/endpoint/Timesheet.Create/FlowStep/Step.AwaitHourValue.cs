@@ -46,8 +46,8 @@ partial class TimesheetCreateFlowStep
         =>
         value switch
         {
-            not > 0 => BotFlowFailure.From("Значение должно быть больше нуля"),
-            not <= MaxValue => BotFlowFailure.From(Invariant($"Значение не может быть больше {MaxValue}")),
+            not > 0 => BotFlowFailure.From("Время работы должно быть больше нуля"),
+            not <= MaxValue => BotFlowFailure.From(Invariant($"Время работы не может быть больше {MaxValue}")),
             _ => value
         };
 

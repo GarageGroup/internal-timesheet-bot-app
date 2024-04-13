@@ -27,9 +27,9 @@ partial class TimesheetDeleteFlowStep
         .On(
             (context, token) => context.DeleteActivityAsync(context.Activity.Id, cancellationToken))
         .Pipe(
-            static context => context.FlowState.TimesheetIds.Map(BuildDeletionInput))
+            static context => context.FlowState.TimesheetIds)
         .PipeParallelValue(
-            crmTimesheetApi.DeleteAsync,
+            crmTimesheetApi.DeleteTimesheetAsync,
             ParallelOption)
         .Map(
             _ => context.FlowState,
@@ -46,7 +46,19 @@ partial class TimesheetDeleteFlowStep
             _ => MessageFactory.Text("Выполняется удаление списаний времени")
         };
 
-    private static TimesheetDeleteIn BuildDeletionInput(Guid timesheetId)
+    private static ValueTask<Result<Unit, Failure<Unit>>> DeleteTimesheetAsync(
+        this ICrmTimesheetApi crmTimesheetApi, Guid timesheetId, CancellationToken cancellationToken)
         =>
-        new(timesheetId);
+        AsyncPipeline.Pipe(
+            timesheetId, cancellationToken)
+        .Pipe(
+            static id => new TimesheetDeleteIn(id))
+        .PipeValue(
+            crmTimesheetApi.DeleteAsync)
+        .Recover(
+            static failure => failure.FailureCode switch
+            {
+                TimesheetDeleteFailureCode.NotFound => Result.Success<Unit>(default).With<Failure<Unit>>(),
+                _ => failure.WithFailureCode<Unit>(default)
+            });
 }

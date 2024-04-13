@@ -35,28 +35,27 @@ partial class TimesheetCreateFlowStep
         };
 
     private static Result<TimesheetCreateFlowState, BotFlowFailure> GetWebAppData(
-        IChatFlowContext<TimesheetCreateFlowState> context, 
-        string webAppData)
+        IChatFlowContext<TimesheetCreateFlowState> context, string webAppData)
     {
-        var updateTimesheet = JsonConvert.DeserializeObject<WebAppCreateTimesheetDataJson>(webAppData);
+        return DeserializeWebAppData(webAppData).Pipe(InnerValidateDuration).MapSuccess(BindWebAppData);
 
-        if (updateTimesheet is null)
-        {
-            return BotFlowFailure.From("Произошла ошибка при попытке обработать данные с формы");
-        }
+        static WebAppCreateTimesheetDataJson DeserializeWebAppData(string webAppData)
+            =>
+            JsonConvert.DeserializeObject<WebAppCreateTimesheetDataJson>(webAppData);
 
-        if (updateTimesheet.Duration <= 0 || updateTimesheet.Duration > MaxValue)
-        {
-            return BotFlowFailure.From($"Длительность должна быть в интервале между 0 и {MaxValue} часа");
-        }
+        static Result<WebAppCreateTimesheetDataJson, BotFlowFailure> InnerValidateDuration(WebAppCreateTimesheetDataJson timesheet)
+            =>
+            timesheet.Duration is null ? timesheet : ValidateHourValueOrFailure(timesheet.Duration.Value).MapSuccess(_ => timesheet);
 
-        return context.FlowState with
-        {
-            Project = updateTimesheet.IsEditProject ? null : context.FlowState.Project,
-            UpdateProject = updateTimesheet.IsEditProject, // WARNING
-            Description = updateTimesheet.Description is null ? context.FlowState.Description : new(updateTimesheet.Description),
-            ValueHours = updateTimesheet.Duration ?? context.FlowState.ValueHours,
-        };
+        TimesheetCreateFlowState BindWebAppData(WebAppCreateTimesheetDataJson timesheet)
+            =>
+            context.FlowState with
+            {
+                Project = timesheet.IsEditProject ? null : context.FlowState.Project,
+                UpdateProject = timesheet.IsEditProject,
+                Description = timesheet.Description is null ? context.FlowState.Description : new(timesheet.Description),
+                ValueHours = timesheet.Duration ?? context.FlowState.ValueHours,
+            };
     }
 
     private static ChatFlowJump<TimesheetCreateFlowState> NextOrRestart(IChatFlowContext<TimesheetCreateFlowState> context)

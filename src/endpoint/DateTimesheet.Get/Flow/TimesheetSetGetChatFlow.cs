@@ -9,13 +9,13 @@ internal static partial class TimesheetSetGetChatFlow
         this ChatFlowStarter<DateTimesheetFlowState> chatFlowStarter,
         ConversationState conversationState,
         ICrmTimesheetApi timesheetApi,
-        TimesheetEditOption option)
+        DateTimesheetEditOption option)
         =>
         chatFlowStarter.Start(
             () => new()
             {
                 UrlWebApp = option.UrlWebApp,
-                TimesheetInterval = option.TimesheetInterval
+                AllowedIntervalInDays = option.AllowedIntervalInDays
             })
         .GetUserId()
         .ReadContextData(

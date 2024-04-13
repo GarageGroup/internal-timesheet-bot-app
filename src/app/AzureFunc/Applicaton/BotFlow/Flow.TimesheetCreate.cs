@@ -11,5 +11,7 @@ partial class Application
             UseCrmProjectApi())
         .With(
             UseCrmTimesheetApi())
+        .With(
+            ResolveTimesheetEditOptionOrThrow<TimesheetEditOption>)
         .MapTimesheetCreateFlow(botBuilder, TimesheetCreateCommand);
 }

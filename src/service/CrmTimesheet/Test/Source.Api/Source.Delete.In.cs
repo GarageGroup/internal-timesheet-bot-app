@@ -19,7 +19,7 @@ partial class CrmTimesheetApiSource
                 new("gg_timesheetactivities", new DataversePrimaryKey(Guid.Parse("4835096d-03ef-4e30-abc1-77bcfe3a5d5f")))
             },
             {
-                new(Guid.Empty),
+                default,
                 new("gg_timesheetactivities", new DataversePrimaryKey(Guid.Empty))
             },
         };

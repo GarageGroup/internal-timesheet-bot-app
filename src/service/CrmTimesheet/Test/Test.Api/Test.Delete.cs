@@ -9,37 +9,18 @@ namespace GarageGroup.Internal.Timesheet.Service.CrmTimesheet.Test;
 
 partial class CrmTimesheetApiTest
 {
-    [Fact]
-    public static async Task DeleteAsync_InputIsNull_ExpectArgumentNullException()
-    {
-        var mockDataverseApiClient = BuildMockDeleteDataverseApiClient(Result.Success<Unit>(default));
-
-        var api = new CrmTimesheetApi(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
-        var ex = await Assert.ThrowsAsync<ArgumentNullException>(TestAsync);
-
-        Assert.Equal("input", ex.ParamName);
-
-        async Task TestAsync()
-            =>
-            _ = await api.DeleteAsync(null!, default);
-    }
-
     [Theory]
     [MemberData(nameof(CrmTimesheetApiSource.InputDeleteTestData), MemberType = typeof(CrmTimesheetApiSource))]
-    public static async Task DeleteAsync_InputIsNotNull_ExpectDataverseDeleteCalledOnce(
+    public static async Task DeleteAsync_ExpectDataverseDeleteCalledOnce(
         TimesheetDeleteIn input, DataverseEntityDeleteIn expectedInput)
     {
-        var mockDataverseApiClient = BuildMockDeleteDataverseApiClient(Result.Success<Unit>(default));
-
+        var mockDataverseApiClient = BuildMockDataverseApiClient(Result.Success<Unit>(default));
         var api = new CrmTimesheetApi(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
 
         var cancellationToken = new CancellationToken(false);
         _ = await api.DeleteAsync(input, cancellationToken);
 
-        mockDataverseApiClient.Verify(
-            a => a.DeleteEntityAsync(It.Is<DataverseEntityDeleteIn>(
-                actual => AreDeepEqual(expectedInput, actual)), cancellationToken),
-            Times.Once);
+        mockDataverseApiClient.Verify(a => a.DeleteEntityAsync(expectedInput, cancellationToken), Times.Once);
     }
 
     [Theory]
@@ -59,8 +40,7 @@ partial class CrmTimesheetApiTest
         var sourceException = new Exception("Some error message");
         var dataverseFailure = sourceException.ToFailure(sourceFailureCode, "Some failure message");
 
-        var mockDataverseApiClient = BuildMockDeleteDataverseApiClient(dataverseFailure);
-
+        var mockDataverseApiClient = BuildMockDataverseApiClient(dataverseFailure);
         var api = new CrmTimesheetApi(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
 
         var actual = await api.DeleteAsync(SomeTimesheetDeleteInput, default);
@@ -72,8 +52,7 @@ partial class CrmTimesheetApiTest
     [Fact]
     public static async Task DeleteAsync_DataverseResultIsSuccess_ExpectSuccess()
     {
-        var mockDataverseApiClient = BuildMockDeleteDataverseApiClient(Result.Success<Unit>(default));
-
+        var mockDataverseApiClient = BuildMockDataverseApiClient(Result.Success<Unit>(default));
         var api = new CrmTimesheetApi(mockDataverseApiClient.Object, Mock.Of<ISqlQueryEntitySetSupplier>(), SomeOption);
 
         var actual = await api.DeleteAsync(SomeTimesheetDeleteInput, default) ;

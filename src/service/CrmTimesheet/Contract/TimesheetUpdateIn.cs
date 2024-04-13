@@ -7,21 +7,25 @@ public sealed record class TimesheetUpdateIn
 {
     public TimesheetUpdateIn(
         Guid timesheetId,
-        [AllowNull] TimesheetProjectIn? project,
-        [AllowNull] decimal? duration,
-        Optional<string> description)
+        DateOnly date,
+        TimesheetProject project,
+        decimal duration,
+        [AllowNull] string description)
     {
-        Description = description;
-        Duration = duration;
-        Project = project;
         TimesheetId = timesheetId;
+        Date = date;
+        Project = project;
+        Duration = duration;
+        Description = description.OrNullIfEmpty();
     }
 
     public Guid TimesheetId { get; }
 
-    public TimesheetProjectIn? Project { get; }
+    public DateOnly Date { get; }
 
-    public decimal? Duration { get; }
+    public TimesheetProject Project { get; }
 
-    public Optional<string> Description { get; }
+    public decimal Duration { get; }
+
+    public string? Description { get; }
 }

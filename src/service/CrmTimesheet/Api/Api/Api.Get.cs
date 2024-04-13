@@ -21,7 +21,7 @@ partial class CrmTimesheetApi
                     [
                         DbTimesheet.BuildOwnerFilter(@in.UserId),
                         DbTimesheet.BuildDateFilter(@in.Date),
-                        DbTimesheet.BuildAllowedProjectTypeSetFilter()
+                        DbTimesheet.AllowedProjectTypeSetFilter
                     ]
                 },
                 Orders = DbTimesheet.DefaultOrders

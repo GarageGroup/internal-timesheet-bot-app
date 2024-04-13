@@ -8,7 +8,7 @@ public sealed record class TimesheetCreateIn
     public TimesheetCreateIn(
         Guid userId,
         DateOnly date,
-        TimesheetProjectIn project,
+        TimesheetProject project,
         decimal duration,
         [AllowNull] string description,
         TimesheetChannel channel)
@@ -25,7 +25,7 @@ public sealed record class TimesheetCreateIn
 
     public DateOnly Date { get; }
 
-    public TimesheetProjectIn Project { get; }
+    public TimesheetProject Project { get; }
 
     public decimal Duration { get; }
 

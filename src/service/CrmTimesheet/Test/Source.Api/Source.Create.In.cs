@@ -1,14 +1,11 @@
-﻿using System.Collections.Generic;
-using GarageGroup.Infra;
+﻿using GarageGroup.Infra;
 using Xunit;
 
 namespace GarageGroup.Internal.Timesheet.Service.CrmTimesheet.Test;
 
-using IEntityDictionary = IReadOnlyDictionary<string, object?>;
-
 partial class CrmTimesheetApiSource
 {
-    public static TheoryData<TimesheetCreateIn, CrmTimesheetApiOption, DataverseEntityCreateIn<IEntityDictionary>> InputCreateTestData
+    public static TheoryData<TimesheetCreateIn, CrmTimesheetApiOption, DataverseEntityCreateIn<TimesheetJson>> InputCreateTestData
         =>
         new()
         {
@@ -26,13 +23,13 @@ partial class CrmTimesheetApiSource
                 default,
                 new(
                     entityPluralName: "gg_timesheetactivities",
-                    entityData: new Dictionary<string, object?>
+                    entityData: new()
                     {
-                        ["gg_date"] = "2021-10-07",
-                        ["gg_description"] = "Some message!",
-                        ["gg_duration"] = 8,
-                        ["regardingobjectid_lead@odata.bind"] = "/leads(7583b4e6-23f5-eb11-94ef-00224884a588)",
-                        ["subject"] = "Some lead display name"
+                        Date = new(2021, 10, 07),
+                        Description = "Some message!",
+                        Duration = 8,
+                        LeadLookupValue = "/leads(7583b4e6-23f5-eb11-94ef-00224884a588)",
+                        Subject = "Some lead display name"
                     })
             },
             {
@@ -55,13 +52,13 @@ partial class CrmTimesheetApiSource
                     ]),
                 new(
                     entityPluralName: "gg_timesheetactivities",
-                    entityData: new Dictionary<string, object?>
+                    entityData: new()
                     {
-                        ["gg_date"] = "2023-01-12",
-                        ["gg_description"] = null,
-                        ["gg_duration"] = 3,
-                        ["regardingobjectid_opportunity@odata.bind"] = "/opportunities(8829deda-5249-4412-9be5-ef5728fb928d)",
-                        ["gg_timesheetactivity_channel"] = 279015
+                        Date = new(2023, 01, 12),
+                        Description = null,
+                        Duration = 3,
+                        OpportunityLookupValue = "/opportunities(8829deda-5249-4412-9be5-ef5728fb928d)",
+                        ChannelCode = 279015
                     })
             },
             {
@@ -82,13 +79,13 @@ partial class CrmTimesheetApiSource
                     ]),
                 new(
                     entityPluralName: "gg_timesheetactivities",
-                    entityData: new Dictionary<string, object?>
+                    entityData: new()
                     {
-                        ["gg_date"] = "2023-11-03",
-                        ["gg_description"] = null,
-                        ["gg_duration"] = 15,
-                        ["regardingobjectid_gg_project@odata.bind"] = "/gg_projects(13f0cb5c-b251-494c-9cae-1b0708471c10)",
-                        ["subject"] = "\n\r"
+                        Date = new(2023, 11, 03),
+                        Description = null,
+                        Duration = 15,
+                        ProjectLookupValue = "/gg_projects(13f0cb5c-b251-494c-9cae-1b0708471c10)",
+                        Subject = "\n\r"
                     })
             },
             {
@@ -111,13 +108,13 @@ partial class CrmTimesheetApiSource
                     ]),
                 new(
                     entityPluralName: "gg_timesheetactivities",
-                    entityData: new Dictionary<string, object?>
+                    entityData: new()
                     {
-                        ["gg_date"] = "2022-12-25",
-                        ["gg_description"] = "Some description",
-                        ["gg_duration"] = -3,
-                        ["regardingobjectid_incident@odata.bind"] = "/incidents(ca012870-a0f9-4945-a314-a14ebf690574)",
-                        ["gg_timesheetactivity_channel"] = -967912307
+                        Date = new(2022, 12, 25),
+                        Description = "Some description",
+                        Duration = -3,
+                        IncidentLookupValue = "/incidents(ca012870-a0f9-4945-a314-a14ebf690574)",
+                        ChannelCode = -967912307
                     })
             }
         };

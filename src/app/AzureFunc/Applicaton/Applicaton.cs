@@ -9,8 +9,6 @@ namespace GarageGroup.Internal.Timesheet;
 
 internal static partial class Application
 {
-    private const string DataverseSectionName = "Dataverse";
-
     private const string BotEntityName = "BotRequest";
 
     private static Dependency<ICrmProjectApi> UseCrmProjectApi()
@@ -34,6 +32,16 @@ internal static partial class Application
 
         return new(
             channelCodes: section.Get<Dictionary<TimesheetChannel, int?>>().ToFlatArray());
+    }
+
+    private static TTimesheetEditOption ResolveTimesheetEditOptionOrThrow<TTimesheetEditOption>(IServiceProvider serviceProvider)
+        where TTimesheetEditOption : class
+    {
+        return serviceProvider.GetConfiguration().GetRequiredSection("TimesheetEdit").Get<TTimesheetEditOption>() ?? throw CreateException();
+
+        static InvalidOperationException CreateException()
+            =>
+            new("TimesheetEditOption must be specified");
     }
 
     private static IConfiguration GetConfiguration(this IServiceProvider serviceProvider)

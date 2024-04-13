@@ -1,67 +1,79 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
+using System.Text.Json.Serialization;
+using GarageGroup.Infra;
 
 namespace GarageGroup.Internal.Timesheet;
 
 internal sealed record class TimesheetJson
 {
-    public const string EntityPluralName = "gg_timesheetactivities";
+    private const string EntityPluralName
+        =
+        "gg_timesheetactivities";
 
-    public required TimesheetProjectType ProjectType { get; init; }
+    internal static DataverseEntityCreateIn<TimesheetJson> BuildDataverseCreateInput(TimesheetJson timesheet)
+        =>
+        new(
+            entityPluralName: EntityPluralName,
+            entityData: timesheet);
 
-    public required Guid ProjectId { get; init; }
+    internal static DataverseEntityUpdateIn<TimesheetJson> BuildDataverseUpdateInput(Guid timesheetId, TimesheetJson timesheet)
+        =>
+        new(
+            entityPluralName: EntityPluralName,
+            entityKey: new DataversePrimaryKey(timesheetId),
+            entityData: timesheet);
 
-    public required string? ProjectDisplayName { get; init; }
+    internal static DataverseEntityDeleteIn BuildDataverseDeleteInput(Guid timesheetId)
+        =>
+        new(
+            entityPluralName: EntityPluralName,
+            entityKey: new DataversePrimaryKey(timesheetId));
 
-    public required DateOnly Date { get; init; }
+    internal static string BuildIncidentLookupValue(Guid incidentId)
+        =>
+        $"/incidents({incidentId:D})";
 
-    public required string? Description { get; init; }
+    internal static string BuildLeadLookupValue(Guid leadId)
+        =>
+        $"/leads({leadId:D})";
 
-    public required decimal Duration { get; init; }
+    internal static string BuildOpportunityLookupValue(Guid opportunityId)
+        =>
+        $"/opportunities({opportunityId:D})";
 
-    public required int? ChannelCode { get; init; }
+    internal static string BuildProjectLookupValue(Guid projectId)
+        =>
+        $"/gg_projects({projectId:D})";
 
-    internal Result<IReadOnlyDictionary<string, object?>, Failure<Unit>> BuildEntityOrFailure()
-    {
-        var entityData = new Dictionary<string, object?>
-        {
-            ["gg_date"] = Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            ["gg_description"] = Description,
-            ["gg_duration"] = Duration
-        };
+    [JsonPropertyName("gg_date")]
+    public DateTime Date { get; init; }
 
-        if (ProjectType is TimesheetProjectType.Incident)
-        {
-            entityData["regardingobjectid_incident@odata.bind"] = $"/incidents({ProjectId:D})";
-        }
-        else if (ProjectType is TimesheetProjectType.Lead)
-        {
-            entityData["regardingobjectid_lead@odata.bind"] = $"/leads({ProjectId:D})";
-        }
-        else if (ProjectType is TimesheetProjectType.Opportunity)
-        {
-            entityData["regardingobjectid_opportunity@odata.bind"] = $"/opportunities({ProjectId:D})";
-        }
-        else if (ProjectType is TimesheetProjectType.Project)
-        {
-            entityData["regardingobjectid_gg_project@odata.bind"] = $"/gg_projects({ProjectId:D})";
-        }
-        else
-        {
-            return Failure.Create($"An unexpected project type: {ProjectType}");
-        }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("regardingobjectid_incident@odata.bind")]
+    public string? IncidentLookupValue { get; init; }
 
-        if (string.IsNullOrEmpty(ProjectDisplayName) is false)
-        {
-            entityData["subject"] = ProjectDisplayName;
-        }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("regardingobjectid_lead@odata.bind")]
+    public string? LeadLookupValue { get; init; }
 
-        if (ChannelCode is not null)
-        {
-            entityData["gg_timesheetactivity_channel"] = ChannelCode;
-        }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("regardingobjectid_opportunity@odata.bind")]
+    public string? OpportunityLookupValue { get; init; }
 
-        return entityData;
-    }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("regardingobjectid_gg_project@odata.bind")]
+    public string? ProjectLookupValue { get; init; }
+
+    [JsonPropertyName("subject")]
+    public string? Subject { get; init; }
+
+    [JsonPropertyName("gg_description")]
+    public string? Description { get; init; }
+
+    [JsonPropertyName("gg_duration")]
+    public decimal Duration { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("gg_timesheetactivity_channel")]
+    public int? ChannelCode { get; init; }
 }

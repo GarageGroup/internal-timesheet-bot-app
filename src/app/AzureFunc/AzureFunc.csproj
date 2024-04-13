@@ -46,8 +46,4 @@
     <PackageReference Include="PrimeFuncPack.DependencyRegistry" Version="2.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
-
 </Project>

@@ -9,19 +9,15 @@ partial class CrmTimesheetApi
 {
     public ValueTask<Result<Unit, Failure<TimesheetDeleteFailureCode>>> DeleteAsync(
         TimesheetDeleteIn input, CancellationToken cancellationToken)
-        => 
+        =>
         AsyncPipeline.Pipe(
-            input ?? throw new ArgumentNullException(nameof(input)), cancellationToken)
+            input.TimesheetId, cancellationToken)
         .Pipe(
-            _ => new DataverseEntityDeleteIn(
-            entityPluralName: TimesheetJson.EntityPluralName,
-            entityKey: new DataversePrimaryKey(input.TimesheetId)))
+            TimesheetJson.BuildDataverseDeleteInput)
         .PipeValue(
             dataverseApi.DeleteEntityAsync)
         .MapFailure(
-            failure => failure.MapFailureCode(ToTimesheetDeleteFailureCode))
-        .MapSuccess(
-            Unit.From);
+            static failure => failure.MapFailureCode(ToTimesheetDeleteFailureCode));
 
     private static TimesheetDeleteFailureCode ToTimesheetDeleteFailureCode(DataverseFailureCode dataverseFailureCode)
         =>

@@ -1,6 +1,5 @@
 ﻿using GarageGroup.Infra.Bot.Builder;
 using GarageGroup.Internal.Timesheet.Internal.Json;
-using System;
 
 namespace GarageGroup.Internal.Timesheet;
 
@@ -17,17 +16,18 @@ internal static partial class TimesheetCreateChatFlow
         chatFlow.Start(
             () => new()
             {
-                UrlWebApp = option.UrlWebApp,
                 TimesheetId = timesheetData?.Id,
-                Description = timesheetData is not null ? new(timesheetData.Description) : null,
+                Description = timesheetData is null ? null : new(timesheetData.Description),
                 ValueHours = timesheetData?.Duration,
-                Project = timesheetData?.IsEditProject is false ? new()
+                Project = timesheetData?.IsEditProject is not false ? null : new()
                 {
                     Type = timesheetData.ProjectType,
                     Name = timesheetData.ProjectName
-                } : null,
-                UpdateProject = timesheetData is not null ? timesheetData.IsEditProject : false,
-                Date = timesheetData is not null ? DateOnly.Parse((timesheetData.Date).OrEmpty()) : null,
+                },
+                UpdateProject = timesheetData is not null && timesheetData.IsEditProject,
+                Date = timesheetData?.Date,
+                AllowedIntervalInDays = option.AllowedIntervalInDays,
+                UrlWebApp = option.UrlWebApp
             })
         .GetUserId()
         .AwaitDate()

@@ -20,6 +20,7 @@ partial class TimesheetCreateChatFlow
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(crmProjectApi);
         ArgumentNullException.ThrowIfNull(crmTimesheetApi);
+        ArgumentNullException.ThrowIfNull(option);
 
         var turnContext = context.TurnContext;
         if (turnContext.IsNotMessageType())
@@ -33,9 +34,9 @@ partial class TimesheetCreateChatFlow
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        var timesheetData = GetWebAppUpdateResponseJson(context);
+        var data = GetWebAppUpdateResponseJson(context);
 
-        await chatFlow.RunFlow(context, crmProjectApi, crmTimesheetApi, option, timesheetData).GetFlowStateAsync(cancellationToken).ConfigureAwait(false);
+        await chatFlow.RunFlow(context, crmProjectApi, crmTimesheetApi, option, data).GetFlowStateAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
-using DeepEqual.Syntax;
 using GarageGroup.Infra;
 using Moq;
 
@@ -30,13 +28,14 @@ public static partial class CrmTimesheetApiTest
     private static readonly TimesheetUpdateIn SomeTimesheetUpdateInput
         =
         new(
+            timesheetId: Guid.Parse("80108b86-61ae-47ea-bd61-6d0c126a42b4"),
+            date: new(2024, 03, 17),
             project: new(
                 id: new("3dd8b1e0-3281-49f5-842b-cd1556113823"),
                 type: TimesheetProjectType.Project,
                 displayName: "Some project name"),
             duration: 8,
-            description: "Some description",
-            timesheetId: Guid.Parse("80108b86-61ae-47ea-bd61-6d0c126a42b4"));
+            description: "Some description");
 
     private static readonly TimesheetSetGetIn SomeTimesheetSetGetInput
         =
@@ -92,19 +91,6 @@ public static partial class CrmTimesheetApiTest
             }
         ];
 
-    private static Mock<IDataverseEntityCreateSupplier> BuildMockDataverseCreateSupplier(
-        in Result<Unit, Failure<DataverseFailureCode>> result)
-    {
-        var mock = new Mock<IDataverseEntityCreateSupplier>();
-
-        _ = mock
-            .Setup(static a => a.CreateEntityAsync(
-                It.IsAny<DataverseEntityCreateIn<IReadOnlyDictionary<string, object?>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(result);
-
-        return mock;
-    }
-
     private static Mock<IDataverseApiClient> BuildMockDataverseApiClient(
         in Result<Unit, Failure<DataverseFailureCode>> result)
     {
@@ -113,34 +99,15 @@ public static partial class CrmTimesheetApiTest
         _ = mock.Setup(static a => a.Impersonate(It.IsAny<Guid>())).Returns(mock.Object);
 
         _ = mock
-            .Setup(static a => a.CreateEntityAsync(
-                It.IsAny<DataverseEntityCreateIn<IReadOnlyDictionary<string, object?>>>(), It.IsAny<CancellationToken>()))
+            .Setup(static a => a.CreateEntityAsync(It.IsAny<DataverseEntityCreateIn<TimesheetJson>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
 
-        return mock;
-    }
-
-    private static Mock<IDataverseApiClient> BuildMockDeleteDataverseApiClient(
-        in Result<Unit, Failure<DataverseFailureCode>> result)
-    {
-        var mock = new Mock<IDataverseApiClient>();
-
         _ = mock
-            .Setup(static a => a.DeleteEntityAsync(
-                It.IsAny<DataverseEntityDeleteIn>(), It.IsAny<CancellationToken>()))
+            .Setup(static a => a.UpdateEntityAsync(It.IsAny<DataverseEntityUpdateIn<TimesheetJson>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
 
-        return mock;
-    }
-
-    private static Mock<IDataverseApiClient> BuildMockUpdateDataverseApiClient(
-        in Result<Unit, Failure<DataverseFailureCode>> result)
-    {
-        var mock = new Mock<IDataverseApiClient>();
-
         _ = mock
-            .Setup(static a => a.UpdateEntityAsync(
-                It.IsAny<DataverseEntityUpdateIn<IReadOnlyDictionary<string, object?>>>(), It.IsAny<CancellationToken>()))
+            .Setup(static a => a.DeleteEntityAsync(It.IsAny<DataverseEntityDeleteIn>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
 
         return mock;
@@ -157,11 +124,5 @@ public static partial class CrmTimesheetApiTest
             .ReturnsAsync(result);
 
         return mock;
-    }
-
-    private static bool AreDeepEqual<T>(T expected, T actual)
-    {
-        actual.ShouldDeepEqual(expected);
-        return true;
     }
 }
