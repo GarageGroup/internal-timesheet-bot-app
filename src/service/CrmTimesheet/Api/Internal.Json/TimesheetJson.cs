@@ -46,7 +46,7 @@ internal sealed record class TimesheetJson
         $"/gg_projects({projectId:D})";
 
     [JsonPropertyName("gg_date")]
-    public DateTime Date { get; init; }
+    public DateOnly Date { get; init; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("regardingobjectid_incident@odata.bind")]

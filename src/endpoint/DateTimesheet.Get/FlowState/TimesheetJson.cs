@@ -9,7 +9,7 @@ internal sealed record class TimesheetJson
     public decimal Duration { get; init; }
 
     [JsonProperty("projectType")]
-    public TimesheetProjectType ProjectType { get; set; }
+    public TimesheetProjectType ProjectType { get; init; }
 
     [JsonProperty("projectName")]
     public string? ProjectName { get; init; }

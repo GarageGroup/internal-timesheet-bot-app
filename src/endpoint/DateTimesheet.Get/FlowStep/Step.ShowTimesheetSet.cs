@@ -82,7 +82,7 @@ partial class DateTimesheetFlowStep
 
             var webAppData = new WebAppTimesheetsDataJson
             {
-                Date = context.FlowState.Date.ToString(),
+                Date = context.FlowState.DateText,
                 Timesheets = context.FlowState.Timesheets,
             };
 

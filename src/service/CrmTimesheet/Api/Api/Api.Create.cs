@@ -25,7 +25,7 @@ partial class CrmTimesheetApi
         var timesheet = new TimesheetJson
         {
             Subject = input.Project.DisplayName,
-            Date = input.Date.ToDateTime(default),
+            Date = input.Date,
             Description = input.Description.OrNullIfEmpty(),
             Duration = input.Duration,
             ChannelCode = GetChannelCode(@input.Channel)

@@ -38,11 +38,11 @@ partial class DateTimesheetFlowStep
         =>
         new()
         {
+            Id = timesheet.Id,
             Duration = timesheet.Duration,
             ProjectType = timesheet.ProjectType,
             ProjectName = timesheet.ProjectName,
-            Description = timesheet.Description,
-            Id = timesheet.Id
+            Description = timesheet.Description
         };
 
     private static ChatFlowBreakState ToBreakState(Failure<TimesheetSetGetFailureCode> failure)

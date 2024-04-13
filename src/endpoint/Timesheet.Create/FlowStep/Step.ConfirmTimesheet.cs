@@ -59,14 +59,12 @@ partial class TimesheetCreateFlowStep
     }
 
     private static ChatFlowJump<TimesheetCreateFlowState> NextOrRestart(IChatFlowContext<TimesheetCreateFlowState> context)
-    {
-        if (context.FlowState.Project is null)
+        =>
+        context.FlowState.Project switch
         {
-            return ChatFlowJump.Restart(context.FlowState);
-        }
-        
-        return context.FlowState;
-    }
+            null => ChatFlowJump.Restart(context.FlowState),
+            _ => ChatFlowJump.Next(context.FlowState)
+        };
 
     private static string CreateBase64Data(this TimesheetCreateFlowState state)
     {
