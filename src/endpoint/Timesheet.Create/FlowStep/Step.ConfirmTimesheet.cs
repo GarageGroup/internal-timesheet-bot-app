@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Text;
+using System.Web;
 
 namespace GarageGroup.Internal.Timesheet;
 
@@ -31,7 +32,7 @@ partial class TimesheetCreateFlowStep
                 new(string.Empty, context.FlowState.Description?.Value)
             ])
         {
-            TelegramWebApp = new($"{context.FlowState.UrlWebApp}/updateTimesheetForm?data={context.FlowState.CreateBase64Data()}")
+            TelegramWebApp = new(context.BuildWebAppUrl())
         };
 
     private static Result<TimesheetCreateFlowState, BotFlowFailure> GetWebAppData(
@@ -66,8 +67,10 @@ partial class TimesheetCreateFlowStep
             _ => ChatFlowJump.Next(context.FlowState)
         };
 
-    private static string CreateBase64Data(this TimesheetCreateFlowState state)
+    private static string BuildWebAppUrl(this IChatFlowContext<TimesheetCreateFlowState> context)
     {
+        var state = context.FlowState;
+
         var timesheet = new WebAppCreateTimesheetDataJson
         {
             Description = state.Description?.Value.OrEmpty(),
@@ -76,6 +79,8 @@ partial class TimesheetCreateFlowStep
         };
 
         var webAppDataJson = JsonConvert.SerializeObject(timesheet);
-        return Convert.ToBase64String(Encoding.UTF8.GetBytes(webAppDataJson));
+        var data = Convert.ToBase64String(Encoding.UTF8.GetBytes(webAppDataJson));
+
+        return $"{state.UrlWebApp}/updateTimesheetForm?data={HttpUtility.UrlEncode(data)}";
     }
 }

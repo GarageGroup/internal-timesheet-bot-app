@@ -80,17 +80,6 @@ partial class DateTimesheetFlowStep
                     });
             }
 
-            var webAppData = new WebAppTimesheetsDataJson
-            {
-                Date = context.FlowState.DateText,
-                Timesheets = context.FlowState.Timesheets,
-            };
-
-            var webAppDataJson = JsonConvert.SerializeObject(webAppData);
-            var data = Convert.ToBase64String(Encoding.UTF8.GetBytes(webAppDataJson));
-
-            var daysInterval = context.FlowState.AllowedIntervalInDays;
-
             return new(
                 parameters: new(textBuilder.ToString())
                 {
@@ -100,7 +89,7 @@ partial class DateTimesheetFlowStep
                             [
                                 new("Редактировать")
                                 {
-                                    WebApp = new($"{context.FlowState.UrlWebApp}/selectUpdateTimesheet?data={data}&days={daysInterval}")
+                                    WebApp = new(context.BuildWebAppUrl())
                                 }
                             ]
                         ])
@@ -324,4 +313,20 @@ partial class DateTimesheetFlowStep
     private static decimal GetDurationSum(this DateTimesheetFlowState flowState)
         =>
         flowState.Timesheets?.Count > 0 ? flowState.Timesheets.Sum(static x => x.Duration) : default;
+
+    private static string BuildWebAppUrl(this IChatFlowContext<DateTimesheetFlowState> context)
+    {
+        var state = context.FlowState;
+
+        var webAppData = new WebAppTimesheetsDataJson
+        {
+            Date = state.DateText,
+            Timesheets = state.Timesheets,
+        };
+
+        var webAppDataJson = JsonConvert.SerializeObject(webAppData);
+        var data = Convert.ToBase64String(Encoding.UTF8.GetBytes(webAppDataJson));
+
+        return $"{state.UrlWebApp}/selectUpdateTimesheet?data={HttpUtility.UrlEncode(data)}&days={state.AllowedIntervalInDays}";
+    }
 }
