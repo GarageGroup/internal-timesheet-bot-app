@@ -7,12 +7,9 @@ internal readonly record struct WebAppCreateTimesheetDataJson
     [JsonProperty("duration")]
     public decimal? Duration { get; init; }
 
-    [JsonProperty("projectName")]
-    public string? ProjectName { get; init; }
+    [JsonProperty("project")]
+    public TimesheetProjectState? Project { get; init; }
 
     [JsonProperty("description")]
     public string? Description { get; init; }
-
-    [JsonProperty("isEditProject")]
-    public bool IsEditProject { get; init; }
 }

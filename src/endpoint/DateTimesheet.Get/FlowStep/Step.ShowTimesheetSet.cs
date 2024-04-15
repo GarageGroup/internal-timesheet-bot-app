@@ -120,7 +120,7 @@ partial class DateTimesheetFlowStep
 
         foreach (var timesheet in context.FlowState.Timesheets)
         {
-            var timesheetRow = CreateAdaptiveTimesheetRow(timesheet.Duration, timesheet.ProjectName);
+            var timesheetRow = CreateAdaptiveTimesheetRow(timesheet.Duration, timesheet.Project?.Name);
             adaptiveElements.Add(timesheetRow);
 
             if (string.IsNullOrEmpty(timesheet.Description) is false)
@@ -252,7 +252,7 @@ partial class DateTimesheetFlowStep
         StringBuilder BuildTimesheetText(TimesheetJson timesheet)
         {
             var row = new StringBuilder().AppendRow(
-                timesheet.Duration.ToDurationStringRussianCulture(true), context.EncodeTextWithStyle(timesheet.ProjectName, BotTextStyle.Bold));
+                timesheet.Duration.ToDurationStringRussianCulture(true), context.EncodeTextWithStyle(timesheet.Project?.Name, BotTextStyle.Bold));
 
             if (string.IsNullOrEmpty(timesheet.Description))
             {
@@ -294,7 +294,7 @@ partial class DateTimesheetFlowStep
         static StringBuilder BuildTimesheetText(TimesheetJson timesheet)
         {
             var row = new StringBuilder().AppendRow(
-                timesheet.Duration.ToDurationStringRussianCulture(true), $"<b>{HttpUtility.HtmlEncode(timesheet.ProjectName)}</b>");
+                timesheet.Duration.ToDurationStringRussianCulture(true), $"<b>{HttpUtility.HtmlEncode(timesheet.Project?.Name)}</b>");
 
             if (string.IsNullOrEmpty(timesheet.Description))
             {
@@ -325,8 +325,7 @@ partial class DateTimesheetFlowStep
         };
 
         var webAppDataJson = JsonConvert.SerializeObject(webAppData);
-        var data = Convert.ToBase64String(Encoding.UTF8.GetBytes(webAppDataJson));
 
-        return $"{state.UrlWebApp}/selectUpdateTimesheet?data={HttpUtility.UrlEncode(data)}&days={state.AllowedIntervalInDays}";
+        return $"{state.UrlWebApp}/selectUpdateTimesheet?data={HttpUtility.UrlEncode(webAppDataJson)}&days={state.AllowedIntervalInDays}";
     }
 }

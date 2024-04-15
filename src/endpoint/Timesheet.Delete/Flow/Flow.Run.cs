@@ -29,13 +29,9 @@ partial class DeleteTimesheetFlow
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        var timesheets = GetWebAppDeleteResponseJson(context);
-        if (timesheets is null)
-        {
-            return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
-        }
+        var timesheet = GetWebAppDeleteResponseJson(context);
 
-        await chatFlow.RunFlow(context, timesheetApi, timesheets).GetFlowStateAsync(cancellationToken).ConfigureAwait(false);
+        await chatFlow.RunFlow(context, timesheetApi, timesheet).GetFlowStateAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -48,8 +44,8 @@ partial class DeleteTimesheetFlow
             return starter;
         }
 
-        var timesheets = GetWebAppDeleteResponseJson(context);
-        if (timesheets?.Timesheets?.Length > 0 && string.Equals(timesheets.Command, commandName, StringComparison.InvariantCultureIgnoreCase))
+        var timesheet = GetWebAppDeleteResponseJson(context);
+        if (timesheet?.Timesheet is not null && string.Equals(timesheet.Command, commandName, StringComparison.InvariantCultureIgnoreCase))
         {
             return starter;
         }

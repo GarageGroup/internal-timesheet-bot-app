@@ -21,7 +21,8 @@ partial class TimesheetCreateFlowStep
                 {
                     Type = project.GetProjectType(),
                     Id = project.Id,
-                    Name = project.Name
+                    Name = project.Name,
+                    DisplayTypeName = project.GetProjectType().ToStringRussianCulture(),
                 }
             });
 

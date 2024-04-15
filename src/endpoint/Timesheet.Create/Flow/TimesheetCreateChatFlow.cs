@@ -1,5 +1,4 @@
 ﻿using GarageGroup.Infra.Bot.Builder;
-using GarageGroup.Internal.Timesheet.Internal.Json;
 
 namespace GarageGroup.Internal.Timesheet;
 
@@ -19,12 +18,7 @@ internal static partial class TimesheetCreateChatFlow
                 TimesheetId = timesheetData?.Id,
                 Description = timesheetData is null ? null : new(timesheetData.Description),
                 ValueHours = timesheetData?.Duration,
-                Project = timesheetData?.IsEditProject is not false ? null : new()
-                {
-                    Type = timesheetData.ProjectType,
-                    Name = timesheetData.ProjectName
-                },
-                UpdateProject = timesheetData is not null && timesheetData.IsEditProject,
+                Project = timesheetData?.Project,
                 Date = timesheetData?.Date,
                 AllowedIntervalInDays = option.AllowedIntervalInDays,
                 UrlWebApp = option.UrlWebApp

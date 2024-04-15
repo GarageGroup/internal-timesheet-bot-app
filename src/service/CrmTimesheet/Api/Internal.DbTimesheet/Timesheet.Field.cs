@@ -8,6 +8,9 @@ partial record class DbTimesheet
     [DbSelect(All, AliasName, $"{AliasName}.gg_duration")]
     public decimal Duration { get; init; }
 
+    [DbSelect(All, AliasName, $"{AliasName}.regardingobjectid")]
+    public Guid ProjectId { get; init; }
+
     [DbSelect(All, AliasName, $"{AliasName}.regardingobjecttypecode")]
     public int ProjectTypeCode { get; init; }
 

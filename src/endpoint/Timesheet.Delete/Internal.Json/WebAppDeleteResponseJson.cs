@@ -1,10 +1,8 @@
-using System;
-
 namespace GarageGroup.Internal.Timesheet;
 
 internal sealed record class WebAppDeleteResponseJson
 {
-    public Guid[]? Timesheets { get; init; }
+    public TimesheetJson? Timesheet { get; init; }
 
     public string? Date { get; init; }
 

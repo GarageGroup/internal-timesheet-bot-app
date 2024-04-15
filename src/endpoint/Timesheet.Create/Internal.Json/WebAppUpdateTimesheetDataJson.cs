@@ -2,7 +2,7 @@
 using System;
 using System.Globalization;
 
-namespace GarageGroup.Internal.Timesheet.Internal.Json;
+namespace GarageGroup.Internal.Timesheet;
 
 internal sealed record class WebAppUpdateTimesheetDataJson
 {
@@ -12,11 +12,8 @@ internal sealed record class WebAppUpdateTimesheetDataJson
     [JsonProperty("duration")]
     public decimal? Duration { get; init; }
 
-    [JsonProperty("projectType")]
-    public TimesheetProjectType ProjectType { get; set; }
-
-    [JsonProperty("projectName")]
-    public string? ProjectName { get; init; }
+    [JsonProperty("project")]
+    public TimesheetProjectState? Project { get; init; }
 
     [JsonProperty("description")]
     public string? Description { get; init; }

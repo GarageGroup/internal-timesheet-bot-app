@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal sealed record class TimesheetProjectState
+internal sealed record class ProjectJson
 {
     [JsonProperty("id")]
     public Guid Id { get; init; }

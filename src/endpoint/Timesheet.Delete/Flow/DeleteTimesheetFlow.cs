@@ -9,14 +9,15 @@ internal static partial class DeleteTimesheetFlow
         this ChatFlowStarter<TimesheetDeleteFlowState> chatFlow,
         IBotContext botContext,
         ICrmTimesheetApi timesheetApi,
-        WebAppDeleteResponseJson timesheets)
+        WebAppDeleteResponseJson? timesheet)
         =>
         chatFlow.Start(
             () => new()
             {
-                TimesheetIds = timesheets.Timesheets,
-                Date = DateOnly.Parse(timesheets.Date.OrEmpty())
+                Timesheet = timesheet?.Timesheet,
+                Date = DateOnly.Parse((timesheet?.Date).OrEmpty())
             })
+        .ConfirmDeleteTimesheet()
         .DeleteTimesheet(
             timesheetApi)
         .ShowDateTimesheet(

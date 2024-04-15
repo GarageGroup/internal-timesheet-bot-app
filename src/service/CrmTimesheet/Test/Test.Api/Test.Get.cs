@@ -27,6 +27,7 @@ partial class CrmTimesheetApiTest
             SelectedFields =
             [
                 "t.gg_duration AS Duration",
+                "t.regardingobjectid AS ProjectId",
                 "t.regardingobjecttypecode AS ProjectTypeCode",
                 "t.regardingobjectidname AS ProjectName",
                 "t.subject AS Subject",

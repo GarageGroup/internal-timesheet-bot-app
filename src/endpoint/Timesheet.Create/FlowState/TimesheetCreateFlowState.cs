@@ -39,7 +39,4 @@ internal sealed record class TimesheetCreateFlowState
 
     [JsonProperty("urlWebApp")]
     public string? UrlWebApp { get; init; }
-
-    [JsonProperty("updateProject")]
-    public bool UpdateProject { get; init; }
 }

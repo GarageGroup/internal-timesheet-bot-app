@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra.Bot.Builder;
-using GarageGroup.Internal.Timesheet.Internal.Json;
 using Newtonsoft.Json;
 
 namespace GarageGroup.Internal.Timesheet;

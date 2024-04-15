@@ -1,7 +1,6 @@
 ﻿using GarageGroup.Infra.Bot.Builder;
 using Newtonsoft.Json;
 using System;
-using System.Text;
 using System.Web;
 
 namespace GarageGroup.Internal.Timesheet;
@@ -52,8 +51,7 @@ partial class TimesheetCreateFlowStep
             =>
             context.FlowState with
             {
-                Project = timesheet.IsEditProject ? null : context.FlowState.Project,
-                UpdateProject = timesheet.IsEditProject,
+                Project = timesheet.Project,
                 Description = timesheet.Description is null ? context.FlowState.Description : new(timesheet.Description),
                 ValueHours = timesheet.Duration ?? context.FlowState.ValueHours,
             };
@@ -75,12 +73,11 @@ partial class TimesheetCreateFlowStep
         {
             Description = state.Description?.Value.OrEmpty(),
             Duration = state.ValueHours,
-            ProjectName = state.Project?.Name
+            Project = state.Project
         };
 
         var webAppDataJson = JsonConvert.SerializeObject(timesheet);
-        var data = Convert.ToBase64String(Encoding.UTF8.GetBytes(webAppDataJson));
 
-        return $"{state.UrlWebApp}/updateTimesheetForm?data={HttpUtility.UrlEncode(data)}";
+        return $"{state.UrlWebApp}/updateTimesheetForm?data={HttpUtility.UrlEncode(webAppDataJson)}";
     }
 }

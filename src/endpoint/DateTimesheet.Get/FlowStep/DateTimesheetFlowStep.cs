@@ -42,4 +42,14 @@ internal static partial class DateTimesheetFlowStep
     private static string ToStringRussianCulture(this DateOnly date)
         =>
         date.ToString("d MMMM yyyy", RussianCultureInfo);
+
+    private static string ToStringRussianCulture(this TimesheetProjectType projectType)
+        =>
+        projectType switch
+        {
+            TimesheetProjectType.Opportunity => "Возможная сделка",
+            TimesheetProjectType.Lead => "Лид",
+            TimesheetProjectType.Incident => "Инцидент",
+            _ => "Проект"
+        };
 }
