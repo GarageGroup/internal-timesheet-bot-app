@@ -1,15 +1,22 @@
-﻿using System;
-using GarageGroup.Infra.Bot.Builder;
+﻿using GarageGroup.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
 
 namespace GarageGroup.Internal.Timesheet;
 
 internal static partial class TimesheetSetGetChatFlow
 {
-    private static ChatFlow<Unit> RunFlow(this ChatFlow chatFlow, ConversationState conversationState, ICrmTimesheetApi timesheetApi)
+    private static ChatFlow<DateTimesheetFlowState> RunFlow(
+        this ChatFlowStarter<DateTimesheetFlowState> chatFlowStarter,
+        ConversationState conversationState,
+        ICrmTimesheetApi timesheetApi,
+        DateTimesheetEditOption option)
         =>
-        chatFlow.Start<DateTimesheetFlowState>(
-            static () => new())
+        chatFlowStarter.Start(
+            () => new()
+            {
+                UrlWebApp = option.UrlWebApp,
+                AllowedIntervalInDays = option.AllowedIntervalInDays
+            })
         .GetUserId()
         .ReadContextData(
             conversationState)

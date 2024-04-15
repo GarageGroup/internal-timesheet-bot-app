@@ -6,22 +6,26 @@ namespace GarageGroup.Internal.Timesheet;
 public sealed record class TimesheetUpdateIn
 {
     public TimesheetUpdateIn(
-        [AllowNull] TimesheetProjectIn? project,
-        [AllowNull] decimal? duration,
-        [AllowNull] string description,
-        Guid timesheetId)
+        Guid timesheetId,
+        DateOnly date,
+        TimesheetProject project,
+        decimal duration,
+        [AllowNull] string description)
     {
-        Description = description.OrNullIfEmpty();
-        Duration = duration;
-        Project = project;
         TimesheetId = timesheetId;
+        Date = date;
+        Project = project;
+        Duration = duration;
+        Description = description.OrNullIfEmpty();
     }
 
-    public TimesheetProjectIn? Project { get; }
+    public Guid TimesheetId { get; }
 
-    public decimal? Duration { get; }
+    public DateOnly Date { get; }
+
+    public TimesheetProject Project { get; }
+
+    public decimal Duration { get; }
 
     public string? Description { get; }
-
-    public Guid TimesheetId { get; }
 }

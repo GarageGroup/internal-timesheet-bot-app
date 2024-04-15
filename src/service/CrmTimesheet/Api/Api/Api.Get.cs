@@ -20,7 +20,8 @@ partial class CrmTimesheetApi
                     Filters =
                     [
                         DbTimesheet.BuildOwnerFilter(@in.UserId),
-                        DbTimesheet.BuildDateFilter(@in.Date)
+                        DbTimesheet.BuildDateFilter(@in.Date),
+                        DbTimesheet.AllowedProjectTypeSetFilter
                     ]
                 },
                 Orders = DbTimesheet.DefaultOrders
@@ -38,6 +39,8 @@ partial class CrmTimesheetApi
         =>
         new(
             duration: dbTimesheet.Duration,
+            projectId: dbTimesheet.ProjectId,
+            projectType: (TimesheetProjectType)dbTimesheet.ProjectTypeCode,
             projectName: dbTimesheet.Subject.OrNullIfEmpty() ?? dbTimesheet.ProjectName, 
             description: dbTimesheet.Description,
             id: dbTimesheet.Id);

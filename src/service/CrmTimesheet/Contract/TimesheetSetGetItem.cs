@@ -7,19 +7,27 @@ public sealed record class TimesheetSetGetItem
 {
     public TimesheetSetGetItem(
         decimal duration,
+        Guid projectId,
+        TimesheetProjectType projectType,
         [AllowNull] string projectName,
         [AllowNull] string description,
         Guid id)
-    {
-        Duration = duration;
+    { 
+        ProjectId = projectId;
+        ProjectType = projectType;
         ProjectName = projectName.OrEmpty();
+        Duration = duration;
         Description = description.OrEmpty();
         Id = id;
     }
 
-    public decimal Duration { get; }
+    public Guid ProjectId { get; }
+
+    public TimesheetProjectType ProjectType { get; }
 
     public string ProjectName { get; }
+
+    public decimal Duration { get; }
 
     public string Description { get; }
 

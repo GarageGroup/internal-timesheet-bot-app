@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra;
@@ -12,39 +11,40 @@ partial class CrmTimesheetApi
         TimesheetCreateIn input, CancellationToken cancellationToken)
         =>
         AsyncPipeline.Pipe(
-            input ?? throw new ArgumentNullException(nameof(input)), cancellationToken)
+            input, cancellationToken)
         .Pipe(
-            @in => new TimesheetJson
-            {
-                ProjectType = @in.Project.Type,
-                ProjectId = @in.Project.Id,
-                ProjectDisplayName = @in.Project.DisplayName,
-                Date = @in.Date,
-                Description = @in.Description.OrNullIfEmpty(),
-                Duration = @in.Duration,
-                ChannelCode = GetChannelCode(@in.Channel)
-            }
-            .BuildEntityOrFailure())
-        .Map(
-            static entity => new DataverseEntityCreateIn<IReadOnlyDictionary<string, object?>>(
-                entityPluralName: TimesheetJson.EntityPluralName,
-                entityData: entity),
-            static failure => failure.WithFailureCode(TimesheetCreateFailureCode.Unknown))
+            BuildTimesheetJsonOrFailure)
+        .MapSuccess(
+            TimesheetJson.BuildDataverseCreateInput)
         .ForwardValue(
             dataverseApi.Impersonate(input.UserId).CreateEntityAsync,
             static failure => failure.MapFailureCode(ToTimesheetCreateFailureCode));
 
-    private int? GetChannelCode(TimesheetChannel channel)
+    private Result<TimesheetJson, Failure<TimesheetCreateFailureCode>> BuildTimesheetJsonOrFailure(TimesheetCreateIn input)
     {
-        foreach (var channelCode in option.ChannelCodes)
+        var timesheet = new TimesheetJson
         {
-            if (channelCode.Key == channel)
-            {
-                return channelCode.Value;
-            }
-        }
+            Subject = input.Project.DisplayName,
+            Date = input.Date,
+            Description = input.Description.OrNullIfEmpty(),
+            Duration = input.Duration,
+            ChannelCode = GetChannelCode(@input.Channel)
+        };
 
-        return null;
+        return BindProjectOrFailure<TimesheetCreateFailureCode>(timesheet, input.Project);
+
+        int? GetChannelCode(TimesheetChannel channel)
+        {
+            foreach (var channelCode in option.ChannelCodes)
+            {
+                if (channelCode.Key == channel)
+                {
+                    return channelCode.Value;
+                }
+            }
+
+            return null;
+        }
     }
 
     private static TimesheetCreateFailureCode ToTimesheetCreateFailureCode(DataverseFailureCode dataverseFailureCode)

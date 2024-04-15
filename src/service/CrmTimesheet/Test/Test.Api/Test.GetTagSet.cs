@@ -10,21 +10,7 @@ namespace GarageGroup.Internal.Timesheet.Service.CrmTimesheet.Test;
 partial class CrmTimesheetApiTest
 {
     [Fact]
-    public static async Task GetTagSetAsync_InputIsNull_ExpectArgumentNullException()
-    {
-        var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(SomeDbTimesheetTagSet);
-        var api = new CrmTimesheetApi(Mock.Of<IDataverseApiClient>(), mockSqlApi.Object, SomeOption);
-
-        var ex = await Assert.ThrowsAsync<ArgumentNullException>(TestAsync);
-        Assert.Equal("input", ex.ParamName);
-
-        async Task TestAsync()
-            =>
-            _ = await api.GetTagSetAsync(null!, default);
-    }
-
-    [Fact]
-    public static async Task GetTagSetAsync_InputIsNotNull_ExpectSqlApiCalledOnce()
+    public static async Task GetTagSetAsync_ExpectSqlApiCalledOnce()
     {
         var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(SomeDbTimesheetTagSet);
         var api = new CrmTimesheetApi(Mock.Of<IDataverseApiClient>(), mockSqlApi.Object, SomeOption);

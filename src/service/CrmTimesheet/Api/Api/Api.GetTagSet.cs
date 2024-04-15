@@ -14,7 +14,7 @@ partial class CrmTimesheetApi
         TimesheetTagSetGetIn input, CancellationToken cancellationToken)
         =>
         AsyncPipeline.Pipe(
-            input ?? throw new ArgumentNullException(nameof(input)), cancellationToken)
+            input, cancellationToken)
         .Pipe(
             static @in => DbTimesheetTag.QueryAll with
             {

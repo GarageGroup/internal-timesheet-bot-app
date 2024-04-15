@@ -16,7 +16,10 @@ partial class TimesheetCreateFlowStep
         chatFlow.AwaitValue(
             static context => new(
                 messageText: "Введите время работы в часах",
-                suggestions: context.GetHourValueSuggestions()),
+                suggestions: context.GetHourValueSuggestions())
+            {
+                SkipStep = context.FlowState.ValueHours is not null,
+            },
             static text => ParseDecimalOrAbsent(text).Fold(ValidateHourValueOrFailure, CreateUnexpectedValueFailureResult),
             static (context, value) => $"Время работы в часах: {context.EncodeTextWithStyle(value.ToStringRussianCulture(), BotTextStyle.Bold)}",
             (state, value) => state with
@@ -43,8 +46,8 @@ partial class TimesheetCreateFlowStep
         =>
         value switch
         {
-            not > 0 => BotFlowFailure.From("Значение должно быть больше нуля"),
-            not <= MaxValue => BotFlowFailure.From(Invariant($"Значение не может быть больше {MaxValue}")),
+            not > 0 => BotFlowFailure.From("Время работы должно быть больше нуля"),
+            not <= MaxValue => BotFlowFailure.From(Invariant($"Время работы не может быть больше {MaxValue}")),
             _ => value
         };
 

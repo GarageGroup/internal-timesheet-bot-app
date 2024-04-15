@@ -16,15 +16,14 @@ partial class TimesheetCreateFlowStep
                 text: context.GetDateText(),
                 confirmButtonText: "Выбрать",
                 invalidDateText: "Не удалось распознать дату",
-                defaultDate: GetNow(),
+                defaultDate: GetToday(),
                 placeholder: DatePlaceholder,
-                suggestions: context.CreateSuggestions()),
-            static (context, date) => "Дата списания: " + context.EncodeTextWithStyle(date.ToStringRussianCulture(), BotTextStyle.Bold),
-            static (_, date) => (date <= GetNow()) switch
+                suggestions: context.CreateSuggestions())
             {
-                true => Result.Success(date),
-                _ => BotFlowFailure.From("Дата не может быть в будущем")
+                SkipStep = context.FlowState.Date is not null
             },
+            static (context, date) => "Дата списания: " + context.EncodeTextWithStyle(date.ToStringRussianCulture(), BotTextStyle.Bold),
+            ValidateDateOrFailure,
             static (state, date) => state with
             {
                 Date = date
@@ -52,7 +51,7 @@ partial class TimesheetCreateFlowStep
             return [];
         }
 
-        var today = GetNow();
+        var today = GetToday();
         var days = DaysInRow * DaysRowsCount;
 
         return Enumerable.Range(1 - days, days).GroupBy(GetRowNumber).Select(CreateRow).ToArray();
@@ -69,5 +68,23 @@ partial class TimesheetCreateFlowStep
         KeyValuePair<string, DateOnly> CreateSuggestion(DateOnly date)
             =>
             date == today ? new("Сегодня", date) : new(date.ToStringRussianCulture("dd.MM ddd").ToUpperInvariant(), date);
+    }
+
+    private static Result<DateOnly, BotFlowFailure> ValidateDateOrFailure(
+        this IChatFlowContext<TimesheetCreateFlowState> context, DateOnly date)
+    {
+        var today = GetToday();
+        if (date > today)
+        {
+            return BotFlowFailure.From("Дата не может быть в будущем");
+        }
+
+        var minDate = today.AddDays(-context.FlowState.AllowedIntervalInDays);
+        if (date < minDate)
+        {
+            return BotFlowFailure.From($"Нельзя выбрать дату раньше, чем {context.FlowState.AllowedIntervalInDays} дней от текущей");
+        }
+
+        return Result.Success(date);
     }
 }

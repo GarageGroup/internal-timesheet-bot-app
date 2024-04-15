@@ -1,47 +1,22 @@
+using AdaptiveCards;
+using GarageGroup.Infra.Bot.Builder;
+using Microsoft.Bot.Builder;
+using Microsoft.Bot.Schema;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Web;
-using AdaptiveCards;
-using GarageGroup.Infra.Bot.Builder;
-using Microsoft.Bot.Builder;
-using Microsoft.Bot.Schema;
 
 namespace GarageGroup.Internal.Timesheet;
 
 partial class DateTimesheetFlowStep
 {
-    internal static ChatFlow<Unit> ShowTimesheetSet(this ChatFlow<DateTimesheetFlowState> chatFlow)
+    internal static ChatFlow<DateTimesheetFlowState> ShowTimesheetSet(this ChatFlow<DateTimesheetFlowState> chatFlow)
         =>
         chatFlow.ReplaceActivityOrSkip(
-            CreateActivity)
-        .MapFlowState(
-            Unit.From);
-
-    private static IActivity? CreateSuccessActivity(IChatFlowContext<DateTimesheetFlowState> context)
-    {
-        if (string.IsNullOrEmpty(context.FlowState.MessageText))
-        {
-            return null;
-        }
-
-        if (context.IsNotTelegramChannel())
-        {
-            return MessageFactory.Text(context.FlowState.MessageText);
-        }
-
-        var telegramActivity = context.Activity.CreateReply();
-
-        telegramActivity.ChannelData = new TelegramChannelData(
-            parameters: new TelegramParameters(context.FlowState.MessageText)
-            {
-                DisableNotification = true
-            })
-            .ToJObject();
-
-        return telegramActivity;
-    }
+            CreateActivity);
 
     private static IActivity CreateActivity(IChatFlowContext<DateTimesheetFlowState> context)
     {
@@ -64,7 +39,7 @@ partial class DateTimesheetFlowStep
         return MessageFactory.Text(text);
     }
 
-    private static IActivity CreateTextActivity(this ITurnContext turnContext, string text)
+    private static IActivity CreateTextActivity(this IChatFlowContext<DateTimesheetFlowState> turnContext, string text)
         =>
         turnContext.IsNotTelegramChannel() ? MessageFactory.Text(text) : turnContext.CreateTelegramTextActivity(text);
 
@@ -80,7 +55,7 @@ partial class DateTimesheetFlowStep
         }
         .ToActivity();
 
-    private static IActivity CreateTelegramTextActivity(this ITurnContext context, string text)
+    private static IActivity CreateTelegramTextActivity(this IChatFlowContext<DateTimesheetFlowState> context, string text)
     {
         var textBuilder = new StringBuilder(text)
             .Append(TelegramBotLine)
@@ -88,17 +63,42 @@ partial class DateTimesheetFlowStep
             .Append(TelegramBotLine)
             .Append("/newtimesheet - Списать время");
 
-        var channelData = new TelegramChannelData(
-            parameters: new(textBuilder.ToString())
-            {
-                ParseMode = TelegramParseMode.Html,
-                ReplyMarkup = new TelegramReplyKeyboardRemove()
-            });
-
         var telegramActivity = context.Activity.CreateReply();
-        telegramActivity.ChannelData = channelData.ToJObject();
+        telegramActivity.ChannelData = BuildChannelData().ToJObject();
 
         return telegramActivity;
+
+        TelegramChannelData BuildChannelData()
+        {
+            if (context.FlowState.Timesheets?.Count is not > 0)
+            {
+                return new(
+                    parameters: new(textBuilder.ToString())
+                    {
+                        ParseMode = TelegramParseMode.Html,
+                        ReplyMarkup = new TelegramReplyKeyboardRemove()
+                    });
+            }
+
+            return new(
+                parameters: new(textBuilder.ToString())
+                {
+                    ParseMode = TelegramParseMode.Html,
+                    ReplyMarkup = new TelegramReplyKeyboardMarkup(
+                        [
+                            [
+                                new("Редактировать")
+                                {
+                                    WebApp = new(context.BuildWebAppUrl())
+                                }
+                            ]
+                        ])
+                    {
+                        OneTimeKeyboard = true,
+                        ResizeKeyboard = true
+                    }
+                });
+        }
     }
 
     private static List<AdaptiveElement> CreateAdaptiveBody(IChatFlowContext<DateTimesheetFlowState> context)
@@ -120,7 +120,7 @@ partial class DateTimesheetFlowStep
 
         foreach (var timesheet in context.FlowState.Timesheets)
         {
-            var timesheetRow = CreateAdaptiveTimesheetRow(timesheet.Duration, timesheet.ProjectName);
+            var timesheetRow = CreateAdaptiveTimesheetRow(timesheet.Duration, timesheet.Project?.Name);
             adaptiveElements.Add(timesheetRow);
 
             if (string.IsNullOrEmpty(timesheet.Description) is false)
@@ -252,7 +252,7 @@ partial class DateTimesheetFlowStep
         StringBuilder BuildTimesheetText(TimesheetJson timesheet)
         {
             var row = new StringBuilder().AppendRow(
-                timesheet.Duration.ToDurationStringRussianCulture(true), context.EncodeTextWithStyle(timesheet.ProjectName, BotTextStyle.Bold));
+                timesheet.Duration.ToDurationStringRussianCulture(true), context.EncodeTextWithStyle(timesheet.Project?.Name, BotTextStyle.Bold));
 
             if (string.IsNullOrEmpty(timesheet.Description))
             {
@@ -294,7 +294,7 @@ partial class DateTimesheetFlowStep
         static StringBuilder BuildTimesheetText(TimesheetJson timesheet)
         {
             var row = new StringBuilder().AppendRow(
-                timesheet.Duration.ToDurationStringRussianCulture(true), $"<b>{HttpUtility.HtmlEncode(timesheet.ProjectName)}</b>");
+                timesheet.Duration.ToDurationStringRussianCulture(true), $"<b>{HttpUtility.HtmlEncode(timesheet.Project?.Name)}</b>");
 
             if (string.IsNullOrEmpty(timesheet.Description))
             {
@@ -313,4 +313,19 @@ partial class DateTimesheetFlowStep
     private static decimal GetDurationSum(this DateTimesheetFlowState flowState)
         =>
         flowState.Timesheets?.Count > 0 ? flowState.Timesheets.Sum(static x => x.Duration) : default;
+
+    private static string BuildWebAppUrl(this IChatFlowContext<DateTimesheetFlowState> context)
+    {
+        var state = context.FlowState;
+
+        var webAppData = new WebAppTimesheetsDataJson
+        {
+            Date = state.DateText,
+            Timesheets = state.Timesheets,
+        };
+
+        var webAppDataJson = JsonConvert.SerializeObject(webAppData);
+
+        return $"{state.UrlWebApp}/selectUpdateTimesheet?data={HttpUtility.UrlEncode(webAppDataJson)}&days={state.AllowedIntervalInDays}";
+    }
 }

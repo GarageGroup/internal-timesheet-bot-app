@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra.Bot.Builder;
+using Newtonsoft.Json;
 
 namespace GarageGroup.Internal.Timesheet;
 
@@ -12,11 +13,13 @@ partial class TimesheetCreateChatFlow
         string commandName,
         ICrmProjectApi crmProjectApi,
         ICrmTimesheetApi crmTimesheetApi,
+        TimesheetEditOption option,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(crmProjectApi);
         ArgumentNullException.ThrowIfNull(crmTimesheetApi);
+        ArgumentNullException.ThrowIfNull(option);
 
         var turnContext = context.TurnContext;
         if (turnContext.IsNotMessageType())
@@ -30,23 +33,39 @@ partial class TimesheetCreateChatFlow
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        await chatFlow.RunFlow(context, crmProjectApi, crmTimesheetApi).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
+        var data = GetWebAppUpdateResponseJson(context);
+
+        await chatFlow.RunFlow(context, crmProjectApi, crmTimesheetApi, option, data).GetFlowStateAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task<ChatFlow?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
+    private static async Task<ChatFlowStarter<TimesheetCreateFlowState>?> GetChatFlowAsync(
+        this IBotContext context, string commandName, CancellationToken cancellationToken)
     {
-        var chatFlow = context.CreateChatFlow("TimesheetCreate");
-        if (await chatFlow.IsStartedAsync(cancellationToken).ConfigureAwait(false))
+        var starter = context.GetChatFlowStarter<TimesheetCreateFlowState>("TimesheetCreate");
+        if (await starter.IsStartedAsync(cancellationToken).ConfigureAwait(false))
         {
-            return chatFlow;
+            return starter;
         }
 
         if (context.TurnContext.RecognizeCommandOrAbsent(commandName).IsPresent)
         {
-            return chatFlow;
+            return starter;
+        }
+
+        var timesheet = GetWebAppUpdateResponseJson(context);
+        if (timesheet is not null && timesheet.Command?.Equals("updatetimesheet") is true)
+        {
+            await context.TurnContext.DeleteActivityAsync(context.TurnContext.Activity.Id, cancellationToken).ConfigureAwait(false);
+            return starter;
         }
 
         return null;
+    }
+
+    private static WebAppUpdateTimesheetDataJson? GetWebAppUpdateResponseJson(IBotContext context)
+    {
+        var dataWebApp = TelegramWebAppResponse.FromChannelData(context.TurnContext.Activity.ChannelData);
+        return JsonConvert.DeserializeObject<WebAppUpdateTimesheetDataJson>((dataWebApp.Message?.WebAppData?.Data).OrEmpty());
     }
 }

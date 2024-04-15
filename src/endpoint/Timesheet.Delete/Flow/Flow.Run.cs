@@ -1,4 +1,5 @@
 ﻿using GarageGroup.Infra.Bot.Builder;
+using Newtonsoft.Json;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,10 +9,9 @@ namespace GarageGroup.Internal.Timesheet;
 partial class DeleteTimesheetFlow
 {
     internal static async ValueTask<Unit> RunAsync(
-        this IBotContext context, 
-        string commandName, 
-        ICrmTimesheetApi timesheetApi, 
-        DeleteTimesheetOptions options, 
+        this IBotContext context,
+        string commandName,
+        ICrmTimesheetApi timesheetApi,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -28,24 +28,34 @@ partial class DeleteTimesheetFlow
         {
             return await context.BotFlow.NextAsync(cancellationToken).ConfigureAwait(false);
         }
-        
-        await chatFlow.RunFlow(timesheetApi, options).CompleteValueAsync(cancellationToken).ConfigureAwait(false);
+
+        var timesheet = GetWebAppDeleteResponseJson(context);
+
+        await chatFlow.RunFlow(context, timesheetApi, timesheet).GetFlowStateAsync(cancellationToken).ConfigureAwait(false);
         return await context.BotFlow.EndAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task<ChatFlow?> GetChatFlowAsync(this IBotContext context, string commandName, CancellationToken cancellationToken)
+    private static async Task<ChatFlowStarter<TimesheetDeleteFlowState>?> GetChatFlowAsync(
+        this IBotContext context, string commandName, CancellationToken cancellationToken)
     {
-        var chatFlow = context.CreateChatFlow("TimesheetDelete");
-        if (await chatFlow.IsStartedAsync(cancellationToken).ConfigureAwait(false))
+        var starter = context.GetChatFlowStarter<TimesheetDeleteFlowState>("TimesheetDelete");
+        if (await starter.IsStartedAsync(cancellationToken).ConfigureAwait(false))
         {
-            return chatFlow;
+            return starter;
         }
 
-        if (context.TurnContext.RecognizeCommandOrAbsent(commandName).IsPresent)
+        var timesheet = GetWebAppDeleteResponseJson(context);
+        if (timesheet?.Timesheet is not null && string.Equals(timesheet.Command, commandName, StringComparison.InvariantCultureIgnoreCase))
         {
-            return chatFlow;
+            return starter;
         }
 
         return null;
+    }
+
+    private static WebAppDeleteResponseJson? GetWebAppDeleteResponseJson(IBotContext context)
+    {
+        var dataWebApp = TelegramWebAppResponse.FromChannelData(context.TurnContext.Activity.ChannelData);
+        return JsonConvert.DeserializeObject<WebAppDeleteResponseJson>((dataWebApp.Message?.WebAppData?.Data).OrEmpty());
     }
 }

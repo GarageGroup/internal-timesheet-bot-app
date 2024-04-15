@@ -1,6 +1,4 @@
 using GarageGroup.Infra.Bot.Builder;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using PrimeFuncPack;
 using System;
 using System.Threading;
@@ -23,19 +21,6 @@ public static class TimesheetDeleteDependency
             context.RunAsync(
                 commandName,
                 dependency.Resolve(context.ServiceProvider),
-                context.ServiceProvider.GetRequiredService<IConfiguration>().ResolveOptions(),
                 cancellationToken);
     }
-
-    private static DeleteTimesheetOptions ResolveOptions(this IConfiguration configuration)
-        =>
-        new ()
-        {
-            TimesheetInterval = TimeSpan.Parse(configuration.GetRequiredString("DeleteTimesheetOptions:TimesheetInterval")),
-            UrlWebApp = configuration.GetRequiredString("DeleteTimesheetOptions:UrlWebApp")
-        };
-
-    private static string GetRequiredString(this IConfiguration configuration, string nameConfiguration)
-        =>
-        configuration[nameConfiguration] ?? throw new InvalidOperationException($"{nameConfiguration} is missing");
 }

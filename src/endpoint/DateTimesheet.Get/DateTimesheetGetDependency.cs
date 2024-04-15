@@ -9,7 +9,7 @@ namespace GarageGroup.Internal.Timesheet;
 public static class DateTimesheetGetDependency
 {
     public static IBotBuilder MapDateTimesheetGetFlow(
-        this Dependency<ICrmTimesheetApi> dependency, IBotBuilder botBuilder, string commandName)
+        this Dependency<ICrmTimesheetApi, DateTimesheetEditOption> dependency, IBotBuilder botBuilder, string commandName)
     {
         ArgumentNullException.ThrowIfNull(dependency);
         ArgumentNullException.ThrowIfNull(botBuilder);
@@ -20,7 +20,8 @@ public static class DateTimesheetGetDependency
             =>
             context.RunAsync(
                 commandName,
-                dependency.Resolve(context.ServiceProvider),
+                dependency.ResolveFirst(context.ServiceProvider),
+                dependency.ResolveSecond(context.ServiceProvider),
                 cancellationToken);
     }
 }

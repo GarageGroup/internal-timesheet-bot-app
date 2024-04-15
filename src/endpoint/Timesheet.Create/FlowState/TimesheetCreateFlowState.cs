@@ -6,34 +6,37 @@ namespace GarageGroup.Internal.Timesheet;
 
 internal sealed record class TimesheetCreateFlowState
 {
+    [JsonProperty("timesheetId")]
+    public Guid? TimesheetId { get; set; }
+
     [JsonProperty("userId")]
-    public Guid UserId { get; init; }
+    public Guid? UserId { get; init; }
 
-    [JsonProperty("projectId")]
-    public Guid ProjectId { get; init; }
-
-    [JsonProperty("projectType")]
-    public TimesheetProjectType ProjectType { get; init; }
-
-    [JsonProperty("projectName")]
-    public string? ProjectName { get; init; }
+    [JsonProperty("project")]
+    public TimesheetProjectState? Project { get; init; }
 
     [JsonIgnore]
-    public DateOnly Date { get; init; }
+    public DateOnly? Date { get; init; }
 
     [JsonProperty("dateText")]
-    public string DateText
+    public string? DateText
     {
-        get => Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        private init => Date = DateOnly.Parse(value, CultureInfo.InvariantCulture);
+        get => Date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        private init => Date = value is null ? null : DateOnly.Parse(value, CultureInfo.InvariantCulture);
     }
 
     [JsonProperty("valueHours")]
-    public decimal ValueHours { get; init; }
+    public decimal? ValueHours { get; init; }
 
     [JsonProperty("descriptionTags")]
     public string[]? DescriptionTags { get; init; }
 
     [JsonProperty("description")]
-    public string? Description { get; init; }
+    public TimesheetDescriptionState? Description { get; init; }
+
+    [JsonProperty("allowedIntervalInDays")]
+    public int AllowedIntervalInDays { get; init; }
+
+    [JsonProperty("urlWebApp")]
+    public string? UrlWebApp { get; init; }
 }

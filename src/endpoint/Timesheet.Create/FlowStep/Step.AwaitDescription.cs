@@ -23,7 +23,10 @@ partial class TimesheetCreateFlowStep
                     [
                         new("Пропустить", string.Empty)
                     ]
-                ]),
+                ])
+            {
+                SkipStep = context.FlowState.Description is not null
+            },
             static (context, description) => string.IsNullOrEmpty(description) switch
             {
                 true => "Описание пропущено",
@@ -31,13 +34,13 @@ partial class TimesheetCreateFlowStep
             },
             static (flowState, description) => flowState with
             {
-                Description = description.OrNullIfEmpty()
+                Description = new(description.OrNullIfEmpty())
             });
 
     private static async ValueTask<ChatFlowJump<TimesheetCreateFlowState>> GetDescriptionTagsAsync(
         this ICrmTimesheetApi crmTimesheetApi, IChatFlowContext<TimesheetCreateFlowState> context, CancellationToken cancellationToken)
     {
-        if (context.IsNotTelegramChannel())
+        if (context.IsNotTelegramChannel() || context.FlowState.Description is not null)
         {
             return context.FlowState;
         }
@@ -81,10 +84,10 @@ partial class TimesheetCreateFlowStep
             context.FlowState, cancellationToken)
         .Pipe(
             static state => new TimesheetTagSetGetIn(
-                userId: state.UserId,
-                projectId: state.ProjectId,
-                minDate: state.Date.AddDays(-DescriptionTagDays),
-                maxDate: state.Date))
+                userId: state.UserId.GetValueOrDefault(),
+                projectId: state.Project?.Id ?? default,
+                minDate: state.Date.GetValueOrDefault().AddDays(-DescriptionTagDays),
+                maxDate: state.Date.GetValueOrDefault()))
         .PipeValue(
             crmTimesheetApi.GetTagSetAsync)
         .OnFailure(

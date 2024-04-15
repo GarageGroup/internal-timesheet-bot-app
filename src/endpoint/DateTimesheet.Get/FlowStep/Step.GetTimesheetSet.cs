@@ -38,8 +38,15 @@ partial class DateTimesheetFlowStep
         =>
         new()
         {
+            Id = timesheet.Id,
             Duration = timesheet.Duration,
-            ProjectName = timesheet.ProjectName,
+            Project = new()
+            {
+                Id = timesheet.ProjectId,
+                Type = timesheet.ProjectType,
+                Name = timesheet.ProjectName,
+                DisplayTypeName = timesheet.ProjectType.ToStringRussianCulture()
+            },            
             Description = timesheet.Description
         };
 

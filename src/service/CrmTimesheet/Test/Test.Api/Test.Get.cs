@@ -27,6 +27,8 @@ partial class CrmTimesheetApiTest
             SelectedFields =
             [
                 "t.gg_duration AS Duration",
+                "t.regardingobjectid AS ProjectId",
+                "t.regardingobjecttypecode AS ProjectTypeCode",
                 "t.regardingobjectidname AS ProjectName",
                 "t.subject AS Subject",
                 "t.gg_description AS Description",
@@ -37,7 +39,12 @@ partial class CrmTimesheetApiTest
                 Filters =
                 [
                     new DbParameterFilter("t.ownerid", DbFilterOperator.Equal, Guid.Parse("bd8b8e33-554e-e611-80dc-c4346bad0190"), "ownerId"),
-                    new DbParameterFilter("t.gg_date", DbFilterOperator.Equal, "2022-02-05", "date")
+                    new DbParameterFilter("t.gg_date", DbFilterOperator.Equal, "2022-02-05", "date"),
+                    new DbParameterArrayFilter(
+                        fieldName: "t.regardingobjecttypecode",
+                        @operator: DbArrayFilterOperator.In,
+                        fieldValues: new(3, 4, 112, 10912),
+                        parameterPrefix: "projectTypeCode")
                 ]
             },
             Orders =

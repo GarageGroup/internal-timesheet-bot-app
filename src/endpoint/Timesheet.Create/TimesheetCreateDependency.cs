@@ -9,7 +9,7 @@ namespace GarageGroup.Internal.Timesheet;
 public static class TimesheetCreateDependency
 {
     public static IBotBuilder MapTimesheetCreateFlow(
-        this Dependency<ICrmProjectApi, ICrmTimesheetApi> dependency, IBotBuilder botBuilder, string commandName)
+        this Dependency<ICrmProjectApi, ICrmTimesheetApi, TimesheetEditOption> dependency, IBotBuilder botBuilder, string commandName)
     {
         ArgumentNullException.ThrowIfNull(dependency);
         ArgumentNullException.ThrowIfNull(botBuilder);
@@ -22,6 +22,7 @@ public static class TimesheetCreateDependency
                 commandName: commandName,
                 crmProjectApi: dependency.ResolveFirst(context.ServiceProvider),
                 crmTimesheetApi: dependency.ResolveSecond(context.ServiceProvider),
+                option: dependency.ResolveThird(context.ServiceProvider),
                 cancellationToken: cancellationToken);
     }
 }
