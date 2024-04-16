@@ -10,8 +10,7 @@ partial class TimesheetDeleteFlowStep
     internal static ChatFlow<TimesheetDeleteFlowState> DeleteTimesheet(
         this ChatFlow<TimesheetDeleteFlowState> chatFlow, ICrmTimesheetApi timesheetApi)
         =>
-        chatFlow.SetTypingStatus()
-        .ForwardValue(
+        chatFlow.SetTypingStatus().ForwardValue(
             timesheetApi.DeleteTimesheetsAsync);
 
     private static ValueTask<ChatFlowJump<TimesheetDeleteFlowState>> DeleteTimesheetsAsync(

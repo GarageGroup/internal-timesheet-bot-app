@@ -8,7 +8,7 @@ partial class TimesheetDeleteFlowStep
     internal static ChatFlow<TimesheetDeleteFlowState> ConfirmDeleteTimesheet(
         this ChatFlow<TimesheetDeleteFlowState> chatFlow)
         =>
-        chatFlow.AwaitConfirmation(CreateTimesheetConfirmationOption).SetTypingStatus();
+        chatFlow.AwaitConfirmation(CreateTimesheetConfirmationOption);
 
 
     private static ConfirmationCardOption CreateTimesheetConfirmationOption(IChatFlowContext<TimesheetDeleteFlowState> context)
