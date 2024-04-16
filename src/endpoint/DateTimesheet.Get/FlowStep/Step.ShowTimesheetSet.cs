@@ -321,6 +321,7 @@ partial class DateTimesheetFlowStep
         var webAppData = new WebAppTimesheetsDataJson
         {
             Date = state.DateText,
+            DateText = state.Date?.ToStringRussianCulture(),
             Timesheets = state.Timesheets,
         };
 
