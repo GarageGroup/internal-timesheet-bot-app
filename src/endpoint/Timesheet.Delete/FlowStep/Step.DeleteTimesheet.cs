@@ -21,8 +21,6 @@ partial class TimesheetDeleteFlowStep
         =>
         AsyncPipeline.Pipe(
             context, cancellationToken)
-        .On(
-            (context, token) => context.DeleteActivityAsync(context.Activity.Id, cancellationToken))
         .Pipe(
             static context => new TimesheetDeleteIn(context.FlowState.Timesheet?.Id ?? default))
         .PipeValue(

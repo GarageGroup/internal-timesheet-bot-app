@@ -20,7 +20,7 @@ partial class TimesheetDeleteFlowStep
             cancelText: "Удаление списания времени было отменено",
             fieldValues:
             [
-                new((context.FlowState.Timesheet?.Project?.Type.ToStringRussianCulture()).OrEmpty(), context.FlowState.Timesheet?.Project?.Name),
+                new((context.FlowState.Timesheet?.Project?.DisplayTypeName).OrEmpty(), context.FlowState.Timesheet?.Project?.Name),
                 new("Дата", context.FlowState.Date.ToStringRussianCulture()),
                 new("Время", context.FlowState.Timesheet?.Duration.ToStringRussianCulture() + "ч"),
                 new(string.Empty, context.FlowState.Timesheet?.Description)

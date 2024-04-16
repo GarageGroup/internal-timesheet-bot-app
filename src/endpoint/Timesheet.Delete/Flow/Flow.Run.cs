@@ -47,6 +47,7 @@ partial class DeleteTimesheetFlow
         var timesheet = GetWebAppDeleteResponseJson(context);
         if (timesheet?.Timesheet is not null && string.Equals(timesheet.Command, commandName, StringComparison.InvariantCultureIgnoreCase))
         {
+            await context.TurnContext.DeleteActivityAsync(context.TurnContext.Activity.Id, cancellationToken).ConfigureAwait(false);
             return starter;
         }
 
