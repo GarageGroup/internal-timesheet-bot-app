@@ -37,9 +37,7 @@ partial class TimesheetCreateFlowStep
         context.InnerCreateTimesheetCardOption("Изменение списания времени", context.FlowState.ShowReadonlyCard is false);
 
     private static EntityCardOption InnerCreateTimesheetCardOption(
-        this IChatFlowContext<TimesheetCreateFlowState> context, 
-        string headerText,
-        bool skipStep)
+        this IChatFlowContext<TimesheetCreateFlowState> context, string headerText, bool skipStep)
         =>
         new(
             headerText: headerText,
