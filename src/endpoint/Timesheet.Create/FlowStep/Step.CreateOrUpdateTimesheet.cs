@@ -11,8 +11,27 @@ partial class TimesheetCreateFlowStep
     internal static ChatFlow<TimesheetCreateFlowState> CreateOrUpdateTimesheet(
         this ChatFlow<TimesheetCreateFlowState> chatFlow, ICrmTimesheetApi crmTimesheetApi)
         =>
-        chatFlow.ForwardValue(
+        chatFlow.Forward(
+            ValidateFlowState)
+        .ForwardValue(
             crmTimesheetApi.CreateOrUpdateTimesheetAsync);
+
+    private static ChatFlowJump<TimesheetCreateFlowState> ValidateFlowState(IChatFlowContext<TimesheetCreateFlowState> context)
+    {
+        return InnerValidateDate(context.FlowState).Forward(InnerValidateDuration).Fold(ChatFlowJump.Next, MapFailure);
+
+        Result<TimesheetCreateFlowState, BotFlowFailure> InnerValidateDate(TimesheetCreateFlowState state)
+            =>
+            context.ValidateDateOrFailure(state.Date.GetValueOrDefault()).MapSuccess(_ => state);
+
+        static Result<TimesheetCreateFlowState, BotFlowFailure> InnerValidateDuration(TimesheetCreateFlowState state)
+            =>
+            ValidateHourValueOrFailure(state.ValueHours.GetValueOrDefault()).MapSuccess(_ => state);
+
+        static ChatFlowJump<TimesheetCreateFlowState> MapFailure(BotFlowFailure failure)
+            =>
+            ChatFlowBreakState.From(failure.UserMessage, failure.LogMessage, failure.SourceException);
+    }
 
     private static ValueTask<ChatFlowJump<TimesheetCreateFlowState>> CreateOrUpdateTimesheetAsync(
         this ICrmTimesheetApi crmTimesheetApi, IChatFlowContext<TimesheetCreateFlowState> context, CancellationToken cancellationToken)
