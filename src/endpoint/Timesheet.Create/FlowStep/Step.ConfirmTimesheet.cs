@@ -85,7 +85,7 @@ partial class TimesheetCreateFlowStep
         {
             Description = state.Description?.Value.OrEmpty(),
             Duration = state.ValueHours,
-            Project = state.Project,
+            Project = state.Project
         };
 
         var webAppDataJson = JsonConvert.SerializeObject(timesheet);
