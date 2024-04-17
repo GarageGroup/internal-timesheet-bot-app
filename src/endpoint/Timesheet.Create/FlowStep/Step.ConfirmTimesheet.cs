@@ -14,48 +14,59 @@ partial class TimesheetCreateFlowStep
             CreateTimesheetConfirmationOption, GetWebAppData)
         .Forward(
             NextOrRestart)
+        .ShowEntityCard(
+            CreateTimesheetCardOption)
         .SetTypingStatus();
 
     private static ConfirmationCardOption CreateTimesheetConfirmationOption(IChatFlowContext<TimesheetCreateFlowState> context)
         =>
         new(
-            questionText: context.FlowState.TimesheetId is null ? "Списать время?" : "Сохранить изменения?",
-            confirmButtonText: context.FlowState.TimesheetId is null ? "Списать" : "Сохранить",
-            cancelButtonText: "Отменить",
-            cancelText: context.FlowState.TimesheetId is null ? "Списание времени было отменено" : "Изменение времени было отменено",
+            entity: context.InnerCreateTimesheetCardOption(
+                headerText: context.FlowState.TimesheetId is null ? "Списать время?" : "Сохранить изменения?",
+                skipStep: false),
+            buttons: new(
+                confirmButtonText: context.FlowState.TimesheetId is null ? "Списать" : "Сохранить",
+                cancelButtonText: "Отменить",
+                cancelText: context.FlowState.TimesheetId is null ? "Списание времени было отменено" : "Изменение времени было отменено")
+            {
+                TelegramWebApp = new(context.BuildWebAppUrl())
+            });
+
+    private static EntityCardOption CreateTimesheetCardOption(IChatFlowContext<TimesheetCreateFlowState> context)
+        =>
+        context.InnerCreateTimesheetCardOption("Изменение списания времени", context.FlowState.CardOptionSkip is false);
+
+    private static EntityCardOption InnerCreateTimesheetCardOption(
+        this IChatFlowContext<TimesheetCreateFlowState> context, 
+        string headerText,
+        bool skipStep)
+        =>
+        new(
+            headerText: headerText,
             fieldValues:
-            [
-                new((context.FlowState.Project?.Type.ToStringRussianCulture()).OrEmpty(), context.FlowState.Project?.Name),
-                new("Дата", context.FlowState.Date?.ToStringRussianCulture()),
-                new("Время", context.FlowState.ValueHours?.ToStringRussianCulture() + "ч"),
-                new(string.Empty, context.FlowState.Description?.Value)
-            ])
+                [
+                    new((context.FlowState.Project?.Type.ToStringRussianCulture()).OrEmpty(), context.FlowState.Project?.Name),
+                    new("Дата", context.FlowState.Date?.ToStringRussianCulture()),
+                    new("Время", context.FlowState.ValueHours?.ToStringRussianCulture() + "ч"),
+                    new(string.Empty, context.FlowState.Description?.Value)
+                ])
         {
-            TelegramWebApp = new(context.BuildWebAppUrl())
+            SkipStep = skipStep
         };
 
     private static Result<TimesheetCreateFlowState, BotFlowFailure> GetWebAppData(
         IChatFlowContext<TimesheetCreateFlowState> context, string webAppData)
     {
-        return DeserializeWebAppData(webAppData).Pipe(InnerValidateDuration).MapSuccess(BindWebAppData);
+        var timesheet = JsonConvert.DeserializeObject<WebAppCreateTimesheetDataJson>(webAppData);
 
-        static WebAppCreateTimesheetDataJson DeserializeWebAppData(string webAppData)
-            =>
-            JsonConvert.DeserializeObject<WebAppCreateTimesheetDataJson>(webAppData);
-
-        static Result<WebAppCreateTimesheetDataJson, BotFlowFailure> InnerValidateDuration(WebAppCreateTimesheetDataJson timesheet)
-            =>
-            timesheet.Duration is null ? timesheet : ValidateHourValueOrFailure(timesheet.Duration.Value).MapSuccess(_ => timesheet);
-
-        TimesheetCreateFlowState BindWebAppData(WebAppCreateTimesheetDataJson timesheet)
-            =>
-            context.FlowState with
-            {
-                Project = timesheet.Project,
-                Description = timesheet.Description is null ? context.FlowState.Description : new(timesheet.Description),
-                ValueHours = timesheet.Duration ?? context.FlowState.ValueHours,
-                Date = DateOnly.Parse(timesheet.Date.OrEmpty())
-            };
+        return context.FlowState with
+        {
+            Project = timesheet.Project,
+            Description = timesheet.Description is null ? context.FlowState.Description : new(timesheet.Description),
+            ValueHours = timesheet.Duration ?? context.FlowState.ValueHours,
+            DateText = timesheet.Date,
+            CardOptionSkip = true
+        };
     }
 
     private static ChatFlowJump<TimesheetCreateFlowState> NextOrRestart(IChatFlowContext<TimesheetCreateFlowState> context)

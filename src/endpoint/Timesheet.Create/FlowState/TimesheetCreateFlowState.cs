@@ -22,7 +22,7 @@ internal sealed record class TimesheetCreateFlowState
     public string? DateText
     {
         get => Date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        private init => Date = value is null ? null : DateOnly.Parse(value, CultureInfo.InvariantCulture);
+        init => Date = value is null ? null : DateOnly.Parse(value, CultureInfo.InvariantCulture);
     }
 
     [JsonProperty("valueHours")]
@@ -39,4 +39,7 @@ internal sealed record class TimesheetCreateFlowState
 
     [JsonProperty("urlWebApp")]
     public string? UrlWebApp { get; init; }
+
+    [JsonProperty("cardOptionSkip")]
+    public bool CardOptionSkip { get; set; }
 }
