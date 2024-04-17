@@ -54,6 +54,7 @@ partial class TimesheetCreateFlowStep
                 Project = timesheet.Project,
                 Description = timesheet.Description is null ? context.FlowState.Description : new(timesheet.Description),
                 ValueHours = timesheet.Duration ?? context.FlowState.ValueHours,
+                Date = DateOnly.Parse(timesheet.Date.OrEmpty())
             };
     }
 
@@ -73,11 +74,11 @@ partial class TimesheetCreateFlowStep
         {
             Description = state.Description?.Value.OrEmpty(),
             Duration = state.ValueHours,
-            Project = state.Project
+            Project = state.Project,
         };
 
         var webAppDataJson = JsonConvert.SerializeObject(timesheet);
 
-        return $"{state.UrlWebApp}/updateTimesheetForm?data={HttpUtility.UrlEncode(webAppDataJson)}";
+        return $"{state.UrlWebApp}/updateTimesheetForm?data={HttpUtility.UrlEncode(webAppDataJson)}&date={context.FlowState.DateText}&days={context.FlowState.AllowedIntervalInDays}";
     }
 }

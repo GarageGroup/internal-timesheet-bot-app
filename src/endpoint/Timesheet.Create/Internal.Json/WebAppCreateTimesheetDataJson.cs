@@ -12,4 +12,7 @@ internal readonly record struct WebAppCreateTimesheetDataJson
 
     [JsonProperty("description")]
     public string? Description { get; init; }
+
+    [JsonProperty("date")]
+    public string? Date {  get; init; }
 }
