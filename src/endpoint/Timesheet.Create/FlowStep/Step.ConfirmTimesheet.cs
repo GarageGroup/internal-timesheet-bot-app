@@ -1,7 +1,9 @@
 ﻿using GarageGroup.Infra.Bot.Builder;
 using Newtonsoft.Json;
 using System;
-using System.Web;
+using System.IO;
+using System.IO.Compression;
+using System.Text;
 
 namespace GarageGroup.Internal.Timesheet;
 
@@ -23,7 +25,7 @@ partial class TimesheetCreateFlowStep
         new(
             entity: context.InnerCreateTimesheetCardOption(
                 headerText: context.FlowState.TimesheetId is null ? "Списать время?" : "Сохранить изменения?",
-                skipStep: false),
+                skipStep: context.FlowState.WithoutConfirmation),
             buttons: new(
                 confirmButtonText: context.FlowState.TimesheetId is null ? "Списать" : "Сохранить",
                 cancelButtonText: "Отменить",
@@ -34,7 +36,7 @@ partial class TimesheetCreateFlowStep
 
     private static EntityCardOption CreateTimesheetCardOption(IChatFlowContext<TimesheetCreateFlowState> context)
         =>
-        context.InnerCreateTimesheetCardOption("Изменение списания времени", context.FlowState.ShowReadonlyCard is false);
+        context.InnerCreateTimesheetCardOption("Изменение списания времени", context.FlowState.WithoutConfirmation  is false);
 
     private static EntityCardOption InnerCreateTimesheetCardOption(
         this IChatFlowContext<TimesheetCreateFlowState> context, string headerText, bool skipStep)
@@ -60,10 +62,10 @@ partial class TimesheetCreateFlowStep
         return context.FlowState with
         {
             Project = timesheet.Project,
-            Description = timesheet.Description is null ? context.FlowState.Description : new(timesheet.Description),
-            ValueHours = timesheet.Duration ?? context.FlowState.ValueHours,
+            Description = new(timesheet.Description),
+            ValueHours = timesheet.Duration,
             DateText = timesheet.Date,
-            ShowReadonlyCard = true
+            WithoutConfirmation = true
         };
     }
 
@@ -71,7 +73,10 @@ partial class TimesheetCreateFlowStep
         =>
         context.FlowState.Project switch
         {
-            null => ChatFlowJump.Restart(context.FlowState),
+            null => ChatFlowJump.Restart(context.FlowState with
+            {
+                WithoutConfirmation = false
+            }),
             _ => ChatFlowJump.Next(context.FlowState)
         };
 
@@ -82,13 +87,29 @@ partial class TimesheetCreateFlowStep
         var timesheet = new WebAppCreateTimesheetDataJson
         {
             Description = state.Description?.Value.OrEmpty(),
-            Duration = state.ValueHours,
+            Duration = state.ValueHours.GetValueOrDefault(),
             Project = state.Project
         };
 
-        var webAppDataJson = JsonConvert.SerializeObject(timesheet);
-        var data = HttpUtility.UrlEncode(webAppDataJson);
+        var data = timesheet.CompressDataJson();
+        var date = context.FlowState.DateText;
+        var days = context.FlowState.AllowedIntervalInDays;
 
-        return $"{state.UrlWebApp}/updateTimesheetForm?data={data}&date={context.FlowState.DateText}&days={context.FlowState.AllowedIntervalInDays}";
+        return $"{state.UrlWebApp}/updateTimesheetForm?data={data}&date={date}&days={days}";
+    }
+
+    private static string CompressDataJson(this WebAppCreateTimesheetDataJson data)
+    {
+        var json = JsonConvert.SerializeObject(data);
+
+        var buffer = Encoding.UTF8.GetBytes(json);
+        var memoryStream = new MemoryStream();
+
+        using (var zipStream = new GZipStream(memoryStream, CompressionMode.Compress, true))
+        {
+            zipStream.Write(buffer, 0, buffer.Length);
+        }
+
+        return Convert.ToBase64String(memoryStream.ToArray());
     }
 }

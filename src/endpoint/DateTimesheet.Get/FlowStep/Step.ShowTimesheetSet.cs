@@ -5,6 +5,8 @@ using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Web;
@@ -55,7 +57,7 @@ partial class DateTimesheetFlowStep
         }
         .ToActivity();
 
-    private static IActivity CreateTelegramTextActivity(this IChatFlowContext<DateTimesheetFlowState> context, string text)
+    private static Activity CreateTelegramTextActivity(this IChatFlowContext<DateTimesheetFlowState> context, string text)
     {
         var textBuilder = new StringBuilder(text)
             .Append(TelegramBotLine)
@@ -63,17 +65,17 @@ partial class DateTimesheetFlowStep
             .Append(TelegramBotLine)
             .Append("/newtimesheet - Списать время");
 
-        var telegramActivity = context.Activity.CreateReply();
-        telegramActivity.ChannelData = BuildChannelData().ToJObject();
-
-        return telegramActivity;
-
-        TelegramChannelData BuildChannelData()
+        return new(ActivityTypes.Message)
         {
-            if (context.FlowState.Timesheets?.Count is not > 0)
+            ChannelData = BuildChannelData(context.FlowState, textBuilder.ToString()).ToJObject()
+        };
+
+        static TelegramChannelData BuildChannelData(DateTimesheetFlowState flowState, string text)
+        {
+            if (flowState.Timesheets?.Count is not > 0)
             {
                 return new(
-                    parameters: new(textBuilder.ToString())
+                    parameters: new(text)
                     {
                         ParseMode = TelegramParseMode.Html,
                         ReplyMarkup = new TelegramReplyKeyboardRemove()
@@ -81,7 +83,7 @@ partial class DateTimesheetFlowStep
             }
 
             return new(
-                parameters: new(textBuilder.ToString())
+                parameters: new(text)
                 {
                     ParseMode = TelegramParseMode.Html,
                     ReplyMarkup = new TelegramReplyKeyboardMarkup(
@@ -89,7 +91,7 @@ partial class DateTimesheetFlowStep
                             [
                                 new("Редактировать")
                                 {
-                                    WebApp = new(context.BuildWebAppUrl())
+                                    WebApp = new(flowState.BuildWebAppUrl())
                                 }
                             ]
                         ])
@@ -314,19 +316,30 @@ partial class DateTimesheetFlowStep
         =>
         flowState.Timesheets?.Count > 0 ? flowState.Timesheets.Sum(static x => x.Duration) : default;
 
-    private static string BuildWebAppUrl(this IChatFlowContext<DateTimesheetFlowState> context)
+    private static string BuildWebAppUrl(this DateTimesheetFlowState state)
     {
-        var state = context.FlowState;
+        var webAppData = new WebAppTimesheetsDataJson(
+            date: state.DateText,
+            dateText: state.Date?.ToStringRussianCulture(),
+            timesheets: state.Timesheets,
+            allowedDays: state.AllowedIntervalInDays);
 
-        var webAppData = new WebAppTimesheetsDataJson
+        var data = webAppData.CompressDataJson();
+        return $"{state.UrlWebApp}/selectUpdateTimesheet?data={HttpUtility.UrlEncode(data)}";
+    }
+
+    private static string CompressDataJson(this WebAppTimesheetsDataJson data)
+    {
+        var json = JsonConvert.SerializeObject(data);
+
+        var buffer = Encoding.UTF8.GetBytes(json);
+        var memoryStream = new MemoryStream();
+
+        using (var zipStream = new GZipStream(memoryStream, CompressionMode.Compress, true))
         {
-            Date = state.DateText,
-            DateText = state.Date?.ToStringRussianCulture(),
-            Timesheets = state.Timesheets,
-        };
+            zipStream.Write(buffer, 0, buffer.Length);
+        }
 
-        var webAppDataJson = JsonConvert.SerializeObject(webAppData);
-
-        return $"{state.UrlWebApp}/selectUpdateTimesheet?data={HttpUtility.UrlEncode(webAppDataJson)}&days={state.AllowedIntervalInDays}";
+        return Convert.ToBase64String(memoryStream.ToArray());
     }
 }
