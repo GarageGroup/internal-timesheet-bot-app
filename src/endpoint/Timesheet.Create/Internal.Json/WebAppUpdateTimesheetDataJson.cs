@@ -21,6 +21,7 @@ internal sealed record class WebAppUpdateTimesheetDataJson
     [JsonProperty("date")]
     public string? DateText { get; init; }
 
+    [JsonIgnore]
     public DateOnly? Date
         =>
         string.IsNullOrEmpty(DateText) ? null : DateOnly.Parse(DateText, CultureInfo.InvariantCulture);

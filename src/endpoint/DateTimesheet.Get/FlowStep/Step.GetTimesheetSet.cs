@@ -17,8 +17,8 @@ partial class DateTimesheetFlowStep
         =>
         AsyncPipeline.Pipe(
             context.FlowState, cancellationToken)
-        .Pipe<TimesheetSetGetIn>(
-            static flowState => new(
+        .Pipe(
+            static flowState => new TimesheetSetGetIn(
                 userId: flowState.UserId,
                 date: flowState.Date.GetValueOrDefault()))
         .PipeValue(

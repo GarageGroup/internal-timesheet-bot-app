@@ -89,7 +89,8 @@ partial class TimesheetCreateFlowStep
         };
 
         var webAppDataJson = JsonConvert.SerializeObject(timesheet);
+        var data = HttpUtility.UrlEncode(webAppDataJson);
 
-        return $"{state.UrlWebApp}/updateTimesheetForm?data={HttpUtility.UrlEncode(webAppDataJson)}&date={context.FlowState.DateText}&days={context.FlowState.AllowedIntervalInDays}";
+        return $"{state.UrlWebApp}/updateTimesheetForm?data={data}&date={context.FlowState.DateText}&days={context.FlowState.AllowedIntervalInDays}";
     }
 }
