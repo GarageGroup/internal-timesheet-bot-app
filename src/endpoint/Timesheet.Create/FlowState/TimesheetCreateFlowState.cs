@@ -41,5 +41,5 @@ internal sealed record class TimesheetCreateFlowState
     public string? UrlWebApp { get; init; }
 
     [JsonProperty("cardOptionSkip")]
-    public bool CardOptionSkip { get; set; }
+    public bool ShowReadonlyCard { get; set; }
 }

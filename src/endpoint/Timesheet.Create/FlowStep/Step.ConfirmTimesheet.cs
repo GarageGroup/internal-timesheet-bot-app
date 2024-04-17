@@ -34,7 +34,7 @@ partial class TimesheetCreateFlowStep
 
     private static EntityCardOption CreateTimesheetCardOption(IChatFlowContext<TimesheetCreateFlowState> context)
         =>
-        context.InnerCreateTimesheetCardOption("Изменение списания времени", context.FlowState.CardOptionSkip is false);
+        context.InnerCreateTimesheetCardOption("Изменение списания времени", context.FlowState.ShowReadonlyCard is false);
 
     private static EntityCardOption InnerCreateTimesheetCardOption(
         this IChatFlowContext<TimesheetCreateFlowState> context, 
@@ -44,12 +44,12 @@ partial class TimesheetCreateFlowStep
         new(
             headerText: headerText,
             fieldValues:
-                [
-                    new((context.FlowState.Project?.Type.ToStringRussianCulture()).OrEmpty(), context.FlowState.Project?.Name),
-                    new("Дата", context.FlowState.Date?.ToStringRussianCulture()),
-                    new("Время", context.FlowState.ValueHours?.ToStringRussianCulture() + "ч"),
-                    new(string.Empty, context.FlowState.Description?.Value)
-                ])
+            [
+                new((context.FlowState.Project?.Type.ToStringRussianCulture()).OrEmpty(), context.FlowState.Project?.Name),
+                new("Дата", context.FlowState.Date?.ToStringRussianCulture()),
+                new("Время", context.FlowState.ValueHours?.ToStringRussianCulture() + "ч"),
+                new(string.Empty, context.FlowState.Description?.Value)
+            ])
         {
             SkipStep = skipStep
         };
@@ -65,7 +65,7 @@ partial class TimesheetCreateFlowStep
             Description = timesheet.Description is null ? context.FlowState.Description : new(timesheet.Description),
             ValueHours = timesheet.Duration ?? context.FlowState.ValueHours,
             DateText = timesheet.Date,
-            CardOptionSkip = true
+            ShowReadonlyCard = true
         };
     }
 
