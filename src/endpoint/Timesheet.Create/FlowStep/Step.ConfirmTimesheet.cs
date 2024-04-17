@@ -1,9 +1,11 @@
 ﻿using GarageGroup.Infra.Bot.Builder;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using System.Web;
 
 namespace GarageGroup.Internal.Timesheet;
 
@@ -21,8 +23,11 @@ partial class TimesheetCreateFlowStep
         .SetTypingStatus();
 
     private static ConfirmationCardOption CreateTimesheetConfirmationOption(IChatFlowContext<TimesheetCreateFlowState> context)
-        =>
-        new(
+    {
+        var webAppUrl = context.FlowState.BuildWebAppUrl();
+        context.Logger.LogInformation("WebAppUrl: {webAppUrl}", webAppUrl);
+
+        return new(
             entity: context.InnerCreateTimesheetCardOption(
                 headerText: context.FlowState.TimesheetId is null ? "Списать время?" : "Сохранить изменения?",
                 skipStep: context.FlowState.WithoutConfirmation),
@@ -31,8 +36,9 @@ partial class TimesheetCreateFlowStep
                 cancelButtonText: "Отменить",
                 cancelText: context.FlowState.TimesheetId is null ? "Списание времени было отменено" : "Изменение времени было отменено")
             {
-                TelegramWebApp = new(context.BuildWebAppUrl())
+                TelegramWebApp = new(webAppUrl)
             });
+    }
 
     private static EntityCardOption CreateTimesheetCardOption(IChatFlowContext<TimesheetCreateFlowState> context)
         =>
@@ -80,10 +86,8 @@ partial class TimesheetCreateFlowStep
             _ => ChatFlowJump.Next(context.FlowState)
         };
 
-    private static string BuildWebAppUrl(this IChatFlowContext<TimesheetCreateFlowState> context)
+    private static string BuildWebAppUrl(this TimesheetCreateFlowState state)
     {
-        var state = context.FlowState;
-
         var timesheet = new WebAppCreateTimesheetDataJson
         {
             Description = state.Description?.Value.OrEmpty(),
@@ -92,10 +96,7 @@ partial class TimesheetCreateFlowStep
         };
 
         var data = timesheet.CompressDataJson();
-        var date = context.FlowState.DateText;
-        var days = context.FlowState.AllowedIntervalInDays;
-
-        return $"{state.UrlWebApp}/updateTimesheetForm?data={data}&date={date}&days={days}";
+        return $"{state.UrlWebApp}/updateTimesheetForm?data={HttpUtility.UrlEncode(data)}&date={state.DateText}&days={state.AllowedIntervalInDays}";
     }
 
     private static string CompressDataJson(this WebAppCreateTimesheetDataJson data)

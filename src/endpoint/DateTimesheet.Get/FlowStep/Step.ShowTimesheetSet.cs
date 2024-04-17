@@ -2,6 +2,7 @@ using AdaptiveCards;
 using GarageGroup.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -65,12 +66,15 @@ partial class DateTimesheetFlowStep
             .Append(TelegramBotLine)
             .Append("/newtimesheet - Списать время");
 
+        var webAppUrl = context.FlowState.BuildWebAppUrl();
+        context.Logger.LogInformation("WebAppUrl: {webAppUrl}", webAppUrl);
+
         return new(ActivityTypes.Message)
         {
-            ChannelData = BuildChannelData(context.FlowState, textBuilder.ToString()).ToJObject()
+            ChannelData = BuildChannelData(context.FlowState, textBuilder.ToString(), webAppUrl).ToJObject()
         };
 
-        static TelegramChannelData BuildChannelData(DateTimesheetFlowState flowState, string text)
+        static TelegramChannelData BuildChannelData(DateTimesheetFlowState flowState, string text, string webAppUrl)
         {
             if (flowState.Timesheets?.Count is not > 0)
             {
@@ -91,7 +95,7 @@ partial class DateTimesheetFlowStep
                             [
                                 new("Редактировать")
                                 {
-                                    WebApp = new(flowState.BuildWebAppUrl())
+                                    WebApp = new(webAppUrl)
                                 }
                             ]
                         ])
