@@ -3,13 +3,13 @@ using Microsoft.Bot.Builder;
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal static partial class TimesheetSetGetChatFlow
+internal static partial class TimesheetGetChatFlow
 {
-    private static ChatFlow<DateTimesheetFlowState> RunFlow(
-        this ChatFlowStarter<DateTimesheetFlowState> chatFlowStarter,
+    private static ChatFlow<TimesheetGetFlowState> RunFlow(
+        this ChatFlowStarter<TimesheetGetFlowState> chatFlowStarter,
         ConversationState conversationState,
         ICrmTimesheetApi timesheetApi,
-        DateTimesheetEditOption option)
+        TimesheetGetFlowOption option)
         =>
         chatFlowStarter.Start(
             () => new()

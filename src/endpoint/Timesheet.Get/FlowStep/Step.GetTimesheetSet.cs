@@ -5,15 +5,15 @@ using GarageGroup.Infra.Bot.Builder;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class DateTimesheetFlowStep
+partial class TimesheetGetFlowStep
 {
-    internal static ChatFlow<DateTimesheetFlowState> GetTimesheetSet(
-        this ChatFlow<DateTimesheetFlowState> chatFlow, ICrmTimesheetApi timesheetApi)
+    internal static ChatFlow<TimesheetGetFlowState> GetTimesheetSet(
+        this ChatFlow<TimesheetGetFlowState> chatFlow, ICrmTimesheetApi timesheetApi)
         =>
         chatFlow.SetTypingStatus().ForwardValue(timesheetApi.GetTimesheetSetOrBreakAsync);
 
-    private static ValueTask<ChatFlowJump<DateTimesheetFlowState>> GetTimesheetSetOrBreakAsync(
-        this ICrmTimesheetApi timesheetApi, IChatFlowContext<DateTimesheetFlowState> context, CancellationToken cancellationToken)
+    private static ValueTask<ChatFlowJump<TimesheetGetFlowState>> GetTimesheetSetOrBreakAsync(
+        this ICrmTimesheetApi timesheetApi, IChatFlowContext<TimesheetGetFlowState> context, CancellationToken cancellationToken)
         =>
         AsyncPipeline.Pipe(
             context.FlowState, cancellationToken)
@@ -32,7 +32,7 @@ partial class DateTimesheetFlowStep
             })
         .Fold(
             ChatFlowJump.Next,
-            ChatFlowJump.Break<DateTimesheetFlowState>);
+            ChatFlowJump.Break<TimesheetGetFlowState>);
 
     private static TimesheetJson MapTimesheet(TimesheetSetGetItem timesheet)
         =>

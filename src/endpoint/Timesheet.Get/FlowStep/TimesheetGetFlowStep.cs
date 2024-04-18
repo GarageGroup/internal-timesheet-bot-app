@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal static partial class DateTimesheetFlowStep
+internal static partial class TimesheetGetFlowStep
 {
     private const char HourSymbol = 'ч';
 
@@ -25,7 +25,7 @@ internal static partial class DateTimesheetFlowStep
 
     private static readonly CultureInfo RussianCultureInfo;
 
-    static DateTimesheetFlowStep()
+    static TimesheetGetFlowStep()
         =>
         RussianCultureInfo = CultureInfo.GetCultureInfo("ru-RU");
 

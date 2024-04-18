@@ -2,9 +2,9 @@ using GarageGroup.Infra.Bot.Builder;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class DateTimesheetFlowStep
+partial class TimesheetGetFlowStep
 {
-    internal static ChatFlow<DateTimesheetFlowState> GetUserId(this ChatFlow<DateTimesheetFlowState> chatFlow)
+    internal static ChatFlow<TimesheetGetFlowState> GetUserId(this ChatFlow<TimesheetGetFlowState> chatFlow)
         =>
         chatFlow.GetDataverseUserOrBreak(
             "Произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее",
