@@ -10,7 +10,7 @@ internal sealed record class WebAppUpdateTimesheetDataJson
     public Guid Id { get; init; }
 
     [JsonProperty("duration")]
-    public decimal? Duration { get; init; }
+    public decimal Duration { get; init; }
 
     [JsonProperty("project")]
     public TimesheetProjectState? Project { get; init; }

@@ -1,6 +1,10 @@
 ﻿using GarageGroup.Infra.Bot.Builder;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
+using System.IO;
+using System.IO.Compression;
+using System.Text;
 using System.Web;
 
 namespace GarageGroup.Internal.Timesheet;
@@ -19,22 +23,26 @@ partial class TimesheetCreateFlowStep
         .SetTypingStatus();
 
     private static ConfirmationCardOption CreateTimesheetConfirmationOption(IChatFlowContext<TimesheetCreateFlowState> context)
-        =>
-        new(
+    {
+        var webAppUrl = context.FlowState.BuildWebAppUrl();
+        context.Logger.LogInformation("WebAppUrl: {webAppUrl}", webAppUrl);
+
+        return new(
             entity: context.InnerCreateTimesheetCardOption(
                 headerText: context.FlowState.TimesheetId is null ? "Списать время?" : "Сохранить изменения?",
-                skipStep: false),
+                skipStep: context.FlowState.WithoutConfirmation),
             buttons: new(
                 confirmButtonText: context.FlowState.TimesheetId is null ? "Списать" : "Сохранить",
                 cancelButtonText: "Отменить",
                 cancelText: context.FlowState.TimesheetId is null ? "Списание времени было отменено" : "Изменение времени было отменено")
             {
-                TelegramWebApp = new(context.BuildWebAppUrl())
+                TelegramWebApp = new(webAppUrl)
             });
+    }
 
     private static EntityCardOption CreateTimesheetCardOption(IChatFlowContext<TimesheetCreateFlowState> context)
         =>
-        context.InnerCreateTimesheetCardOption("Изменение списания времени", context.FlowState.ShowReadonlyCard is false);
+        context.InnerCreateTimesheetCardOption("Изменение списания времени", context.FlowState.WithoutConfirmation  is false);
 
     private static EntityCardOption InnerCreateTimesheetCardOption(
         this IChatFlowContext<TimesheetCreateFlowState> context, string headerText, bool skipStep)
@@ -60,10 +68,10 @@ partial class TimesheetCreateFlowStep
         return context.FlowState with
         {
             Project = timesheet.Project,
-            Description = timesheet.Description is null ? context.FlowState.Description : new(timesheet.Description),
-            ValueHours = timesheet.Duration ?? context.FlowState.ValueHours,
+            Description = new(timesheet.Description),
+            ValueHours = timesheet.Duration,
             DateText = timesheet.Date,
-            ShowReadonlyCard = true
+            WithoutConfirmation = true
         };
     }
 
@@ -71,24 +79,38 @@ partial class TimesheetCreateFlowStep
         =>
         context.FlowState.Project switch
         {
-            null => ChatFlowJump.Restart(context.FlowState),
+            null => ChatFlowJump.Restart(context.FlowState with
+            {
+                WithoutConfirmation = false
+            }),
             _ => ChatFlowJump.Next(context.FlowState)
         };
 
-    private static string BuildWebAppUrl(this IChatFlowContext<TimesheetCreateFlowState> context)
+    private static string BuildWebAppUrl(this TimesheetCreateFlowState state)
     {
-        var state = context.FlowState;
-
         var timesheet = new WebAppCreateTimesheetDataJson
         {
             Description = state.Description?.Value.OrEmpty(),
-            Duration = state.ValueHours,
+            Duration = state.ValueHours.GetValueOrDefault(),
             Project = state.Project
         };
 
-        var webAppDataJson = JsonConvert.SerializeObject(timesheet);
-        var data = HttpUtility.UrlEncode(webAppDataJson);
+        var data = timesheet.CompressDataJson();
+        return $"{state.UrlWebApp}/updateTimesheetForm?data={HttpUtility.UrlEncode(data)}&date={state.DateText}&days={state.AllowedIntervalInDays}";
+    }
 
-        return $"{state.UrlWebApp}/updateTimesheetForm?data={data}&date={context.FlowState.DateText}&days={context.FlowState.AllowedIntervalInDays}";
+    private static string CompressDataJson(this WebAppCreateTimesheetDataJson data)
+    {
+        var json = JsonConvert.SerializeObject(data);
+
+        var buffer = Encoding.UTF8.GetBytes(json);
+        var memoryStream = new MemoryStream();
+
+        using (var zipStream = new GZipStream(memoryStream, CompressionMode.Compress, true))
+        {
+            zipStream.Write(buffer, 0, buffer.Length);
+        }
+
+        return Convert.ToBase64String(memoryStream.ToArray());
     }
 }

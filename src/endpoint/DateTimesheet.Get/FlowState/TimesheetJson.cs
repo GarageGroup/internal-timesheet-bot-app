@@ -5,6 +5,9 @@ namespace GarageGroup.Internal.Timesheet;
 
 internal sealed record class TimesheetJson
 {
+    [JsonProperty("id")]
+    public Guid Id { get; init; }
+
     [JsonProperty("duration")]
     public decimal Duration { get; init; }
 
@@ -13,7 +16,4 @@ internal sealed record class TimesheetJson
 
     [JsonProperty("description")]
     public string? Description { get; init; }
-
-    [JsonProperty("id")]
-    public Guid Id { get; init; }
 }

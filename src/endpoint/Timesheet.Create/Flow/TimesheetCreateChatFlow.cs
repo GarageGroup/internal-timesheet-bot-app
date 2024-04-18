@@ -10,18 +10,19 @@ internal static partial class TimesheetCreateChatFlow
         ICrmProjectApi crmProjectApi,
         ICrmTimesheetApi crmTimesheetApi,
         TimesheetEditOption option,
-        WebAppUpdateTimesheetDataJson? timesheetData)
+        WebAppUpdateTimesheetDataJson? data)
         =>
         chatFlow.Start(
             () => new()
             {
-                TimesheetId = timesheetData?.Id,
-                Description = timesheetData is null ? null : new(timesheetData.Description),
-                ValueHours = timesheetData?.Duration,
-                Project = timesheetData?.Project,
-                Date = timesheetData?.Date,
+                TimesheetId = data?.Id,
+                Description = data is null ? null : new(data.Description),
+                ValueHours = data?.Duration,
+                Project = data?.Project,
+                Date = data?.Date,
                 AllowedIntervalInDays = option.AllowedIntervalInDays,
-                UrlWebApp = option.UrlWebApp
+                UrlWebApp = option.UrlWebApp,
+                WithoutConfirmation = data?.Project is not null
             })
         .GetUserId()
         .AwaitDate()
