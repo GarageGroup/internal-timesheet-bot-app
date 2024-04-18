@@ -6,10 +6,10 @@ using PrimeFuncPack;
 
 namespace GarageGroup.Internal.Timesheet;
 
-public static class DateTimesheetGetDependency
+public static class TimesheetGetDependency
 {
-    public static IBotBuilder MapDateTimesheetGetFlow(
-        this Dependency<ICrmTimesheetApi, DateTimesheetEditOption> dependency, IBotBuilder botBuilder, string commandName)
+    public static IBotBuilder MapTimesheetGetFlow(
+        this Dependency<ICrmTimesheetApi, TimesheetGetFlowOption> dependency, IBotBuilder botBuilder, string commandName)
     {
         ArgumentNullException.ThrowIfNull(dependency);
         ArgumentNullException.ThrowIfNull(botBuilder);

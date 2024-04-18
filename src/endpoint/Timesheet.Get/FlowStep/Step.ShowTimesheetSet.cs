@@ -14,14 +14,14 @@ using System.Web;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class DateTimesheetFlowStep
+partial class TimesheetGetFlowStep
 {
-    internal static ChatFlow<DateTimesheetFlowState> ShowTimesheetSet(this ChatFlow<DateTimesheetFlowState> chatFlow)
+    internal static ChatFlow<TimesheetGetFlowState> ShowTimesheetSet(this ChatFlow<TimesheetGetFlowState> chatFlow)
         =>
         chatFlow.ReplaceActivityOrSkip(
             CreateActivity);
 
-    private static IActivity CreateActivity(IChatFlowContext<DateTimesheetFlowState> context)
+    private static IActivity CreateActivity(IChatFlowContext<TimesheetGetFlowState> context)
     {
         if (context.FlowState.Timesheets?.Count is not > 0)
         {
@@ -42,11 +42,11 @@ partial class DateTimesheetFlowStep
         return MessageFactory.Text(text);
     }
 
-    private static IActivity CreateTextActivity(this IChatFlowContext<DateTimesheetFlowState> turnContext, string text)
+    private static IActivity CreateTextActivity(this IChatFlowContext<TimesheetGetFlowState> turnContext, string text)
         =>
         turnContext.IsNotTelegramChannel() ? MessageFactory.Text(text) : turnContext.CreateTelegramTextActivity(text);
 
-    private static IActivity CreateAdaptiveCardActivity(IChatFlowContext<DateTimesheetFlowState> context)
+    private static IActivity CreateAdaptiveCardActivity(IChatFlowContext<TimesheetGetFlowState> context)
         =>
         new Attachment
         {
@@ -58,7 +58,7 @@ partial class DateTimesheetFlowStep
         }
         .ToActivity();
 
-    private static Activity CreateTelegramTextActivity(this IChatFlowContext<DateTimesheetFlowState> context, string text)
+    private static Activity CreateTelegramTextActivity(this IChatFlowContext<TimesheetGetFlowState> context, string text)
     {
         var textBuilder = new StringBuilder(text)
             .Append(TelegramBotLine)
@@ -74,7 +74,7 @@ partial class DateTimesheetFlowStep
             ChannelData = BuildChannelData(context.FlowState, textBuilder.ToString(), webAppUrl).ToJObject()
         };
 
-        static TelegramChannelData BuildChannelData(DateTimesheetFlowState flowState, string text, string webAppUrl)
+        static TelegramChannelData BuildChannelData(TimesheetGetFlowState flowState, string text, string webAppUrl)
         {
             if (flowState.Timesheets?.Count is not > 0)
             {
@@ -107,7 +107,7 @@ partial class DateTimesheetFlowStep
         }
     }
 
-    private static List<AdaptiveElement> CreateAdaptiveBody(IChatFlowContext<DateTimesheetFlowState> context)
+    private static List<AdaptiveElement> CreateAdaptiveBody(IChatFlowContext<TimesheetGetFlowState> context)
     {
         var adaptiveElements = new List<AdaptiveElement>();
 
@@ -225,7 +225,7 @@ partial class DateTimesheetFlowStep
         =>
         turnContext.IsMsteamsChannel() ? AdaptiveCard.KnownSchemaVersion : new(1, 0);
 
-    private static string BuildText(IChatFlowContext<DateTimesheetFlowState> context)
+    private static string BuildText(IChatFlowContext<TimesheetGetFlowState> context)
     {
         var flowState = context.FlowState;
         var textBuilder = new StringBuilder();
@@ -270,7 +270,7 @@ partial class DateTimesheetFlowStep
         }
     }
 
-    private static string BuildTelegramText(IChatFlowContext<DateTimesheetFlowState> context)
+    private static string BuildTelegramText(IChatFlowContext<TimesheetGetFlowState> context)
     {
         var flowState = context.FlowState;
         var textBuilder = new StringBuilder();
@@ -316,11 +316,11 @@ partial class DateTimesheetFlowStep
         =>
         stringBuilder.AppendFormat("{0,-10}{1}", first, second);
 
-    private static decimal GetDurationSum(this DateTimesheetFlowState flowState)
+    private static decimal GetDurationSum(this TimesheetGetFlowState flowState)
         =>
         flowState.Timesheets?.Count > 0 ? flowState.Timesheets.Sum(static x => x.Duration) : default;
 
-    private static string BuildWebAppUrl(this DateTimesheetFlowState state)
+    private static string BuildWebAppUrl(this TimesheetGetFlowState state)
     {
         var webAppData = new WebAppTimesheetsDataJson(
             date: state.DateText,

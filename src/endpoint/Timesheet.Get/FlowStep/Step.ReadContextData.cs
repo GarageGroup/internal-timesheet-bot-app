@@ -6,16 +6,16 @@ using Microsoft.Bot.Builder;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class DateTimesheetFlowStep
+partial class TimesheetGetFlowStep
 {
-    internal static ChatFlow<DateTimesheetFlowState> ReadContextData(
-        this ChatFlow<DateTimesheetFlowState> chatFlow, ConversationState conversationState)
+    internal static ChatFlow<TimesheetGetFlowState> ReadContextData(
+        this ChatFlow<TimesheetGetFlowState> chatFlow, ConversationState conversationState)
         =>
         chatFlow.Next(
             conversationState.ReadContextDataAsync);
 
-    private static async Task<DateTimesheetFlowState> ReadContextDataAsync(
-        this ConversationState conversationState, IChatFlowContext<DateTimesheetFlowState> context, CancellationToken cancellationToken)
+    private static async Task<TimesheetGetFlowState> ReadContextDataAsync(
+        this ConversationState conversationState, IChatFlowContext<TimesheetGetFlowState> context, CancellationToken cancellationToken)
     {
         var contextData = await conversationState.GetContextDataAsync(context, cancellationToken).ConfigureAwait(false);
 

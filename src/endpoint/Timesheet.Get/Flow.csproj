@@ -7,7 +7,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <InvariantGlobalization>false</InvariantGlobalization>
     <RootNamespace>GarageGroup.Internal.Timesheet</RootNamespace>
-    <AssemblyName>GarageGroup.Internal.Timesheet.Endpoint.DateTimesheet.Get.Flow</AssemblyName>
+    <AssemblyName>GarageGroup.Internal.Timesheet.Endpoint.Timesheet.Get.Flow</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

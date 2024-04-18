@@ -6,10 +6,10 @@ using Microsoft.Bot.Builder;
 
 namespace GarageGroup.Internal.Timesheet;
 
-partial class DateTimesheetFlowStep
+partial class TimesheetGetFlowStep
 {
-    internal static ChatFlow<DateTimesheetFlowState> AwaitDate(
-        this ChatFlow<DateTimesheetFlowState> chatFlow)
+    internal static ChatFlow<TimesheetGetFlowState> AwaitDate(
+        this ChatFlow<TimesheetGetFlowState> chatFlow)
         =>
         chatFlow.AwaitDate(
             static context => new(

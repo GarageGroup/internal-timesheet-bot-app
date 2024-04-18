@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal sealed record class DateTimesheetFlowState
+internal sealed record class TimesheetGetFlowState
 {
     [JsonIgnore]
     public DateOnly? Date { get; init; }

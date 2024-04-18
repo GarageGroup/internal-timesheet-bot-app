@@ -9,7 +9,7 @@ internal static partial class TimesheetCreateChatFlow
         IBotContext botContext,
         ICrmProjectApi crmProjectApi,
         ICrmTimesheetApi crmTimesheetApi,
-        TimesheetEditOption option,
+        TimesheetCreateFlowOption option,
         WebAppUpdateTimesheetDataJson? data)
         =>
         chatFlow.Start(

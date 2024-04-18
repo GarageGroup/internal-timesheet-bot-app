@@ -34,14 +34,14 @@ internal static partial class Application
             channelCodes: section.Get<Dictionary<TimesheetChannel, int?>>().ToFlatArray());
     }
 
-    private static TTimesheetEditOption ResolveTimesheetEditOptionOrThrow<TTimesheetEditOption>(IServiceProvider serviceProvider)
-        where TTimesheetEditOption : class
+    private static TTimesheetCreateFlowOption ResolveTimesheetCreateFlowOptionOrThrow<TTimesheetCreateFlowOption>(IServiceProvider serviceProvider)
+        where TTimesheetCreateFlowOption : class
     {
-        return serviceProvider.GetConfiguration().GetRequiredSection("TimesheetEdit").Get<TTimesheetEditOption>() ?? throw CreateException();
+        return serviceProvider.GetConfiguration().GetRequiredSection("TimesheetEdit").Get<TTimesheetCreateFlowOption>() ?? throw CreateException();
 
         static InvalidOperationException CreateException()
             =>
-            new("TimesheetEditOption must be specified");
+            new("TimesheetCreateFlowOption must be specified");
     }
 
     private static IConfiguration GetConfiguration(this IServiceProvider serviceProvider)

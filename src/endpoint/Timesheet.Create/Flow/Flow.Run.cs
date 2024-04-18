@@ -13,7 +13,7 @@ partial class TimesheetCreateChatFlow
         string commandName,
         ICrmProjectApi crmProjectApi,
         ICrmTimesheetApi crmTimesheetApi,
-        TimesheetEditOption option,
+        TimesheetCreateFlowOption option,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(context);

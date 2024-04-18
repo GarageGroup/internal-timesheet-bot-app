@@ -2,9 +2,9 @@
 
 namespace GarageGroup.Internal.Timesheet;
 
-public sealed record class TimesheetEditOption
+public sealed record class TimesheetCreateFlowOption
 {
-    public TimesheetEditOption(int allowedIntervalInDays, string urlWebApp)
+    public TimesheetCreateFlowOption(int allowedIntervalInDays, string urlWebApp)
     {
         AllowedIntervalInDays = allowedIntervalInDays;
         UrlWebApp = urlWebApp.OrEmpty();

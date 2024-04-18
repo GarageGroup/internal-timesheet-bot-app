@@ -5,12 +5,12 @@ namespace GarageGroup.Internal.Timesheet;
 
 partial class Application
 {
-    private static IBotBuilder UseDateTimesheetGetFlow(this IBotBuilder botBuilder)
+    private static IBotBuilder UseTimesheetGetFlow(this IBotBuilder botBuilder)
         =>
         Pipeline.Pipe(
             UseCrmTimesheetApi())
         .With(
-            ResolveTimesheetEditOptionOrThrow<DateTimesheetEditOption>)
-        .MapDateTimesheetGetFlow(
+            ResolveTimesheetCreateFlowOptionOrThrow<TimesheetGetFlowOption>)
+        .MapTimesheetGetFlow(
             botBuilder, DateTimesheetGetCommand);
 }

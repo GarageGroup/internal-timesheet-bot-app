@@ -23,9 +23,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "app", "app", "{E87022B0-BD9
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "endpoint", "endpoint", "{7D9CDEDB-482B-476A-BB7F-662F7F838FE1}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DateTimesheet.Get", "DateTimesheet.Get", "{A983929D-6468-4F3B-B70C-A550AD9F6426}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Timesheet.Get", "Timesheet.Get", "{A983929D-6468-4F3B-B70C-A550AD9F6426}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Flow", "src\endpoint\DateTimesheet.Get\Flow.csproj", "{A62224A6-203C-4AA3-809E-D1730330DEBE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Flow", "src\endpoint\Timesheet.Get\Flow.csproj", "{A62224A6-203C-4AA3-809E-D1730330DEBE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Timesheet.Create", "Timesheet.Create", "{7012B7E9-F5CC-420D-A0A3-AB4349465E7C}"
 EndProject
