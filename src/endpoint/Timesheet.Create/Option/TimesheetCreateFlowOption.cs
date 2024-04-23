@@ -4,13 +4,13 @@ namespace GarageGroup.Internal.Timesheet;
 
 public sealed record class TimesheetCreateFlowOption
 {
-    public TimesheetCreateFlowOption(int allowedIntervalInDays, string urlWebApp)
+    public TimesheetCreateFlowOption(int limitationDay, string urlWebApp)
     {
-        AllowedIntervalInDays = allowedIntervalInDays;
+        LimitationDay = limitationDay;
         UrlWebApp = urlWebApp.OrEmpty();
     }
 
-    public int AllowedIntervalInDays { get; }
+    public int LimitationDay { get; }
 
     public string UrlWebApp { get; }
 }

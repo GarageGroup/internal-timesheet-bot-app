@@ -34,8 +34,8 @@ internal sealed record class TimesheetCreateFlowState
     [JsonProperty("description")]
     public TimesheetDescriptionState? Description { get; init; }
 
-    [JsonProperty("allowedIntervalInDays")]
-    public int AllowedIntervalInDays { get; init; }
+    [JsonProperty("limitationDay")]
+    public int LimitationDay { get; init; }
 
     [JsonProperty("urlWebApp")]
     public string? UrlWebApp { get; init; }
