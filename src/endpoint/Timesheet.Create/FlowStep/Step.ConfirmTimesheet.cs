@@ -96,7 +96,7 @@ partial class TimesheetCreateFlowStep
         };
 
         var data = timesheet.CompressDataJson();
-        return $"{state.UrlWebApp}/updateTimesheetForm?data={HttpUtility.UrlEncode(data)}&date={state.DateText}&days={state.AllowedIntervalInDays}";
+        return $"{state.UrlWebApp}/updateTimesheetForm?data={HttpUtility.UrlEncode(data)}&date={state.DateText}&days={state.LimitationDay}";
     }
 
     private static string CompressDataJson(this WebAppCreateTimesheetDataJson data)

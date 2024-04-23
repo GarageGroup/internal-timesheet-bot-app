@@ -79,10 +79,15 @@ partial class TimesheetCreateFlowStep
             return BotFlowFailure.From("Дата не может быть в будущем");
         }
 
-        var minDate = today.AddDays(-context.FlowState.AllowedIntervalInDays);
+        var minDate = new DateOnly(today.Year, today.Month, 1);
+        if (today.Day < context.FlowState.LimitationDay)
+        {
+            minDate = new DateOnly(today.Year, today.Month - 1, 1);
+        }
+
         if (date < minDate)
         {
-            return BotFlowFailure.From($"Нельзя выбрать дату раньше, чем {context.FlowState.AllowedIntervalInDays} дней от текущей");
+            return BotFlowFailure.From($"Нельзя выбрать дату раньше, чем {minDate.ToStringRussianCulture()}");
         }
 
         return Result.Success(date);
