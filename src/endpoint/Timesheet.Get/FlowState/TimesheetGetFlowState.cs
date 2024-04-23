@@ -39,6 +39,6 @@ internal sealed record class TimesheetGetFlowState
     [JsonProperty("urlWebApp")]
     public string? UrlWebApp { get; init; }
 
-    [JsonProperty("allowedIntervalInDays")]
-    public int AllowedIntervalInDays { get; init; }
+    [JsonProperty("limitationDay")]
+    public int LimitationDay { get; init; }
 }

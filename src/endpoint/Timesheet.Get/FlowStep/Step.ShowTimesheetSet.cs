@@ -326,7 +326,7 @@ partial class TimesheetGetFlowStep
             date: state.DateText,
             dateText: state.Date?.ToStringRussianCulture(),
             timesheets: state.Timesheets,
-            allowedDays: state.AllowedIntervalInDays);
+            allowedDays: state.LimitationDay);
 
         var data = webAppData.CompressDataJson();
         return $"{state.UrlWebApp}/selectUpdateTimesheet?data={HttpUtility.UrlEncode(data)}";
