@@ -15,7 +15,7 @@ internal static partial class TimesheetGetChatFlow
             () => new()
             {
                 UrlWebApp = option.UrlWebApp,
-                AllowedIntervalInDays = option.AllowedIntervalInDays
+                LimitationDay = option.LimitationDay
             })
         .GetUserId()
         .ReadContextData(
