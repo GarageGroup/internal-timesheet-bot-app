@@ -32,7 +32,7 @@ partial class TimesheetDeleteFlowStep
             })
         .Map(
             _ => context.FlowState,
-            static failure => failure.SourceException.ToChatFlowBreakState("Не удалось удалить запись", failure.FailureMessage))
+            static failure => failure.SourceException.ToChatFlowBreakState("Failed to delete the timesheet", failure.FailureMessage))
         .Fold(
             ChatFlowJump.Next,
             ChatFlowJump.Break<TimesheetDeleteFlowState>);

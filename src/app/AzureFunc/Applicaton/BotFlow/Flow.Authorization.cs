@@ -1,7 +1,6 @@
 using System;
 using GarageGroup.Infra;
 using GarageGroup.Infra.Bot.Builder;
-using Microsoft.Extensions.DependencyInjection;
 using PrimeFuncPack;
 
 namespace GarageGroup.Internal.Timesheet;
@@ -10,35 +9,31 @@ partial class Application
 {
     internal static IBotBuilder UseAuthorizationFlow(this IBotBuilder botBuilder)
         =>
-        botBuilder.UseDataverseAuthorization(
-            ResolveBotAuthorizationOption,
-            GetAzureUserApi,
-            GetDataverseUserApi);
+        Pipeline.Pipe(
+            UseGraphHttpApi())
+        .With(
+            UseUserAuthorizationApi())
+        .With(
+            ResolveBotSignInOption)
+        .MapSignInMiddleware(
+            botBuilder);
 
-    private static IAzureUserApi GetAzureUserApi(IBotContext botContext)
+    private static Dependency<IHttpApi> UseGraphHttpApi()
         =>
         PrimaryHandler.UseStandardSocketsHttpHandler()
-        .UseLogging("AzureUserApi")
+        .UseLogging("GraphApi")
         .UsePollyStandard()
-        .UseAzureUserApi()
-        .Resolve(botContext.ServiceProvider);
+        .UseTokenCredentialStandard()
+        .UseHttpApi();
 
-    private static IDataverseUserApi GetDataverseUserApi(IBotContext botContext)
-        =>
-        Dependency.From(
-            ServiceProviderServiceExtensions.GetRequiredService<IDataverseApiClient>)
-        .UseUserApi()
-        .Resolve(
-            botContext.ServiceProvider);
-
-    private static BotAuthorizationOption ResolveBotAuthorizationOption(this IBotContext context)
+    private static BotSignInOption ResolveBotSignInOption(IServiceProvider serviceProvider)
         =>
         new(
-            oAuthConnectionName: context.ServiceProvider.GetConfiguration()["OAuthConnectionName"].OrEmpty(),
+            oAuthConnectionName: serviceProvider.GetConfiguration()["OAuthConnectionName"].OrEmpty(),
             enterText: """
-                Войдите в свою учетную запись Garage Group:
-                1. Перейдите по ссылке
-                2. Авторизуйтесь под учетной записью Garage Group
-                3. Скопируйте и отправьте полученный код в этот чат
+                Sign in to your Garage Group account:
+                1. Follow the link
+                2. Sign in with your Garage Group account
+                3. Copy and send the received code to this chat
                 """);
 }

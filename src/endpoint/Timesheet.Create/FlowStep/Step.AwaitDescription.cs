@@ -21,7 +21,7 @@ partial class TimesheetCreateFlowStep
                 suggestions:
                 [
                     [
-                        new("Пропустить", string.Empty)
+                        new("Skip", string.Empty)
                     ]
                 ])
             {
@@ -29,8 +29,8 @@ partial class TimesheetCreateFlowStep
             },
             static (context, description) => string.IsNullOrEmpty(description) switch
             {
-                true => "Описание пропущено",
-                _ => $"Описание: {context.EncodeTextWithStyle(description, BotTextStyle.Bold)}"
+                true => "Description is omitted",
+                _ => $"Description: {context.EncodeTextWithStyle(description, BotTextStyle.Bold)}"
             },
             static (flowState, description) => flowState with
             {
@@ -55,7 +55,7 @@ partial class TimesheetCreateFlowStep
 
     private static string BuildDescriptionMessageText(this IChatFlowContext<TimesheetCreateFlowState> context)
     {
-        const string DefaultMessageText = "Введите описание. Этот шаг можно пропустить";
+        const string DefaultMessageText = "Enter the description. This step can be skipped";
         if (context.IsNotTelegramChannel() || context.FlowState.DescriptionTags?.Length is not > 0)
         {
             return DefaultMessageText;

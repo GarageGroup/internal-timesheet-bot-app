@@ -121,25 +121,21 @@ partial class TimesheetCreateFlowStep
 
     private static ChatFlowBreakState ToBreakState(Failure<TimesheetCreateFailureCode> failure)
         =>
-        (failure.FailureCode switch
-        {
-            TimesheetCreateFailureCode.NotAllowed
-                => "Не удалось создать списание времени. Данная операция не разрешена для вашей учетной записи. Обратитесь к администратору",
-            _
-                => "При создании списания времени произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее"
-        })
-        .Pipe(
-            message => ChatFlowBreakState.From(message, failure.FailureMessage, failure.SourceException));
+        failure.SourceException.ToChatFlowBreakState(
+            userMessage: failure.FailureCode switch
+            {
+                TimesheetCreateFailureCode.NotAllowed => NotAllowedFailureUserMessage,
+                _ => UnexpectedFailureUserMessage
+            },
+            logMessage: failure.FailureMessage);
 
     private static ChatFlowBreakState ToBreakState(Failure<TimesheetUpdateFailureCode> failure)
         =>
-        (failure.FailureCode switch
-        {
-            TimesheetUpdateFailureCode.NotFound
-                => "Списание времени не найдено. Возможно оно уже было удалено ранее",
-            _
-                => "При изменении списания времени произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее"
-        })
-        .Pipe(
-            message => ChatFlowBreakState.From(message, failure.FailureMessage, failure.SourceException));
+        failure.SourceException.ToChatFlowBreakState(
+            userMessage: failure.FailureCode switch
+            {
+                TimesheetUpdateFailureCode.NotFound => "The project was not found. It may have been deleted previously",
+                _ => UnexpectedFailureUserMessage
+            },
+            logMessage: failure.FailureMessage);
 }

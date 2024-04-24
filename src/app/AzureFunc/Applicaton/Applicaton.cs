@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GarageGroup.Infra;
+using GarageGroup.Infra.Bot.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PrimeFuncPack;
@@ -25,6 +26,12 @@ internal static partial class Application
             ServiceProviderServiceExtensions.GetRequiredService<ISqlApi>,
             ResolveTimesheetApiOption)
         .UseCrmTimesheetApi();
+
+    private static Dependency<IUserAuthorizationApi> UseUserAuthorizationApi()
+        =>
+        Dependency.From(
+            ServiceProviderServiceExtensions.GetRequiredService<IDataverseApiClient>)
+        .UseUserAuthorizationApi();
 
     private static CrmTimesheetApiOption ResolveTimesheetApiOption(IServiceProvider serviceProvider)
     {

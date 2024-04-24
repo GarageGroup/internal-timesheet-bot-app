@@ -18,125 +18,107 @@ partial class TimesheetGetFlowStep
 {
     internal static ChatFlow<TimesheetGetFlowState> ShowTimesheetSet(this ChatFlow<TimesheetGetFlowState> chatFlow)
         =>
-        chatFlow.ReplaceActivityOrSkip(
-            CreateActivity);
+        chatFlow.ReplaceActivityOrSkip(CreateActivity);
 
     private static IActivity CreateActivity(IChatFlowContext<TimesheetGetFlowState> context)
     {
         if (context.FlowState.Timesheets?.Count is not > 0)
         {
-            return context.CreateTextActivity($"Нет списаний времени за {context.FlowState.Date?.ToStringRussianCulture()}");
+            return context.CreateTextActivity($"No timesheets for {context.FlowState.Date?.ToDisplayText()}");
         }
 
         if (context.IsCardSupported())
         {
-            return CreateAdaptiveCardActivity(context);
+            return CreateAdaptiveCard(context).ToActivity();
         }
 
         if (context.IsTelegramChannel())
         {
-            return context.Pipe(BuildTelegramText).Pipe(context.CreateTelegramTextActivity);
+            return context.CreateTelegramParameters(context.BuildTelegramText()).BuildActivity();
         }
 
-        var text = BuildText(context);
-        return MessageFactory.Text(text);
+        return MessageFactory.Text(context.BuildText());
     }
 
-    private static IActivity CreateTextActivity(this IChatFlowContext<TimesheetGetFlowState> turnContext, string text)
+    private static Activity CreateTextActivity(this IChatFlowContext<TimesheetGetFlowState> turnContext, string text)
         =>
-        turnContext.IsNotTelegramChannel() ? MessageFactory.Text(text) : turnContext.CreateTelegramTextActivity(text);
+        turnContext.IsNotTelegramChannel() ? MessageFactory.Text(text) : turnContext.CreateTelegramParameters(text).BuildActivity();
 
-    private static IActivity CreateAdaptiveCardActivity(IChatFlowContext<TimesheetGetFlowState> context)
+    private static Attachment CreateAdaptiveCard(IChatFlowContext<TimesheetGetFlowState> context)
         =>
-        new Attachment
+        new()
         {
             ContentType = AdaptiveCard.ContentType,
             Content = new AdaptiveCard(context.GetAdaptiveSchemaVersion())
             {
-                Body = CreateAdaptiveBody(context)
+                Body = CreateAdaptiveElements(context).ToList()
             }
-        }
-        .ToActivity();
+        };
 
-    private static Activity CreateTelegramTextActivity(this IChatFlowContext<TimesheetGetFlowState> context, string text)
+    private static TelegramParameters CreateTelegramParameters(this IChatFlowContext<TimesheetGetFlowState> context, string text)
     {
         var textBuilder = new StringBuilder(text)
             .Append(TelegramBotLine)
             .Append(LineSeparator)
             .Append(TelegramBotLine)
-            .Append("/newtimesheet - Списать время");
+            .Append("/newtimesheet - Create timesheet");
 
         var webAppUrl = context.FlowState.BuildWebAppUrl();
         context.Logger.LogInformation("WebAppUrl: {webAppUrl}", webAppUrl);
 
-        return new(ActivityTypes.Message)
+        if (context.FlowState.Timesheets?.Count is not > 0)
         {
-            ChannelData = BuildChannelData(context.FlowState, textBuilder.ToString(), webAppUrl).ToJObject()
-        };
-
-        static TelegramChannelData BuildChannelData(TimesheetGetFlowState flowState, string text, string webAppUrl)
-        {
-            if (flowState.Timesheets?.Count is not > 0)
+            return new(textBuilder.ToString())
             {
-                return new(
-                    parameters: new(text)
-                    {
-                        ParseMode = TelegramParseMode.Html,
-                        ReplyMarkup = new TelegramReplyKeyboardRemove()
-                    });
-            }
-
-            return new(
-                parameters: new(text)
-                {
-                    ParseMode = TelegramParseMode.Html,
-                    ReplyMarkup = new TelegramReplyKeyboardMarkup(
-                        [
-                            [
-                                new("Редактировать")
-                                {
-                                    WebApp = new(webAppUrl)
-                                }
-                            ]
-                        ])
-                    {
-                        OneTimeKeyboard = true,
-                        ResizeKeyboard = true
-                    }
-                });
+                ParseMode = TelegramParseMode.Html,
+                ReplyMarkup = new TelegramReplyKeyboardRemove()
+            };
         }
+
+        return new(textBuilder.ToString())
+        {
+            ParseMode = TelegramParseMode.Html,
+            ReplyMarkup = new TelegramReplyKeyboardMarkup(
+                [
+                    [
+                        new("Edit")
+                        {
+                            WebApp = new(webAppUrl)
+                        }
+                    ]
+                ])
+            {
+                OneTimeKeyboard = true,
+                ResizeKeyboard = true
+            }
+        };
     }
 
-    private static List<AdaptiveElement> CreateAdaptiveBody(IChatFlowContext<TimesheetGetFlowState> context)
+    private static IEnumerable<AdaptiveElement> CreateAdaptiveElements(IChatFlowContext<TimesheetGetFlowState> context)
     {
-        var adaptiveElements = new List<AdaptiveElement>();
-
         if (string.IsNullOrEmpty(context.FlowState.MessageText) is false)
         {
-            adaptiveElements.Add(CreateAdaptiveMessageRow(context.FlowState.MessageText));
+            yield return CreateAdaptiveMessageRow(context.FlowState.MessageText);
         }
 
-        adaptiveElements.Add(
-            CreateAdaptiveTimesheetRow(context.FlowState.GetDurationSum(), $"Всего за {context.FlowState.Date?.ToStringRussianCulture()}"));
+        yield return CreateAdaptiveTimesheetRow(context.FlowState.GetDurationSum(), $"Total for {context.FlowState.Date?.ToDisplayText()}");
 
         if (context.FlowState.Timesheets is null)
         {
-            return adaptiveElements;
+            yield break;
         }
 
         foreach (var timesheet in context.FlowState.Timesheets)
         {
-            var timesheetRow = CreateAdaptiveTimesheetRow(timesheet.Duration, timesheet.Project?.Name);
-            adaptiveElements.Add(timesheetRow);
+            yield return CreateAdaptiveTimesheetRow(timesheet.Duration, timesheet.Project?.Name);
 
-            if (string.IsNullOrEmpty(timesheet.Description) is false)
+            if (string.IsNullOrEmpty(timesheet.Description))
             {
-                var descriptionRow = CreateAdaptiveDescriptionRow(timesheet.Description);
-                adaptiveElements.Add(descriptionRow);
+                continue;
             }
-        }
 
-        return adaptiveElements;
+            yield return CreateAdaptiveDescriptionRow(timesheet.Description);
+        }
     }
 
     private static AdaptiveColumnSet CreateAdaptiveMessageRow(string message)
@@ -175,7 +157,7 @@ partial class TimesheetGetFlowStep
                     [
                         new AdaptiveTextBlock
                         {
-                            Text = duration.ToDurationStringRussianCulture(),
+                            Text = duration.ToDurationDisplayText(),
                             Size = AdaptiveTextSize.Default
                         }
                     ]
@@ -225,7 +207,7 @@ partial class TimesheetGetFlowStep
         =>
         turnContext.IsMsteamsChannel() ? AdaptiveCard.KnownSchemaVersion : new(1, 0);
 
-    private static string BuildText(IChatFlowContext<TimesheetGetFlowState> context)
+    private static string BuildText(this IChatFlowContext<TimesheetGetFlowState> context)
     {
         var flowState = context.FlowState;
         var textBuilder = new StringBuilder();
@@ -240,8 +222,8 @@ partial class TimesheetGetFlowStep
         }
 
         textBuilder = textBuilder.AppendRow(
-            flowState.GetDurationSum().ToDurationStringRussianCulture(true),
-            context.EncodeTextWithStyle($"Всего за {context.FlowState.Date?.ToStringRussianCulture()}", BotTextStyle.Bold));
+            flowState.GetDurationSum().ToDurationDisplayText(true),
+            context.EncodeTextWithStyle($"Total for {context.FlowState.Date?.ToDisplayText()}", BotTextStyle.Bold));
 
         if (context.FlowState.Timesheets?.Count is not > 0)
         {
@@ -258,7 +240,7 @@ partial class TimesheetGetFlowStep
         StringBuilder BuildTimesheetText(TimesheetJson timesheet)
         {
             var row = new StringBuilder().AppendRow(
-                timesheet.Duration.ToDurationStringRussianCulture(true), context.EncodeTextWithStyle(timesheet.Project?.Name, BotTextStyle.Bold));
+                timesheet.Duration.ToDurationDisplayText(true), context.EncodeTextWithStyle(timesheet.Project?.Name, BotTextStyle.Bold));
 
             if (string.IsNullOrEmpty(timesheet.Description))
             {
@@ -270,7 +252,7 @@ partial class TimesheetGetFlowStep
         }
     }
 
-    private static string BuildTelegramText(IChatFlowContext<TimesheetGetFlowState> context)
+    private static string BuildTelegramText(this IChatFlowContext<TimesheetGetFlowState> context)
     {
         var flowState = context.FlowState;
         var textBuilder = new StringBuilder();
@@ -283,7 +265,7 @@ partial class TimesheetGetFlowStep
         }
 
         textBuilder = textBuilder.AppendRow(
-            flowState.GetDurationSum().ToDurationStringRussianCulture(true), $"<b>Всего за {flowState.Date?.ToStringRussianCulture()}</b>");
+            flowState.GetDurationSum().ToDurationDisplayText(true), $"<b>Total for {flowState.Date?.ToDisplayText()}</b>");
 
         if (context.FlowState.Timesheets?.Count is not > 0)
         {
@@ -300,7 +282,7 @@ partial class TimesheetGetFlowStep
         static StringBuilder BuildTimesheetText(TimesheetJson timesheet)
         {
             var row = new StringBuilder().AppendRow(
-                timesheet.Duration.ToDurationStringRussianCulture(true), $"<b>{HttpUtility.HtmlEncode(timesheet.Project?.Name)}</b>");
+                timesheet.Duration.ToDurationDisplayText(true), $"<b>{HttpUtility.HtmlEncode(timesheet.Project?.Name)}</b>");
 
             if (string.IsNullOrEmpty(timesheet.Description))
             {
@@ -324,7 +306,7 @@ partial class TimesheetGetFlowStep
     {
         var webAppData = new WebAppTimesheetsDataJson(
             date: state.DateText,
-            dateText: state.Date?.ToStringRussianCulture(),
+            dateText: state.Date?.ToDisplayText(),
             timesheets: state.Timesheets,
             allowedDays: state.LimitationDay);
 

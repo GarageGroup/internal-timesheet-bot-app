@@ -15,16 +15,16 @@ partial class TimesheetDeleteFlowStep
         =>
         new(
             entity: new(
-                headerText: "Удалить списание времени?",
+                headerText: "Delete timesheet?",
                 fieldValues:
                 [
                     new((context.FlowState.Timesheet?.Project?.DisplayTypeName).OrEmpty(), context.FlowState.Timesheet?.Project?.Name),
-                    new("Дата", context.FlowState.Date.ToStringRussianCulture()),
-                    new("Время", context.FlowState.Timesheet?.Duration.ToStringRussianCulture() + "ч"),
+                    new("Date", context.FlowState.Date.ToDisplayText()),
+                    new("Duration", context.FlowState.Timesheet?.Duration.ToDisplayText() + "h"),
                     new(string.Empty, context.FlowState.Timesheet?.Description)
                 ]),
             buttons: new(
-                confirmButtonText: "Удалить",
-                cancelButtonText: "Отменить",
-                cancelText: "Удаление списания времени было отменено"));
+                confirmButtonText: "Delete",
+                cancelButtonText: "Cancel",
+                cancelText: "The deletion of the timesheet was canceled"));
 }

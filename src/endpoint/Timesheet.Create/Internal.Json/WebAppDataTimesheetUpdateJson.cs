@@ -4,7 +4,7 @@ using System.Globalization;
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal sealed record class WebAppUpdateTimesheetDataJson
+internal sealed record class WebAppDataTimesheetUpdateJson
 {
     [JsonProperty("id")]
     public Guid Id { get; init; }

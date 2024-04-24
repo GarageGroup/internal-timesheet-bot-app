@@ -14,15 +14,15 @@ partial class TimesheetGetFlowStep
         chatFlow.AwaitDate(
             static context => new(
                 text: context.GetDateText(),
-                confirmButtonText: "Выбрать",
-                invalidDateText: "Не удалось распознать дату",
+                confirmButtonText: "Choose",
+                invalidDateText: "Failed to recognize the date",
                 defaultDate: DateOnly.FromDateTime(DateTime.Now),
                 placeholder: DatePlaceholder,
                 suggestions: context.CreateSuggestions())
             {
                 SkipStep = context.FlowState.Date is not null
             },
-            static (context, date) => "Дата: " + context.EncodeTextWithStyle(date.ToStringRussianCulture(), BotTextStyle.Bold),
+            static (context, date) => "Date: " + context.EncodeTextWithStyle(date.ToDisplayText(), BotTextStyle.Bold),
             static (state, date) => state with
             {
                 Date = date
@@ -32,15 +32,15 @@ partial class TimesheetGetFlowStep
     {
         if (context.IsMsteamsChannel())
         {
-            return "Выберите дату списания";
+            return "Choose the date";
         }
 
         if (context.IsTelegramChannel())
         {
-            return $"Выберите или введите дату списания в формате {DatePlaceholder}";
+            return $"Choose or enter the date in the format {DatePlaceholder}";
         }
 
-        return $"Введите дату списания в формате {DatePlaceholder}";
+        return $"Enter the date in the format {DatePlaceholder}";
     }
 
     private static IReadOnlyCollection<KeyValuePair<string, DateOnly>>[] CreateSuggestions(this ITurnContext context)
@@ -66,6 +66,6 @@ partial class TimesheetGetFlowStep
 
         KeyValuePair<string, DateOnly> CreateSuggestion(DateOnly date)
             =>
-            date == today ? new("Сегодня", date) : new(date.ToStringRussianCulture("dd.MM ddd").ToUpperInvariant(), date);
+            date == today ? new("Today", date) : new(date.ToDisplayText("dd.MM ddd").ToUpperInvariant(), date);
     }
 }

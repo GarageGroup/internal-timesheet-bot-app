@@ -22,7 +22,7 @@ partial class TimesheetCreateFlowStep
                     Type = project.GetProjectType(),
                     Id = project.Id,
                     Name = project.Name,
-                    DisplayTypeName = project.GetProjectType().ToStringRussianCulture(),
+                    DisplayTypeName = project.GetProjectType().ToDisplayText(),
                 }
             });
 
@@ -77,15 +77,15 @@ partial class TimesheetCreateFlowStep
             MapToFlowFailure)
         .Filter(
             static @out => @out.Projects.IsNotEmpty,
-            static _ => BotFlowFailure.From("Ничего не найдено. Попробуйте уточнить запрос"))
+            static _ => BotFlowFailure.From("Nothing found. Please refine your search query"))
         .MapSuccess(
             static @out => new LookupValueSetOption(
                 items: @out.Projects.Map(MapProjectItem),
-                choiceText: "Выберите проект"));
+                choiceText: "Choose a project"));
 
     private static string BuildProjectResultMessage(IChatFlowContext<TimesheetCreateFlowState> context, LookupValue projectValue)
         =>
-        $"{projectValue.GetProjectType().ToStringRussianCulture()}: {context.CreateBoldText(projectValue.Name)}";
+        $"{projectValue.GetProjectType().ToDisplayText()}: {context.CreateBoldText(projectValue.Name)}";
 
     private static LookupValue MapProjectItem(ProjectSetGetItem item)
         =>
@@ -108,15 +108,11 @@ partial class TimesheetCreateFlowStep
 
     private static BotFlowFailure MapToFlowFailure(Failure<ProjectSetGetFailureCode> failure)
         =>
-        (failure.FailureCode switch
-        {
-            ProjectSetGetFailureCode.NotAllowed
-                => "При поиске проектов произошла ошибка. У вашей учетной записи не достаточно разрешений. Обратитесь к администратору приложения",
-            ProjectSetGetFailureCode.TooManyRequests
-                => "Слишком много обращений к сервису. Попробуйте повторить попытку через несколько секунд",
-            _
-                => "При поиске проектов произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее"
-        })
-        .Pipe(
-            message => BotFlowFailure.From(message, failure.FailureMessage));
+        failure.SourceException.ToBotFlowFailure(
+            userMessage: failure.FailureCode switch
+            {
+                ProjectSetGetFailureCode.NotAllowed => NotAllowedFailureUserMessage,
+                _ => UnexpectedFailureUserMessage
+            },
+            logMessage: failure.FailureMessage);
 }
