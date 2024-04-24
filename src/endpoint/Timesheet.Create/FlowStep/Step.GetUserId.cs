@@ -11,7 +11,7 @@ partial class TimesheetCreateFlowStep
             {
                 Skip = context.FlowState.UserId is not null
             },
-            failureUserMessage: "Произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее",
+            failureUserMessage: UnexpectedFailureUserMessage,
             mapFlowState: static (flowState, user) => flowState with
             {
                 UserId = user.SystemUserId

@@ -2,7 +2,7 @@
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal readonly record struct WebAppCreateTimesheetDataJson
+internal readonly record struct WebAppDataTimesheetCreateJson
 {
     [JsonProperty("duration")]
     public decimal Duration { get; init; }

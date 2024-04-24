@@ -20,11 +20,23 @@ internal static partial class TimesheetCreateFlowStep
 
     private const int ProjectDays = 30;
 
-    private const string DatePlaceholder = "дд.мм.гг";
+    private const string DatePlaceholder = "dd.mm.yy";
 
-    private const string DefaultProjectMessage = "Нужно выбрать проект. Введите часть названия для поиска";
+    private const string DefaultProjectMessage
+        =
+        "Choose a project. Enter part of the name to search";
 
-    private const string ChooseProjectMessage = "Выберите проект или введите часть названия для поиска";
+    private const string ChooseProjectMessage
+        =
+        "Choose a project or enter part of the name to search";
+
+    private const string NotAllowedFailureUserMessage
+        =
+        "This operation is not allowed for your account. Please contact the administrator";
+
+    private const string UnexpectedFailureUserMessage
+        =
+        "An unexpected error occurred. Please contact the administrator or try again later";
 
     private static readonly IReadOnlyCollection<CultureInfo> AwailableCultures;
 
@@ -32,12 +44,8 @@ internal static partial class TimesheetCreateFlowStep
 
     private static readonly IReadOnlyCollection<IReadOnlyCollection<KeyValuePair<string, decimal>>> TeamsSuggestions;
 
-    private static readonly CultureInfo RussianCultureInfo;
-
     static TimesheetCreateFlowStep()
     {
-        RussianCultureInfo = CultureInfo.GetCultureInfo("ru-RU");
-
         AwailableCultures =
         [
             CultureInfo.GetCultureInfo("ru-RU"),
@@ -65,26 +73,26 @@ internal static partial class TimesheetCreateFlowStep
         =>
         DateOnly.FromDateTime(DateTime.Now);
 
-    private static string ToStringRussianCulture(this DateOnly date, string format)
+    private static string ToDisplayText(this DateOnly date, string format)
         =>
-        date.ToString(format, RussianCultureInfo);
+        date.ToString(format, CultureInfo.InvariantCulture);
 
-    private static string ToStringRussianCulture(this DateOnly date)
+    private static string ToDisplayText(this DateOnly date)
         =>
-        date.ToString("d MMMM yyyy", RussianCultureInfo);
+        date.ToString("d MMMM yyyy", CultureInfo.InvariantCulture);
 
-    private static string ToStringRussianCulture(this decimal value)
+    private static string ToDisplayText(this decimal value)
         =>
-        value.ToString("G", RussianCultureInfo);
+        value.ToString("G", CultureInfo.InvariantCulture);
 
-    private static string ToStringRussianCulture(this TimesheetProjectType projectType)
+    private static string ToDisplayText(this TimesheetProjectType projectType)
         =>
         projectType switch
         {
-            TimesheetProjectType.Opportunity => "Возможная сделка",
-            TimesheetProjectType.Lead => "Лид",
-            TimesheetProjectType.Incident => "Инцидент",
-            _ => "Проект"
+            TimesheetProjectType.Opportunity => "Opportunity",
+            TimesheetProjectType.Lead => "Lead",
+            TimesheetProjectType.Incident => "Incident",
+            _ => "Project"
         };
 
     private static string CreateBoldText(this ITurnContext turnContext, string message)

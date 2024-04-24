@@ -45,20 +45,18 @@ partial class TimesheetGetFlowStep
                 Id = timesheet.ProjectId,
                 Type = timesheet.ProjectType,
                 Name = timesheet.ProjectName,
-                DisplayTypeName = timesheet.ProjectType.ToStringRussianCulture()
+                DisplayTypeName = timesheet.ProjectType.ToDisplayText()
             },            
             Description = timesheet.Description
         };
 
     private static ChatFlowBreakState ToBreakState(Failure<TimesheetSetGetFailureCode> failure)
         =>
-        (failure.FailureCode switch
-        {
-            TimesheetSetGetFailureCode.NotAllowed
-                => "Данная операция не разрешена для вашей учетной записи. Обратитесь к администратору",
-            _
-                => "Произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее"
-        })
-        .Pipe(
-            message => ChatFlowBreakState.From(message, failure.FailureMessage, failure.SourceException));
+        failure.SourceException.ToChatFlowBreakState(
+            userMessage: failure.FailureCode switch
+            {
+                TimesheetSetGetFailureCode.NotAllowed => NotAllowedFailureUserMessage,
+                _ => UnexpectedFailureUserMessage
+            },
+            logMessage: failure.FailureMessage);
 }

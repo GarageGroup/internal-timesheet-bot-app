@@ -63,9 +63,9 @@ partial class TimesheetCreateChatFlow
         return null;
     }
 
-    private static WebAppUpdateTimesheetDataJson? GetWebAppUpdateResponseJson(IBotContext context)
+    private static WebAppDataTimesheetUpdateJson? GetWebAppUpdateResponseJson(IBotContext context)
     {
         var dataWebApp = TelegramWebAppResponse.FromChannelData(context.TurnContext.Activity.ChannelData);
-        return JsonConvert.DeserializeObject<WebAppUpdateTimesheetDataJson>((dataWebApp.Message?.WebAppData?.Data).OrEmpty());
+        return JsonConvert.DeserializeObject<WebAppDataTimesheetUpdateJson>((dataWebApp.Message?.WebAppData?.Data).OrEmpty());
     }
 }

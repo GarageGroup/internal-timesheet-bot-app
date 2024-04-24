@@ -10,7 +10,7 @@ internal static partial class TimesheetCreateChatFlow
         ICrmProjectApi crmProjectApi,
         ICrmTimesheetApi crmTimesheetApi,
         TimesheetCreateFlowOption option,
-        WebAppUpdateTimesheetDataJson? data)
+        WebAppDataTimesheetUpdateJson? data)
         =>
         chatFlow.Start(
             () => new()
@@ -28,7 +28,7 @@ internal static partial class TimesheetCreateChatFlow
         .AwaitDate()
         .AwaitProject(
             crmProjectApi)
-        .AwaitHourValue()
+        .AwaitDuration()
         .AwaitDescription(
             crmTimesheetApi)
         .ConfirmTimesheet()

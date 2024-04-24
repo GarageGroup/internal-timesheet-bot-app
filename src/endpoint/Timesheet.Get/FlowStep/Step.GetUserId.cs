@@ -7,7 +7,7 @@ partial class TimesheetGetFlowStep
     internal static ChatFlow<TimesheetGetFlowState> GetUserId(this ChatFlow<TimesheetGetFlowState> chatFlow)
         =>
         chatFlow.GetDataverseUserOrBreak(
-            "Произошла непредвиденная ошибка. Обратитесь к администратору или повторите попытку позднее",
+            UnexpectedFailureUserMessage,
             static (flowState, user) => flowState with
             {
                 UserId = user.SystemUserId

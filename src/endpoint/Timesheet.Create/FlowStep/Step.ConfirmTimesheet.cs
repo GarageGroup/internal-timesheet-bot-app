@@ -27,14 +27,29 @@ partial class TimesheetCreateFlowStep
         var webAppUrl = context.FlowState.BuildWebAppUrl();
         context.Logger.LogInformation("WebAppUrl: {webAppUrl}", webAppUrl);
 
+        if (context.FlowState.TimesheetId is null)
+        {
+            return new(
+                entity: context.InnerCreateTimesheetCardOption(
+                    headerText: "Create timesheet?",
+                    skipStep: context.FlowState.WithoutConfirmation),
+                buttons: new(
+                    confirmButtonText: "Create",
+                    cancelButtonText: "Cancel",
+                    cancelText: "The timesheet creation has been canceled")
+                {
+                    TelegramWebApp = new(webAppUrl)
+                });
+        }
+
         return new(
             entity: context.InnerCreateTimesheetCardOption(
-                headerText: context.FlowState.TimesheetId is null ? "Списать время?" : "Сохранить изменения?",
+                headerText: "Save changes?",
                 skipStep: context.FlowState.WithoutConfirmation),
             buttons: new(
-                confirmButtonText: context.FlowState.TimesheetId is null ? "Списать" : "Сохранить",
-                cancelButtonText: "Отменить",
-                cancelText: context.FlowState.TimesheetId is null ? "Списание времени было отменено" : "Изменение времени было отменено")
+                confirmButtonText: "Save",
+                cancelButtonText: "Cancel",
+                cancelText: "The timesheet change has been canceled")
             {
                 TelegramWebApp = new(webAppUrl)
             });
@@ -42,7 +57,7 @@ partial class TimesheetCreateFlowStep
 
     private static EntityCardOption CreateTimesheetCardOption(IChatFlowContext<TimesheetCreateFlowState> context)
         =>
-        context.InnerCreateTimesheetCardOption("Изменение списания времени", context.FlowState.WithoutConfirmation  is false);
+        context.InnerCreateTimesheetCardOption("The timesheet modification", context.FlowState.WithoutConfirmation  is false);
 
     private static EntityCardOption InnerCreateTimesheetCardOption(
         this IChatFlowContext<TimesheetCreateFlowState> context, string headerText, bool skipStep)
@@ -51,9 +66,9 @@ partial class TimesheetCreateFlowStep
             headerText: headerText,
             fieldValues:
             [
-                new((context.FlowState.Project?.Type.ToStringRussianCulture()).OrEmpty(), context.FlowState.Project?.Name),
-                new("Дата", context.FlowState.Date?.ToStringRussianCulture()),
-                new("Время", context.FlowState.ValueHours?.ToStringRussianCulture() + "ч"),
+                new((context.FlowState.Project?.Type.ToDisplayText()).OrEmpty(), context.FlowState.Project?.Name),
+                new("Date", context.FlowState.Date?.ToDisplayText()),
+                new("Duration", context.FlowState.ValueHours?.ToDisplayText() + "h"),
                 new(string.Empty, context.FlowState.Description?.Value)
             ])
         {
@@ -63,7 +78,7 @@ partial class TimesheetCreateFlowStep
     private static Result<TimesheetCreateFlowState, BotFlowFailure> GetWebAppData(
         IChatFlowContext<TimesheetCreateFlowState> context, string webAppData)
     {
-        var timesheet = JsonConvert.DeserializeObject<WebAppCreateTimesheetDataJson>(webAppData);
+        var timesheet = JsonConvert.DeserializeObject<WebAppDataTimesheetCreateJson>(webAppData);
 
         return context.FlowState with
         {
@@ -88,7 +103,7 @@ partial class TimesheetCreateFlowStep
 
     private static string BuildWebAppUrl(this TimesheetCreateFlowState state)
     {
-        var timesheet = new WebAppCreateTimesheetDataJson
+        var timesheet = new WebAppDataTimesheetCreateJson
         {
             Description = state.Description?.Value.OrEmpty(),
             Duration = state.ValueHours.GetValueOrDefault(),
@@ -99,7 +114,7 @@ partial class TimesheetCreateFlowStep
         return $"{state.UrlWebApp}/updateTimesheetForm?data={HttpUtility.UrlEncode(data)}&date={state.DateText}&days={state.LimitationDay}";
     }
 
-    private static string CompressDataJson(this WebAppCreateTimesheetDataJson data)
+    private static string CompressDataJson(this WebAppDataTimesheetCreateJson data)
     {
         var json = JsonConvert.SerializeObject(data);
 

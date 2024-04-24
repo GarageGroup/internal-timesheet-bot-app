@@ -5,17 +5,11 @@ namespace GarageGroup.Internal.Timesheet;
 
 internal static partial class TimesheetDeleteFlowStep
 {
-    private static readonly CultureInfo RussianCultureInfo;
-
-    static TimesheetDeleteFlowStep()
+    private static string ToDisplayText(this DateOnly date)
         =>
-        RussianCultureInfo = CultureInfo.GetCultureInfo("ru-RU");
+        date.ToString("d MMMM yyyy", CultureInfo.InvariantCulture);
 
-    private static string ToStringRussianCulture(this DateOnly date)
+    private static string ToDisplayText(this decimal value)
         =>
-        date.ToString("d MMMM yyyy", RussianCultureInfo);
-
-    private static string ToStringRussianCulture(this decimal value)
-        =>
-        value.ToString("G", RussianCultureInfo);
+        value.ToString("G", CultureInfo.InvariantCulture);
 }

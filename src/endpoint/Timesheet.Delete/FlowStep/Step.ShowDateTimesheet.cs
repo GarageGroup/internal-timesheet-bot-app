@@ -19,7 +19,7 @@ partial class TimesheetDeleteFlowStep
         var contextData = new Dictionary<string, string?>
         {
             ["dateText"] = context.FlowState.DateText,
-            ["messageText"] = "Списание времени успешно удалено"
+            ["messageText"] = "Timesheet successfully deleted"
         };
 
         var stateProperty = botContext.ConversationState.CreateProperty<Dictionary<string, string?>>("timesheetData");
