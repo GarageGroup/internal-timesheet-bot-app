@@ -105,6 +105,7 @@ partial class TimesheetCreateFlowStep
     {
         var timesheet = new WebAppDataTimesheetCreateJson
         {
+            Id = state.TimesheetId,
             Description = state.Description?.Value.OrEmpty(),
             Duration = state.ValueHours.GetValueOrDefault(),
             Project = state.Project

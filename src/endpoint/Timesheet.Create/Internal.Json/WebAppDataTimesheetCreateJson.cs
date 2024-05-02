@@ -1,9 +1,13 @@
 ﻿using Newtonsoft.Json;
+using System;
 
 namespace GarageGroup.Internal.Timesheet;
 
 internal readonly record struct WebAppDataTimesheetCreateJson
 {
+    [JsonProperty("id")]
+    public Guid? Id { get; init; }
+
     [JsonProperty("duration")]
     public decimal Duration { get; init; }
 

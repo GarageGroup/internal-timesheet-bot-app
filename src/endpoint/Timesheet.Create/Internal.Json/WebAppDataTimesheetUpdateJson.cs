@@ -7,10 +7,10 @@ namespace GarageGroup.Internal.Timesheet;
 internal sealed record class WebAppDataTimesheetUpdateJson
 {
     [JsonProperty("id")]
-    public Guid Id { get; init; }
+    public Guid? Id { get; init; }
 
     [JsonProperty("duration")]
-    public decimal Duration { get; init; }
+    public decimal? Duration { get; init; }
 
     [JsonProperty("project")]
     public TimesheetProjectState? Project { get; init; }
