@@ -25,6 +25,9 @@ internal sealed record class TimesheetCreateFlowState
         init => Date = value is null ? null : DateOnly.Parse(value, CultureInfo.InvariantCulture);
     }
 
+    [JsonProperty("showSelectedDate")]
+    public bool ShowSelectedDate { get; init; }
+
     [JsonProperty("valueHours")]
     public decimal? ValueHours { get; init; }
 

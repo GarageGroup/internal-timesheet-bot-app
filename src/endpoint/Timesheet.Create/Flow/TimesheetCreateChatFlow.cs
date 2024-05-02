@@ -20,6 +20,7 @@ internal static partial class TimesheetCreateChatFlow
                 ValueHours = data?.Duration,
                 Project = data?.Project,
                 Date = data?.Date,
+                ShowSelectedDate = data?.Date is not null && data?.Id is null,
                 LimitationDay = option.LimitationDay,
                 UrlWebApp = option.UrlWebApp,
                 WithoutConfirmation = data?.Project is not null
