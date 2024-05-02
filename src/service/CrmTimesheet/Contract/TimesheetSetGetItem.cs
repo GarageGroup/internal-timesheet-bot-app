@@ -11,7 +11,9 @@ public sealed record class TimesheetSetGetItem
         TimesheetProjectType projectType,
         [AllowNull] string projectName,
         [AllowNull] string description,
-        Guid id)
+        Guid id,
+        [AllowNull] StateCode? incidentStateCode,
+        StateCode timesheetStateCode)
     { 
         ProjectId = projectId;
         ProjectType = projectType;
@@ -19,6 +21,8 @@ public sealed record class TimesheetSetGetItem
         Duration = duration;
         Description = description.OrEmpty();
         Id = id;
+        IncidentStateCode = incidentStateCode;
+        TimesheetStateCode = timesheetStateCode;
     }
 
     public Guid ProjectId { get; }
@@ -32,4 +36,8 @@ public sealed record class TimesheetSetGetItem
     public string Description { get; }
 
     public Guid Id{ get; }
+
+    public StateCode? IncidentStateCode { get; }
+
+    public StateCode TimesheetStateCode { get; }
 }

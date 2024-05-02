@@ -6,6 +6,11 @@ namespace GarageGroup.Internal.Timesheet;
 
 partial record class DbTimesheetProject
 {
+    internal static DbRawFilter BuildIncidentStateCodeFilter()
+        =>
+        new($"({AliasName}.regardingobjecttypecode <> {TimesheetProjectType.Incident:D} " +
+            $"OR EXISTS (SELECT TOP 1 1 FROM incident AS i WHERE {AliasName}.regardingobjectid = i.incidentid AND i.statecode = 0))");
+
     internal static DbParameterArrayFilter BuildAllowedProjectTypeSetFilter()
     {
         return new(

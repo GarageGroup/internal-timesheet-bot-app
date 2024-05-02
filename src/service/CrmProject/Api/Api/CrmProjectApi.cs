@@ -7,9 +7,13 @@ using TSqlApi = ISqlQueryEntitySetSupplier;
 
 internal sealed partial class CrmProjectApi(TDataverseApi dataverseApi, TSqlApi sqlApi) : ICrmProjectApi
 {
-    private static readonly IDbFilter AllowedProjectTypeSetFilter;
+    private static readonly DbParameterArrayFilter AllowedProjectTypeSetFilter;
+
+    private static readonly DbRawFilter IncidentStateCodeFilter;
 
     static CrmProjectApi()
-        =>
+    {
         AllowedProjectTypeSetFilter = DbTimesheetProject.BuildAllowedProjectTypeSetFilter();
+        IncidentStateCodeFilter = DbTimesheetProject.BuildIncidentStateCodeFilter();
+    }
 }

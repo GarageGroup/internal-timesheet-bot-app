@@ -16,4 +16,10 @@ internal sealed record class TimesheetJson
 
     [JsonProperty("description")]
     public string? Description { get; init; }
+
+    [JsonProperty("incidentStateCode")]
+    public StateCode? IncidentStateCode { get; init; }
+
+    [JsonProperty("timesheetStateCode")]
+    public StateCode TimesheetStateCode { get; init; }
 }
