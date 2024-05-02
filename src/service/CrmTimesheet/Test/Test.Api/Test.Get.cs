@@ -32,7 +32,13 @@ partial class CrmTimesheetApiTest
                 "t.regardingobjectidname AS ProjectName",
                 "t.subject AS Subject",
                 "t.gg_description AS Description",
-                "t.activityid AS Id"
+                "t.activityid AS Id",
+                "i.statecode AS IncidentStateCode",
+                "t.statecode AS TimesheetStateCode"
+            ],
+            JoinedTables =
+            [ 
+                new (DbJoinType.Left, "incident", "i", "t.regardingobjectid = i.incidentid")
             ],
             Filter = new DbCombinedFilter(DbLogicalOperator.And)
             {

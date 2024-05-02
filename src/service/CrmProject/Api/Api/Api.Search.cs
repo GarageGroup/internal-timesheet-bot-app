@@ -17,7 +17,8 @@ partial class CrmProjectApi
             static @in => new($"*{@in.SearchText}*")
             {
                 Top = @in.Top,
-                Entities = DataverseProjectSearch.EntityNames
+                Entities = DataverseProjectSearch.EntityNames,
+                Filter = DataverseProjectSearch.Filter
             })
         .PipeValue(
             dataverseApi.Impersonate(input.UserId).SearchAsync)

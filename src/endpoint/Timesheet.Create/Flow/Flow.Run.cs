@@ -54,7 +54,7 @@ partial class TimesheetCreateChatFlow
         }
 
         var timesheet = GetWebAppUpdateResponseJson(context);
-        if (timesheet is not null && timesheet.Command?.Equals("updatetimesheet") is true)
+        if (string.Equals(timesheet?.Command, "updatetimesheet", StringComparison.InvariantCultureIgnoreCase))
         {
             await context.TurnContext.DeleteActivityAsync(context.TurnContext.Activity.Id, cancellationToken).ConfigureAwait(false);
             return starter;

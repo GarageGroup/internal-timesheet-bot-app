@@ -25,4 +25,10 @@ partial record class DbTimesheet
 
     [DbSelect(All, AliasName, $"{AliasName}.activityid")]
     public Guid Id { get; init; }
+
+    [DbSelect(All, IncidentAlias, $"{IncidentAlias}.statecode")]
+    public StateCode? IncidentStateCode { get; init; }
+
+    [DbSelect(All, AliasName, $"{AliasName}.statecode")]
+    public StateCode TimesheetStateCode { get; init; }
 }

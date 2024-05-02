@@ -16,7 +16,7 @@ internal static partial class TimesheetCreateChatFlow
             () => new()
             {
                 TimesheetId = data?.Id,
-                Description = data is null ? null : new(data.Description),
+                Description = data is null ? null : data.Description is null ? null : new(data.Description),
                 ValueHours = data?.Duration,
                 Project = data?.Project,
                 Date = data?.Date,

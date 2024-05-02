@@ -43,5 +43,7 @@ partial class CrmTimesheetApi
             projectType: (TimesheetProjectType)dbTimesheet.ProjectTypeCode,
             projectName: dbTimesheet.Subject.OrNullIfEmpty() ?? dbTimesheet.ProjectName, 
             description: dbTimesheet.Description,
-            id: dbTimesheet.Id);
+            id: dbTimesheet.Id,
+            incidentStateCode: dbTimesheet.IncidentStateCode,
+            timesheetStateCode: dbTimesheet.TimesheetStateCode);
 }

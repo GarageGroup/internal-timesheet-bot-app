@@ -17,7 +17,8 @@ partial class CrmProjectApiSource
                 new("**")
                 {
                     Entities = new("gg_project", "lead", "opportunity", "incident"),
-                    Top = 3
+                    Top = 3,
+                    Filter = "objecttypecode ne 112 or statecode eq 0"
                 }
             },
             {
@@ -28,7 +29,8 @@ partial class CrmProjectApiSource
                 new("**")
                 {
                     Entities = new("gg_project", "lead", "opportunity", "incident"),
-                    Top = -2
+                    Top = -2,
+                    Filter = "objecttypecode ne 112 or statecode eq 0"
                 }
             },
             {
@@ -39,7 +41,8 @@ partial class CrmProjectApiSource
                 new("*Some text*")
                 {
                     Entities = new("gg_project", "lead", "opportunity", "incident"),
-                    Top = 15
+                    Top = 15,
+                    Filter = "objecttypecode ne 112 or statecode eq 0"
                 }
             }
         };

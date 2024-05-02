@@ -45,7 +45,9 @@ partial class CrmProjectApiSource
                                 fieldName: "t.regardingobjecttypecode",
                                 @operator: DbArrayFilterOperator.In,
                                 fieldValues: new(3, 4, 112, 10912),
-                                parameterPrefix: "projectTypeCode")
+                                parameterPrefix: "projectTypeCode"),
+                            new DbRawFilter("(t.regardingobjecttypecode <> 112 " +
+                                "OR EXISTS (SELECT TOP 1 1 FROM incident AS i WHERE t.regardingobjectid = i.incidentid AND i.statecode = 0))")
                         ]
                     },
                     GroupByFields =
