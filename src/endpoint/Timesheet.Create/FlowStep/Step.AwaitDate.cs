@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GarageGroup.Infra.Bot.Builder;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Schema;
 
 namespace GarageGroup.Internal.Timesheet;
 
@@ -11,7 +12,14 @@ partial class TimesheetCreateFlowStep
     internal static ChatFlow<TimesheetCreateFlowState> AwaitDate(
         this ChatFlow<TimesheetCreateFlowState> chatFlow)
         =>
-        chatFlow.AwaitDate(
+        chatFlow.SendActivityOrSkip(
+            BuildSelectedDateActivity)
+        .MapFlowState(
+            static state => state with
+            {
+                ShowSelectedDate = false
+            })
+        .AwaitDate(
             static context => new(
                 text: context.GetDateText(),
                 confirmButtonText: "Choose",
@@ -28,6 +36,22 @@ partial class TimesheetCreateFlowStep
             {
                 Date = date
             });
+
+    private static Activity? BuildSelectedDateActivity(IChatFlowContext<TimesheetCreateFlowState> context)
+    {
+        if (context.FlowState.Date is null || context.FlowState.ShowSelectedDate is false || context.IsNotTelegramChannel())
+        {
+            return null;
+        }
+
+        var parameters = new TelegramParameters($"Date: <b>{context.FlowState.Date.Value.ToDisplayText()}</b>")
+        {
+            ParseMode = TelegramParseMode.Html,
+            ReplyMarkup = new TelegramReplyKeyboardRemove()
+        };
+
+        return parameters.BuildActivity();
+    }
 
     private static string GetDateText(this ITurnContext context)
     {
