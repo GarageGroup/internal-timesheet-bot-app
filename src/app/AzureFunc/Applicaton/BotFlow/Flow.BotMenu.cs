@@ -12,7 +12,7 @@ partial class Application
     private static BotMenuData CreateMenuData()
         =>
         new(
-            text: "Меню бота",
+            text: "Bot commands",
             commands:
             [
                 new(Guid.Parse("31f7730f-5d18-468c-b540-1cd03e27c268"), TimesheetCreateCommand, "Create timesheet"),
