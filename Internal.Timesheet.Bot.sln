@@ -3,22 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".teams", ".teams", "{29C5E8DE-5450-4C46-97A7-A25DE54C3DFC}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "prod", "prod", "{2388D7B3-F531-46FD-ACE2-457B8F409317}"
-	ProjectSection(SolutionItems) = preProject
-		teams\prod\gg-icon-color.png = teams\prod\gg-icon-color.png
-		teams\prod\gg-icon-outline.png = teams\prod\gg-icon-outline.png
-		teams\prod\manifest.json = teams\prod\manifest.json
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{62A6B896-B989-43D6-8E6F-BDD20B624057}"
-	ProjectSection(SolutionItems) = preProject
-		teams\test\icon-color.png = teams\test\icon-color.png
-		teams\test\icon-outline.png = teams\test\icon-outline.png
-		teams\test\manifest.json = teams\test\manifest.json
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "app", "app", "{E87022B0-BD92-4A69-9067-C0F63AE065CC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "endpoint", "endpoint", "{7D9CDEDB-482B-476A-BB7F-662F7F838FE1}"
@@ -114,8 +98,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{2388D7B3-F531-46FD-ACE2-457B8F409317} = {29C5E8DE-5450-4C46-97A7-A25DE54C3DFC}
-		{62A6B896-B989-43D6-8E6F-BDD20B624057} = {29C5E8DE-5450-4C46-97A7-A25DE54C3DFC}
 		{A983929D-6468-4F3B-B70C-A550AD9F6426} = {7D9CDEDB-482B-476A-BB7F-662F7F838FE1}
 		{A62224A6-203C-4AA3-809E-D1730330DEBE} = {A983929D-6468-4F3B-B70C-A550AD9F6426}
 		{7012B7E9-F5CC-420D-A0A3-AB4349465E7C} = {7D9CDEDB-482B-476A-BB7F-662F7F838FE1}
