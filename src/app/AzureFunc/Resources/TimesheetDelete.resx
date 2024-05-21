@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="DeletionHeaderText" xml:space="preserve">
+    <value>Delete timesheet?</value>
+  </data>
+  <data name="DeletionConfirmButton" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="DeletionCancelButton" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="DeletionCancelText" xml:space="preserve">
+    <value>The timesheet deletion has been canceled</value>
+  </data>
+  <data name="DeletionSuccessText" xml:space="preserve">
+    <value>The timesheet has been successfully deleted</value>
+  </data>
+  <data name="DateFieldName" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="DurationFieldName" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="HourSymbol" xml:space="preserve">
+    <value>h</value>
+  </data>
+</root>

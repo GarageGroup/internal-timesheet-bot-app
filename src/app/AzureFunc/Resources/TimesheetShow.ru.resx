@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Today" xml:space="preserve">
+    <value>Сегодня</value>
+  </data>
+  <data name="DateChoiceText" xml:space="preserve">
+    <value>Выберите или введите дату в формате дд.мм.гг</value>
+  </data>
+  <data name="InvalidDateText" xml:space="preserve">
+    <value>Не удалось распознать дату</value>
+  </data>
+  <data name="NotAllowedText" xml:space="preserve">
+    <value>Данная операция не разрешена для вашей учетной записи. Обратитесь к администратору</value>
+  </data>
+  <data name="HourSymbol" xml:space="preserve">
+    <value>ч</value>
+  </data>
+  <data name="Opportunity" xml:space="preserve">
+    <value>Возможная сделка</value>
+  </data>
+  <data name="Lead" xml:space="preserve">
+    <value>Лид</value>
+  </data>
+  <data name="Incident" xml:space="preserve">
+    <value>Инцидент</value>
+  </data>
+  <data name="Project" xml:space="preserve">
+    <value>Проект</value>
+  </data>
+  <data name="NoTimesheetsTemplate" xml:space="preserve">
+    <value>Нет списаний времени за {0}</value>
+  </data>
+  <data name="TotalMessageTemplate" xml:space="preserve">
+    <value>Всего за {0}</value>
+  </data>
+  <data name="EditButtonName" xml:space="preserve">
+    <value>Редактировать</value>
+  </data>
+  <data name="TimesheetCommandName" xml:space="preserve">
+    <value>Списать время</value>
+  </data>
+</root>

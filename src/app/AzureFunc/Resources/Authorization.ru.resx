@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="UserDisabled" xml:space="preserve">
+    <value>Ваша учетная запись заблокирована</value>
+  </data>
+  <data name="ChooseLanguage" xml:space="preserve">
+    <value>Выберите язык</value>
+  </data>
+  <data name="ChosenLanguage" xml:space="preserve">
+    <value>Выбранный язык</value>
+  </data>
+  <data name="SignInText" xml:space="preserve">
+    <value>Перейдите по ссылку и войдите в свою учетную запись Garage Group</value>
+  </data>
+  <data name="SignInButton" xml:space="preserve">
+    <value>Войти</value>
+  </data>
+  <data name="AuthorizationError" xml:space="preserve">
+    <value>Не удалось авторизоваться. Повторите попытку или обратитесь к администратору системы</value>
+  </data>
+  <data name="UserNotFound" xml:space="preserve">
+    <value>Пользователь не найден в Dataverse. Пожалуйста, обратитесь к администратору системы</value>
+  </data>
+  <data name="UnexpectedError" xml:space="preserve">
+    <value>Произошла неожиданная ошибка при попытке авторизоваться. Пожалуйста, обратитесь к администратору системы</value>
+  </data>
+  <data name="AuthorizationSuccess" xml:space="preserve">
+    <value>{0}, авторизация прошла успешно!</value>
+  </data>
+  <data name="SignOutSuccess" xml:space="preserve">
+    <value>Вы вышли из учетной записи</value>
+  </data>
+</root>

@@ -17,8 +17,7 @@ public static partial class CrmTimesheetApiTest
                 type: TimesheetProjectType.Project,
                 displayName: "Some project name"),
             duration: 9,
-            description: "Some description",
-            channel: TimesheetChannel.Telegram);
+            description: "Some description");
 
     private static readonly TimesheetDeleteIn SomeTimesheetDeleteInput
         =
@@ -50,15 +49,6 @@ public static partial class CrmTimesheetApiTest
             projectId: new("6f8f07d6-b7e4-4b00-a829-e680c0375d1e"),
             minDate: new(2023, 07, 24),
             maxDate: new(2023, 08, 01));
-
-    private static readonly CrmTimesheetApiOption SomeOption
-        =
-        new(
-            channelCodes:
-            [
-                new(TimesheetChannel.Teams, 167001),
-                new(TimesheetChannel.Telegram, 167002)
-            ]);
 
     private static readonly FlatArray<DbTimesheet> SomeDbTimesheetSet
         =

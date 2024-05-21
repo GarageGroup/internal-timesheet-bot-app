@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="DateChoiceText" xml:space="preserve">
+    <value>Choose or enter the date in the format dd.mm.yy</value>
+  </data>
+  <data name="InvalidDateText" xml:space="preserve">
+    <value>Failed to recognize the date</value>
+  </data>
+  <data name="NotAllowedText" xml:space="preserve">
+    <value>This operation is not allowed for your account. Please contact the administrator</value>
+  </data>
+  <data name="HourSymbol" xml:space="preserve">
+    <value>h</value>
+  </data>
+  <data name="Opportunity" xml:space="preserve">
+    <value>Opportunity</value>
+  </data>
+  <data name="Lead" xml:space="preserve">
+    <value>Lead</value>
+  </data>
+  <data name="Incident" xml:space="preserve">
+    <value>Incident</value>
+  </data>
+  <data name="Project" xml:space="preserve">
+    <value>Project</value>
+  </data>
+  <data name="NoTimesheetsTemplate" xml:space="preserve">
+    <value>No timesheets for {0}</value>
+  </data>
+  <data name="TotalMessageTemplate" xml:space="preserve">
+    <value>Total for {0}</value>
+  </data>
+  <data name="EditButtonName" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="TimesheetCommandName" xml:space="preserve">
+    <value>Create timesheet</value>
+  </data>
+</root>

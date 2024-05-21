@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="DeletionHeaderText" xml:space="preserve">
+    <value>Удалить списание времени?</value>
+  </data>
+  <data name="DeletionConfirmButton" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="DeletionCancelButton" xml:space="preserve">
+    <value>Отменить</value>
+  </data>
+  <data name="DeletionCancelText" xml:space="preserve">
+    <value>Удаление списания времени отменено</value>
+  </data>
+  <data name="DeletionSuccessText" xml:space="preserve">
+    <value>Списание времени удалено успешно</value>
+  </data>
+  <data name="DateFieldName" xml:space="preserve">
+    <value>Дата</value>
+  </data>
+  <data name="DurationFieldName" xml:space="preserve">
+    <value>Длительность</value>
+  </data>
+  <data name="HourSymbol" xml:space="preserve">
+    <value>ч</value>
+  </data>
+</root>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="ErrorMessage" xml:space="preserve">
+    <value>При выполнении бота произошла непредвиденная ошибка</value>
+  </data>
+  <data name="CommandStopped" xml:space="preserve">
+    <value>Выполнение команды было остановлено</value>
+  </data>
+  <data name="MenuHeader" xml:space="preserve">
+    <value>Команды бота</value>
+  </data>
+  <data name="TimesheetCreateMenuDescription" xml:space="preserve">
+    <value>Списать время</value>
+  </data>
+  <data name="TimesheetShowMenuDescription" xml:space="preserve">
+    <value>Показать мои списания времени</value>
+  </data>
+  <data name="BotInfoMenuDescription" xml:space="preserve">
+    <value>Информация о боте</value>
+  </data>
+  <data name="StopMenuDescription" xml:space="preserve">
+    <value>Остановить операцию</value>
+  </data>
+  <data name="SignOutMenuDescription" xml:space="preserve">
+    <value>Выйти из учетной записи</value>
+  </data>
+  <data name="BotName" xml:space="preserve">
+    <value>Название</value>
+  </data>
+  <data name="BotDescription" xml:space="preserve">
+    <value>Описание</value>
+  </data>
+  <data name="BotDescriptionValue" xml:space="preserve">
+    <value>Бот учета рабочего времени Garage Group</value>
+  </data>
+  <data name="BotVersion" xml:space="preserve">
+    <value>Версия</value>
+  </data>
+  <data name="BotBuildTime" xml:space="preserve">
+    <value>Время сборки</value>
+  </data>
+</root>

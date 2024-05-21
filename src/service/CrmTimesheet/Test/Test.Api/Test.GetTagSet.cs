@@ -13,7 +13,7 @@ partial class CrmTimesheetApiTest
     public static async Task GetTagSetAsync_ExpectSqlApiCalledOnce()
     {
         var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(SomeDbTimesheetTagSet);
-        var api = new CrmTimesheetApi(Mock.Of<IDataverseApiClient>(), mockSqlApi.Object, SomeOption);
+        var api = new CrmTimesheetApi(Mock.Of<IDataverseApiClient>(), mockSqlApi.Object);
 
         var input = new TimesheetTagSetGetIn(
             userId: new("82ee3d26-17f1-4e2f-adb2-eeea5119a512"),
@@ -60,7 +60,7 @@ partial class CrmTimesheetApiTest
         var dbFailure = sourceException.ToFailure("Some failure text");
 
         var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(dbFailure);
-        var api = new CrmTimesheetApi(Mock.Of<IDataverseApiClient>(), mockSqlApi.Object, SomeOption);
+        var api = new CrmTimesheetApi(Mock.Of<IDataverseApiClient>(), mockSqlApi.Object);
 
         var actual = await api.GetTagSetAsync(SomeTimesheetTagSetGetInput, default);
         var expected = Failure.Create("Some failure text", sourceException);
@@ -74,7 +74,7 @@ partial class CrmTimesheetApiTest
         FlatArray<DbTimesheetTag> dbTimesheetTags, TimesheetTagSetGetOut expected)
     {
         var mockSqlApi = BuildMockSqlApi<DbTimesheetTag>(dbTimesheetTags);
-        var api = new CrmTimesheetApi(Mock.Of<IDataverseApiClient>(), mockSqlApi.Object, SomeOption);
+        var api = new CrmTimesheetApi(Mock.Of<IDataverseApiClient>(), mockSqlApi.Object);
 
         var actual = await api.GetTagSetAsync(SomeTimesheetTagSetGetInput, default);
         Assert.StrictEqual(expected, actual);

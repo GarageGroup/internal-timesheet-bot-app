@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="ErrorMessage" xml:space="preserve">
+    <value>An unexpected error occurred while running the bot</value>
+  </data>
+  <data name="CommandStopped" xml:space="preserve">
+    <value>Command was stopped</value>
+  </data>
+  <data name="MenuHeader" xml:space="preserve">
+    <value>Bot commands</value>
+  </data>
+  <data name="TimesheetCreateMenuDescription" xml:space="preserve">
+    <value>Create timesheet</value>
+  </data>
+  <data name="TimesheetShowMenuDescription" xml:space="preserve">
+    <value>Show my timesheets</value>
+  </data>
+  <data name="BotInfoMenuDescription" xml:space="preserve">
+    <value>Information about the bot</value>
+  </data>
+  <data name="StopMenuDescription" xml:space="preserve">
+    <value>Stop operation</value>
+  </data>
+  <data name="SignOutMenuDescription" xml:space="preserve">
+    <value>Sign out of your account</value>
+  </data>
+  <data name="BotName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="BotDescription" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="BotVersion" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="BotBuildTime" xml:space="preserve">
+    <value>Build time</value>
+  </data>
+</root>

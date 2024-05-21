@@ -4,5 +4,5 @@ public enum StateCode
 {
     Active = 0,
 
-    Canceled = 2,
+    Canceled = 2
 }

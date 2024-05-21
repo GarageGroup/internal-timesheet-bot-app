@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="UserDisabled" xml:space="preserve">
+    <value>Your account is blocked</value>
+  </data>
+  <data name="ChooseLanguage" xml:space="preserve">
+    <value>Choose the language</value>
+  </data>
+  <data name="ChosenLanguage" xml:space="preserve">
+    <value>Chosen language</value>
+  </data>
+  <data name="SignInText" xml:space="preserve">
+    <value>Follow the link and sign in with your Garage Group account</value>
+  </data>
+  <data name="SignInButton" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="AuthorizationError" xml:space="preserve">
+    <value>Failed to authenticate. Please try again later or contact the administrator</value>
+  </data>
+  <data name="UserNotFound" xml:space="preserve">
+    <value>User was not found in Dataverse. Please contact the administrator</value>
+  </data>
+  <data name="UnexpectedError" xml:space="preserve">
+    <value>An unexpected authorization error occurred. Please contact the administrator</value>
+  </data>
+  <data name="AuthorizationSuccess" xml:space="preserve">
+    <value>{0}, authorization was successful!</value>
+  </data>
+  <data name="SignOutSuccess" xml:space="preserve">
+    <value>You have signed out of your account</value>
+  </data>
+</root>
