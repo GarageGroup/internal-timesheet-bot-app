@@ -114,11 +114,14 @@ partial class TimesheetShowFlowStep
             date: date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             dateText: date.ToString(DateFormat, context.User.Culture),
             timesheets: state.Timesheets,
-            allowedDays: state.LimitationDayOfMonth,
-            language: context.User.Culture.TwoLetterISOLanguageName);
+            allowedDays: state.LimitationDayOfMonth);
 
         var data = webAppData.CompressDataJson();
-        return context.WebApp.BuildUrl("selectUpdateTimesheet", [new("data", HttpUtility.UrlEncode(data))]);
+        return context.WebApp.BuildUrl("selectUpdateTimesheet", 
+            [
+                new("data", HttpUtility.UrlEncode(data)), 
+                new("language", context.User.Culture.TwoLetterISOLanguageName)
+            ]);
     }
 
     private static string CompressDataJson(this WebAppTimesheetsDataJson data)

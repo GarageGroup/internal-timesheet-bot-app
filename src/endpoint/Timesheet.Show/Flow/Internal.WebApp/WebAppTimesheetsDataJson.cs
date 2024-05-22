@@ -10,14 +10,12 @@ internal sealed record class WebAppTimesheetsDataJson
         [AllowNull] string date,
         [AllowNull] string dateText,
         [AllowNull] FlatArray<TimesheetJson> timesheets,
-        int allowedDays,
-        [AllowNull] string language)
+        int allowedDays)
     {
         Date = date.OrEmpty();
         DateText = dateText.OrEmpty();
         Timesheets = timesheets;
         AllowedDays = allowedDays;
-        Language = language.OrEmpty();
     }
 
     [JsonPropertyName("d")]
@@ -31,7 +29,4 @@ internal sealed record class WebAppTimesheetsDataJson
 
     [JsonPropertyName("ad")]
     public int AllowedDays { get; }
-
-    [JsonPropertyName("l")]
-    public string Language { get; }
 }

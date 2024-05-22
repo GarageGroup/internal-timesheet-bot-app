@@ -80,7 +80,8 @@ partial class TimesheetCreateFlowStep
             [
                 new("data", HttpUtility.UrlEncode(data)),
                 new("date", context.FlowState.Date.GetValueOrDefault().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
-                new("days", context.FlowState.LimitationDayOfMonth.ToString(CultureInfo.InvariantCulture))
+                new("days", context.FlowState.LimitationDayOfMonth.ToString(CultureInfo.InvariantCulture)),
+                new("language", context.User.Culture.TwoLetterISOLanguageName)
             ]);
 
         context.Logger.LogInformation("WebAppUrl: {webAppUrl}", webAppUrl);
