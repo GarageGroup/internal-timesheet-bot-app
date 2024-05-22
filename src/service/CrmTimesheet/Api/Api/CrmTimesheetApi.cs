@@ -6,9 +6,11 @@ namespace GarageGroup.Internal.Timesheet;
 
 using TSqlApi = ISqlQueryEntitySetSupplier;
 
-internal sealed partial class CrmTimesheetApi(IDataverseApiClient dataverseApi, TSqlApi sqlApi, CrmTimesheetApiOption option) : ICrmTimesheetApi
+internal sealed partial class CrmTimesheetApi(IDataverseApiClient dataverseApi, TSqlApi sqlApi) : ICrmTimesheetApi
 {
     private const string TagStartSymbol = "#";
+
+    private const int TelegramChannelCode = 140120000;
 
     private static readonly Regex TagRegex;
 

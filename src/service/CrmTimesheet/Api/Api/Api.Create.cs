@@ -28,23 +28,10 @@ partial class CrmTimesheetApi
             Date = input.Date,
             Description = input.Description.OrNullIfEmpty(),
             Duration = input.Duration,
-            ChannelCode = GetChannelCode(@input.Channel)
+            ChannelCode = TelegramChannelCode
         };
 
         return BindProjectOrFailure<TimesheetCreateFailureCode>(timesheet, input.Project);
-
-        int? GetChannelCode(TimesheetChannel channel)
-        {
-            foreach (var channelCode in option.ChannelCodes)
-            {
-                if (channelCode.Key == channel)
-                {
-                    return channelCode.Value;
-                }
-            }
-
-            return null;
-        }
     }
 
     private static TimesheetCreateFailureCode ToTimesheetCreateFailureCode(DataverseFailureCode dataverseFailureCode)

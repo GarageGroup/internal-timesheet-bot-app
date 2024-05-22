@@ -5,7 +5,7 @@ namespace GarageGroup.Internal.Timesheet.Service.CrmTimesheet.Test;
 
 partial class CrmTimesheetApiSource
 {
-    public static TheoryData<TimesheetCreateIn, CrmTimesheetApiOption, DataverseEntityCreateIn<TimesheetJson>> InputCreateTestData
+    public static TheoryData<TimesheetCreateIn, DataverseEntityCreateIn<TimesheetJson>> InputCreateTestData
         =>
         new()
         {
@@ -18,9 +18,7 @@ partial class CrmTimesheetApiSource
                         type: TimesheetProjectType.Lead,
                         displayName: "Some lead display name"),
                     duration: 8,
-                    description: "Some message!",
-                    channel: TimesheetChannel.Telegram),
-                default,
+                    description: "Some message!"),
                 new(
                     entityPluralName: "gg_timesheetactivities",
                     entityData: new()
@@ -29,7 +27,8 @@ partial class CrmTimesheetApiSource
                         Description = "Some message!",
                         Duration = 8,
                         LeadLookupValue = "/leads(7583b4e6-23f5-eb11-94ef-00224884a588)",
-                        Subject = "Some lead display name"
+                        Subject = "Some lead display name",
+                        ChannelCode = 140120000
                     })
             },
             {
@@ -41,15 +40,7 @@ partial class CrmTimesheetApiSource
                         type: TimesheetProjectType.Opportunity,
                         displayName: string.Empty),
                     duration: 3,
-                    description: null,
-                    channel: TimesheetChannel.Teams),
-                new(
-                    channelCodes:
-                    [
-                        new(TimesheetChannel.WebChat, 271),
-                        new(TimesheetChannel.Teams, 279015),
-                        new(TimesheetChannel.Teams, 123124)
-                    ]),
+                    description: null),
                 new(
                     entityPluralName: "gg_timesheetactivities",
                     entityData: new()
@@ -58,7 +49,7 @@ partial class CrmTimesheetApiSource
                         Description = null,
                         Duration = 3,
                         OpportunityLookupValue = "/opportunities(8829deda-5249-4412-9be5-ef5728fb928d)",
-                        ChannelCode = 279015
+                        ChannelCode = 140120000
                     })
             },
             {
@@ -70,13 +61,7 @@ partial class CrmTimesheetApiSource
                         type: TimesheetProjectType.Project,
                         displayName: "\n\r"),
                     duration: 15,
-                    description: string.Empty,
-                    channel: TimesheetChannel.Telegram),
-                new(
-                    channelCodes:
-                    [
-                        new(TimesheetChannel.Telegram, null)
-                    ]),
+                    description: string.Empty),
                 new(
                     entityPluralName: "gg_timesheetactivities",
                     entityData: new()
@@ -85,7 +70,8 @@ partial class CrmTimesheetApiSource
                         Description = null,
                         Duration = 15,
                         ProjectLookupValue = "/gg_projects(13f0cb5c-b251-494c-9cae-1b0708471c10)",
-                        Subject = "\n\r"
+                        Subject = "\n\r",
+                        ChannelCode = 140120000
                     })
             },
             {
@@ -97,15 +83,7 @@ partial class CrmTimesheetApiSource
                         type: TimesheetProjectType.Incident,
                         displayName: null),
                     duration: -3,
-                    description: "Some description",
-                    channel: TimesheetChannel.Telegram),
-                new(
-                    channelCodes:
-                    [
-                        new(TimesheetChannel.Telegram, -967912307),
-                        new(TimesheetChannel.WebChat, 12000),
-                        new(TimesheetChannel.Teams, 112497)
-                    ]),
+                    description: "Some description"),
                 new(
                     entityPluralName: "gg_timesheetactivities",
                     entityData: new()
@@ -114,7 +92,7 @@ partial class CrmTimesheetApiSource
                         Description = "Some description",
                         Duration = -3,
                         IncidentLookupValue = "/incidents(ca012870-a0f9-4945-a314-a14ebf690574)",
-                        ChannelCode = -967912307
+                        ChannelCode = 140120000
                     })
             }
         };

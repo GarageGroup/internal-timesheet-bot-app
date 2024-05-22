@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Today" xml:space="preserve">
+    <value>Сегодня</value>
+  </data>
+  <data name="SelectedDateName" xml:space="preserve">
+    <value>Дата списания</value>
+  </data>
+  <data name="DateChoiceText" xml:space="preserve">
+    <value>Выберите или введите дату в формате дд.мм.гг</value>
+  </data>
+  <data name="InvalidDateText" xml:space="preserve">
+    <value>Не удалось распознать дату</value>
+  </data>
+  <data name="FutureDateText" xml:space="preserve">
+    <value>Нельзя указать будущую дату</value>
+  </data>
+  <data name="TooEarlyDateTemplate" xml:space="preserve">
+    <value>Нельзя выбрать дату раньше, чем {0}</value>
+  </data>
+  <data name="NotAllowedText" xml:space="preserve">
+    <value>Данная операция не разрешена для вашей учетной записи. Обратитесь к администратору</value>
+  </data>
+  <data name="NotFoundProjectsText" xml:space="preserve">
+    <value>Ничего не найдено. Попробуйте уточнить запрос</value>
+  </data>
+  <data name="SearchProjectText" xml:space="preserve">
+    <value>Нужно выбрать проект. Введите часть названия для поиска</value>
+  </data>
+  <data name="ChooseOrSearchProjectText" xml:space="preserve">
+    <value>Выберите проект или введите часть названия для поиска</value>
+  </data>
+  <data name="DefaultProjectText" xml:space="preserve">
+    <value>Нужно выбрать проект. Введите часть названия для поиска</value>
+  </data>
+  <data name="Opportunity" xml:space="preserve">
+    <value>Возможная сделка</value>
+  </data>
+  <data name="Lead" xml:space="preserve">
+    <value>Лид</value>
+  </data>
+  <data name="Incident" xml:space="preserve">
+    <value>Инцидент</value>
+  </data>
+  <data name="Project" xml:space="preserve">
+    <value>Проект</value>
+  </data>
+  <data name="DurationMessageText" xml:space="preserve">
+    <value>Введите длительность работы в часах</value>
+  </data>
+  <data name="TooShortDurationText" xml:space="preserve">
+    <value>Значение должно быть больше нуля</value>
+  </data>
+  <data name="TooLongDurationTemplate" xml:space="preserve">
+    <value>Значение не может быть больше {0}</value>
+  </data>
+  <data name="InvalidDurationText" xml:space="preserve">
+    <value>Не удалось распознать десятичное число</value>
+  </data>
+  <data name="Skip" xml:space="preserve">
+    <value>Пропустить</value>
+  </data>
+  <data name="DescriptionMessageText" xml:space="preserve">
+    <value>Введите описание. Этот шаг можно пропустить</value>
+  </data>
+  <data name="CreationHeaderText" xml:space="preserve">
+    <value>Списать время?</value>
+  </data>
+  <data name="CreationConfirmButton" xml:space="preserve">
+    <value>Списать</value>
+  </data>
+  <data name="CreationCancelButton" xml:space="preserve">
+    <value>Отменить</value>
+  </data>
+  <data name="CreationCancelText" xml:space="preserve">
+    <value>Списание времени было отменено</value>
+  </data>
+  <data name="CreationSuccessText" xml:space="preserve">
+    <value>Списание времени создано успешно</value>
+  </data>
+  <data name="ModificationHeaderText" xml:space="preserve">
+    <value>Изменение списания времени</value>
+  </data>
+  <data name="UpdateHeaderText" xml:space="preserve">
+    <value>Сохранить изменения?</value>
+  </data>
+  <data name="UpdateConfirmButton" xml:space="preserve">
+    <value>Сохранить</value>
+  </data>
+  <data name="UpdateCancelButton" xml:space="preserve">
+    <value>Отменить</value>
+  </data>
+  <data name="UpdateCancelText" xml:space="preserve">
+    <value>Изменение списания времени было отменено</value>
+  </data>
+  <data name="UpdateSuccessText" xml:space="preserve">
+    <value>Списание времени изменено успешно</value>
+  </data>
+  <data name="WebAppEditButton" xml:space="preserve">
+    <value>Редактировать</value>
+  </data>
+  <data name="DateFieldName" xml:space="preserve">
+    <value>Дата</value>
+  </data>
+  <data name="DurationFieldName" xml:space="preserve">
+    <value>Время</value>
+  </data>
+  <data name="HourSymbol" xml:space="preserve">
+    <value>ч</value>
+  </data>
+  <data name="NotFoundTimesheetText" xml:space="preserve">
+    <value>Списание времени не найдено. Возможно оно было удалено ранее</value>
+  </data>
+</root>

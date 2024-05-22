@@ -10,15 +10,13 @@ public sealed record class TimesheetCreateIn
         DateOnly date,
         TimesheetProject project,
         decimal duration,
-        [AllowNull] string description,
-        TimesheetChannel channel)
+        [AllowNull] string description)
     {
         UserId = userId;
         Date = date;
         Description = description.OrNullIfEmpty();
         Duration = duration;
         Project = project;
-        Channel = channel;
     }
 
     public Guid UserId { get; }
@@ -30,6 +28,4 @@ public sealed record class TimesheetCreateIn
     public decimal Duration { get; }
 
     public string? Description { get; }
-
-    public TimesheetChannel Channel { get; }
 }

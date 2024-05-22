@@ -7,5 +7,7 @@ partial record class DbTimesheet
 {
     internal static readonly FlatArray<DbOrder> DefaultOrders
         =
-        new DbOrder($"{AliasName}.createdon", DbOrderType.Ascending).AsFlatArray();
+        [
+            new($"{AliasName}.createdon", DbOrderType.Ascending)
+        ];
 }
