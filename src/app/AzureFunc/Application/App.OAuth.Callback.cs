@@ -9,7 +9,7 @@ namespace GarageGroup.Internal.Timesheet;
 partial class Application
 {
     [EndpointFunction("AuthorizeUser", IsSwaggerHidden = true)]
-    [EndpointFunctionSecurity(FunctionAuthorizationLevel.Anonymous)]
+    [EndpointFunctionSecurity(FunctionAuthorizationLevel.Function)]
     internal static Dependency<CallbackEndpoint> UseUserAuthorizeEndpoint([DurableClient] DurableTaskClient client)
         =>
         PrimaryHandler.UseStandardSocketsHttpHandler()

@@ -79,7 +79,7 @@
     <value>Списание времени создано успешно</value>
   </data>
   <data name="ModificationHeaderText" xml:space="preserve">
-    <value>Изменение списание времени</value>
+    <value>Изменение списания времени</value>
   </data>
   <data name="UpdateHeaderText" xml:space="preserve">
     <value>Сохранить изменения?</value>

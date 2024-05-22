@@ -74,7 +74,7 @@ jobs:
       env:
         AZURE_STORAGE_ACCOUNT: startifactblob
 
-  deploy-to-test:
+  deploy-on-test:
     runs-on: ubuntu-latest
     needs: publish
 
@@ -114,7 +114,7 @@ jobs:
 
   ping-test:
     runs-on: ubuntu-latest
-    needs: deploy-to-test
+    needs: deploy-on-test
 
     steps:
       - name: Get version
