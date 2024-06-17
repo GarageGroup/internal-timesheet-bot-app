@@ -10,11 +10,11 @@ public static partial class ClaimsProvideFuncTest
 {
     private static readonly ClaimsProvideIn SomeInput 
         = 
-        new (new AuthenticationEventData
+        new(new()
         {
-            AuthenticationContext = new AuthenticationContext
+            AuthenticationContext = new()
             {
-                User = new User
+                User = new()
                 {
                     Id = Guid.Parse("5b228f06-d220-4006-844a-374df853108d")
                 }
@@ -23,7 +23,7 @@ public static partial class ClaimsProvideFuncTest
 
     private static readonly DataverseEntityGetOut<UserJson> SomeGetUserResult
         =
-        new(new UserJson
+        new(new()
         {
             Id = Guid.Parse("5b228f06-d220-4006-844a-374df853108d")
         });
