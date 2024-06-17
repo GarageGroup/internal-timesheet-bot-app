@@ -1,24 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <ImplicitUsings>disable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <InvariantGlobalization>false</InvariantGlobalization>
-        <IsPackable>false</IsPackable>
-        <RootNamespace>GarageGroup.Internal.Timesheet</RootNamespace>
-        <AssemblyName>GarageGroup.Internal.Timesheet.Claims.Provide.Endpoint</AssemblyName>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>GarageGroup.Internal.Timesheet</RootNamespace>
+    <AssemblyName>GarageGroup.Internal.Timesheet.Claims.Provide.Endpoint</AssemblyName>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\Contract\Contract.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Contract\Contract.csproj" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="EarlyFuncPack.Core.AsyncPipeline" Version="0.3.0" />
-        <PackageReference Include="PrimeFuncPack.Dependency.Core" Version="2.1.0" />
-        <PackageReference Include="GarageGroup.Infra.Dataverse.Api.Abstractions" Version="3.15.0" />
-    </ItemGroup>
-    
+  <ItemGroup>
+    <PackageReference Include="EarlyFuncPack.Core.AsyncPipeline" Version="0.3.0" />
+    <PackageReference Include="PrimeFuncPack.Dependency.Core" Version="2.1.0" />
+    <PackageReference Include="GarageGroup.Infra.Dataverse.Api.Abstractions" Version="3.15.0" />
+  </ItemGroup>
+  
 </Project>
