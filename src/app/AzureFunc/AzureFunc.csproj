@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\endpoint\Timesheet.Show\Flow\Flow.csproj" />
     <ProjectReference Include="..\..\service\CrmProject\Api\Api.csproj" />
     <ProjectReference Include="..\..\service\CrmTimesheet\Api\Api.csproj" />
+    <ProjectReference Include="..\..\service\CustomClaims\Endpoint\Endpoint.csproj" />
   </ItemGroup>
 
   <ItemGroup>

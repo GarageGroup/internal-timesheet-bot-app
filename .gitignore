@@ -350,3 +350,6 @@ MigrationBackup/
 .ionide/
 
 local.settings.json
+
+# JetBrains Rider folder
+.idea/
