@@ -6,9 +6,9 @@ using Moq;
 
 namespace GarageGroup.Internal.Timesheet.Service.CustomClaims.Test.Func.Test;
 
-public static partial class ProvideClaimsFuncTest
+public static partial class ClaimsProvideFuncTest
 {
-    private static readonly ProvideClaimsIn SomeInput 
+    private static readonly ClaimsProvideIn SomeInput 
         = 
         new (new AuthenticationEventData
         {

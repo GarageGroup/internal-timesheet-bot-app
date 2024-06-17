@@ -8,5 +8,5 @@ public sealed record class TokenIssuanceAction
     public string ODataType { get; } = "microsoft.graph.tokenIssuanceStart.provideClaimsForToken";
     
     [JsonPropertyName("claims")]
-    public required CustomClaims Claims { get; init; }
+    public required Claims Claims { get; init; }
 }

@@ -4,7 +4,7 @@ using GarageGroup.Infra;
 
 namespace GarageGroup.Internal.Timesheet.Inner;
 
-internal record struct UserJson
+internal readonly record struct UserJson
 {
     private const string EntityPluralName = "systemusers";
 

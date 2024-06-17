@@ -7,8 +7,8 @@
         <InvariantGlobalization>true</InvariantGlobalization>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <IsPackable>false</IsPackable>
-        <RootNamespace>GarageGroup.Internal.Timesheet.CustomClaims.Test</RootNamespace>
-        <AssemblyName>GarageGroup.Internal.Timesheet.CustomClaims.Test</AssemblyName>
+        <RootNamespace>GarageGroup.Internal.Timesheet.Claims.Provide.Test</RootNamespace>
+        <AssemblyName>GarageGroup.Internal.Timesheet.Claims.Provide.Test</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>

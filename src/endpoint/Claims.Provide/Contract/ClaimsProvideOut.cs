@@ -3,7 +3,7 @@ using GarageGroup.Infra;
 
 namespace GarageGroup.Internal.Timesheet;
 
-public sealed record class ProvideClaimsOut
+public sealed record class ClaimsProvideOut
 {
     [JsonPropertyName("data")]
     [JsonBodyOut]

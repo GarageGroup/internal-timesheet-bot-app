@@ -1,6 +1,6 @@
 namespace GarageGroup.Internal.Timesheet;
 
-public enum ProvideClaimsFailureCode
+public enum ClaimsProvideFailureCode
 {
     InvalidQuery,   
     Unknown

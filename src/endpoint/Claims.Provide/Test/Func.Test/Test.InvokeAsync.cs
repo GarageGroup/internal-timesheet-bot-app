@@ -8,13 +8,13 @@ using Xunit;
 
 namespace GarageGroup.Internal.Timesheet.Service.CustomClaims.Test.Func.Test;
 
-partial class ProvideClaimsFuncTest
+partial class ClaimsProvideFuncTest
 {
     [Fact]
     public static async Task InvokeAsync_ExpectGetUserCalledOnce()
     {
         var cancellationToken = CancellationToken.None;
-        var input = new ProvideClaimsIn(new AuthenticationEventData
+        var input = new ClaimsProvideIn(new AuthenticationEventData
         {
             AuthenticationContext = new AuthenticationContext
             {
@@ -26,7 +26,7 @@ partial class ProvideClaimsFuncTest
         });
         
         var mockDataverseApi = BuildDataverseMock(SomeGetUserResult);
-        var func = new ProvideClaimsFunc(mockDataverseApi.Object);
+        var func = new ClaimsProvideFunc(mockDataverseApi.Object);
         _ = await func.InvokeAsync(input, cancellationToken);
         
         var expected = new DataverseEntityGetIn(
@@ -44,38 +44,38 @@ partial class ProvideClaimsFuncTest
     [Fact]
     public static async Task InvokeAsync_ExpectValidationError()
     {
-        var input = new ProvideClaimsIn(new AuthenticationEventData());
+        var input = new ClaimsProvideIn(new AuthenticationEventData());
         var cancellationToken = CancellationToken.None;
 
         var mockDataverseApi = BuildDataverseMock(SomeGetUserResult);
-        var func = new ProvideClaimsFunc(mockDataverseApi.Object);
+        var func = new ClaimsProvideFunc(mockDataverseApi.Object);
         
         var actual = await func.InvokeAsync(input, cancellationToken);
-        var expected = Failure.Create(ProvideClaimsFailureCode.InvalidQuery, "The Azure Active Directory user is not specified");
+        var expected = Failure.Create(ClaimsProvideFailureCode.InvalidQuery, "The Azure Active Directory user is not specified");
         
         Assert.StrictEqual(actual, expected);
     }
     
     [Theory]
-    [InlineData(DataverseFailureCode.Unknown, ProvideClaimsFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.Unauthorized, ProvideClaimsFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.RecordNotFound, ProvideClaimsFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.PicklistValueOutOfRange, ProvideClaimsFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.UserNotEnabled, ProvideClaimsFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.PrivilegeDenied, ProvideClaimsFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.Throttling, ProvideClaimsFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.SearchableEntityNotFound, ProvideClaimsFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.DuplicateRecord, ProvideClaimsFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.InvalidPayload, ProvideClaimsFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.InvalidFileSize, ProvideClaimsFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.Unknown, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.Unauthorized, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.RecordNotFound, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.PicklistValueOutOfRange, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.UserNotEnabled, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.PrivilegeDenied, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.Throttling, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.SearchableEntityNotFound, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.DuplicateRecord, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.InvalidPayload, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.InvalidFileSize, ClaimsProvideFailureCode.Unknown)]
     public static async Task InvokeAsync_GetUserResultIsFailure_ExpectFailure(
-        DataverseFailureCode sourceFailureCode, ProvideClaimsFailureCode expectedFailureCode)
+        DataverseFailureCode sourceFailureCode, ClaimsProvideFailureCode expectedFailureCode)
     {
         var sourceException = new Exception("Some exception message");
         var dataverseFailure = sourceException.ToFailure(sourceFailureCode, "Some failure text");
         
         var mockDataverseApi = BuildDataverseMock(dataverseFailure);
-        var func = new ProvideClaimsFunc(mockDataverseApi.Object);
+        var func = new ClaimsProvideFunc(mockDataverseApi.Object);
 
         var cancellationToken = CancellationToken.None;
         

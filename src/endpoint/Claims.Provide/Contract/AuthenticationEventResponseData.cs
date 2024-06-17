@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace GarageGroup.Internal.Timesheet;
 
-public record class AuthenticationEventResponseData
+public sealed record class AuthenticationEventResponseData
 {
     [JsonPropertyName("@odata.type")]
     public string ODataType { get; } = "microsoft.graph.onTokenIssuanceStartResponseData";

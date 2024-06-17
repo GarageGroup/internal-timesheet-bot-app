@@ -6,11 +6,11 @@ namespace GarageGroup.Internal.Timesheet;
 
 partial class Application
 {
-    [EndpointFunction("CustomClaimsProvider", IsSwaggerHidden = false)]
+    [EndpointFunction("ClaimsProvider", IsSwaggerHidden = true)]
     [EndpointFunctionSecurity(FunctionAuthorizationLevel.Function)]
-    internal static Dependency<ProvideClaimsEndpoint> UseCustomClaimsEndpoint()
+    internal static Dependency<ClaimsProvideEndpoint> UseClaimsProvideEndpoint()
         => 
         Dependency.From<IDataverseEntityGetSupplier>(
             ServiceProviderServiceExtensions.GetRequiredService<IDataverseApiClient>)
-        .UseProvideClaimsEndpoint();
+        .UseClaimsProvideEndpoint();
 }

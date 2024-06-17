@@ -8,7 +8,7 @@
         <InvariantGlobalization>false</InvariantGlobalization>
         <IsPackable>false</IsPackable>
         <RootNamespace>GarageGroup.Internal.Timesheet</RootNamespace>
-        <AssemblyName>GarageGroup.Internal.Timesheet.CustomClaims.Contract</AssemblyName>
+        <AssemblyName>GarageGroup.Internal.Timesheet.Claims.Provide.Contract</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
