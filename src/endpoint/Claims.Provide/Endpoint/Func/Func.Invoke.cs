@@ -20,7 +20,7 @@ partial class ClaimsProvideFunc
             dataverseApi.GetEntityAsync<UserJson>,
             static failure => failure.WithFailureCode(ClaimsProvideFailureCode.Unknown))
         .MapSuccess(
-            systemUserId => new ClaimsProvideOut
+            static systemUser => new ClaimsProvideOut
             {
                 Data = new AuthenticationEventResponseData
                 {
@@ -30,7 +30,7 @@ partial class ClaimsProvideFunc
                         {
                             Claims = new Claims
                             {
-                                SystemUserId = systemUserId.Value.Id
+                                SystemUserId = systemUser.Value.Id
                             }
                         }
                     ] 
