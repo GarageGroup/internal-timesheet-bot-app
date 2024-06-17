@@ -11,7 +11,22 @@ namespace GarageGroup.Internal.Timesheet.Service.CustomClaims.Test.Func.Test;
 partial class ClaimsProvideFuncTest
 {
     [Fact]
-    public static async Task InvokeAsync_ExpectGetUserCalledOnce()
+    public static async Task InvokeAsync_InputIsInvalid_ExpectValidationFailure()
+    {
+        var input = new ClaimsProvideIn(new AuthenticationEventData());
+        var cancellationToken = CancellationToken.None;
+
+        var mockDataverseApi = BuildDataverseMock(SomeGetUserResult);
+        var func = new ClaimsProvideFunc(mockDataverseApi.Object);
+        
+        var actual = await func.InvokeAsync(input, cancellationToken);
+        var expected = Failure.Create(ClaimsProvideFailureCode.InvalidQuery, "The Azure Active Directory user is not specified");
+        
+        Assert.StrictEqual(actual, expected);
+    }
+
+    [Fact]
+    public static async Task InvokeAsync_InputIsValid_ExpectGetUserCalledOnce()
     {
         var cancellationToken = CancellationToken.None;
         var input = new ClaimsProvideIn(new AuthenticationEventData
@@ -39,21 +54,6 @@ partial class ClaimsProvideFuncTest
         mockDataverseApi.Verify(
             x => x.GetEntityAsync<UserJson>(expected, cancellationToken),
             Times.Once);
-    }
-    
-    [Fact]
-    public static async Task InvokeAsync_ExpectValidationError()
-    {
-        var input = new ClaimsProvideIn(new AuthenticationEventData());
-        var cancellationToken = CancellationToken.None;
-
-        var mockDataverseApi = BuildDataverseMock(SomeGetUserResult);
-        var func = new ClaimsProvideFunc(mockDataverseApi.Object);
-        
-        var actual = await func.InvokeAsync(input, cancellationToken);
-        var expected = Failure.Create(ClaimsProvideFailureCode.InvalidQuery, "The Azure Active Directory user is not specified");
-        
-        Assert.StrictEqual(actual, expected);
     }
     
     [Theory]
