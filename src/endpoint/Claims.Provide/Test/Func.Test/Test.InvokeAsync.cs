@@ -57,19 +57,19 @@ partial class ClaimsProvideFuncTest
     }
     
     [Theory]
-    [InlineData(DataverseFailureCode.Unknown, ClaimsProvideFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.Unauthorized, ClaimsProvideFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.RecordNotFound, ClaimsProvideFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.PicklistValueOutOfRange, ClaimsProvideFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.UserNotEnabled, ClaimsProvideFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.PrivilegeDenied, ClaimsProvideFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.Throttling, ClaimsProvideFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.SearchableEntityNotFound, ClaimsProvideFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.DuplicateRecord, ClaimsProvideFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.InvalidPayload, ClaimsProvideFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.InvalidFileSize, ClaimsProvideFailureCode.Unknown)]
-    public static async Task InvokeAsync_GetUserResultIsFailure_ExpectFailure(
-        DataverseFailureCode sourceFailureCode, ClaimsProvideFailureCode expectedFailureCode)
+    [InlineData(DataverseFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.Unauthorized)]
+    [InlineData(DataverseFailureCode.RecordNotFound)]
+    [InlineData(DataverseFailureCode.PicklistValueOutOfRange)]
+    [InlineData(DataverseFailureCode.UserNotEnabled)]
+    [InlineData(DataverseFailureCode.PrivilegeDenied)]
+    [InlineData(DataverseFailureCode.Throttling)]
+    [InlineData(DataverseFailureCode.SearchableEntityNotFound)]
+    [InlineData(DataverseFailureCode.DuplicateRecord)]
+    [InlineData(DataverseFailureCode.InvalidPayload)]
+    [InlineData(DataverseFailureCode.InvalidFileSize)]
+    public static async Task InvokeAsync_GetUserResultIsFailure_ExpectUnknownFailure(
+        DataverseFailureCode sourceFailureCode)
     {
         var sourceException = new Exception("Some exception message");
         var dataverseFailure = sourceException.ToFailure(sourceFailureCode, "Some failure text");
@@ -80,7 +80,7 @@ partial class ClaimsProvideFuncTest
         var cancellationToken = CancellationToken.None;
         
         var actual = await func.InvokeAsync(SomeInput, cancellationToken);
-        var expected = Failure.Create(expectedFailureCode, "Some failure text", sourceException);
+        var expected = Failure.Create(ClaimsProvideFailureCode.Unknown, "Some failure text", sourceException);
         
         Assert.StrictEqual(expected, actual);
     }
