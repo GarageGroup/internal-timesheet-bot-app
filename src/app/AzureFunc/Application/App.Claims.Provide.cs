@@ -10,7 +10,7 @@ partial class Application
     [EndpointFunctionSecurity(FunctionAuthorizationLevel.Function)]
     internal static Dependency<ClaimsProvideEndpoint> UseClaimsProvideEndpoint()
         => 
-        Dependency.From<IDataverseEntityGetSupplier>(
+        Dependency.From(
             ServiceProviderServiceExtensions.GetRequiredService<IDataverseApiClient>)
         .UseClaimsProvideEndpoint();
 }
