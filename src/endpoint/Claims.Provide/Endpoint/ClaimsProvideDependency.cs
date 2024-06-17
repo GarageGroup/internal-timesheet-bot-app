@@ -17,6 +17,7 @@ public static class ClaimsProvideDependency
 
         static ClaimsProvideFunc CreateFunc(IDataverseEntityGetSupplier dataverseApi)
         {
+            ArgumentNullException.ThrowIfNull(dataverseApi);
             return new ClaimsProvideFunc(dataverseApi);
         }
     }
