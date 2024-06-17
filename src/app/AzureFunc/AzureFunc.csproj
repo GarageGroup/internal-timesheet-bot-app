@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\endpoint\Claims.Provide\Endpoint\Endpoint.csproj" />
     <ProjectReference Include="..\..\endpoint\Timesheet.Create\Flow\Flow.csproj" />
     <ProjectReference Include="..\..\endpoint\Timesheet.Delete\Flow\Flow.csproj" />
     <ProjectReference Include="..\..\endpoint\Timesheet.Show\Flow\Flow.csproj" />
