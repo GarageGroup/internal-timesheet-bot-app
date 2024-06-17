@@ -18,7 +18,7 @@ partial class ClaimsProvideFunc
             UserJson.BuildGetInput)
         .ForwardValue(
             dataverseApi.GetEntityAsync<UserJson>,
-            failure => failure.WithFailureCode(ClaimsProvideFailureCode.Unknown))
+            static failure => failure.WithFailureCode(ClaimsProvideFailureCode.Unknown))
         .MapSuccess(
             systemUserId => new ClaimsProvideOut
             {

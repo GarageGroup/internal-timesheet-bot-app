@@ -84,4 +84,36 @@ partial class ClaimsProvideFuncTest
         
         Assert.StrictEqual(expected, actual);
     }
+    
+    [Fact]
+    public static async Task InvokeAsync_GetUserResultIsSuccess_ExpectSuccess()
+    {
+        var dataverseGetUserResult = new DataverseEntityGetOut<UserJson>(new UserJson
+        {
+            Id = Guid.Parse("eea93cde-6bbf-4137-a6b9-f6c75d8ea10c")
+        });
+        var mockDataverseApi = BuildDataverseMock(dataverseGetUserResult);
+
+        var func = new ClaimsProvideFunc(mockDataverseApi.Object);
+        var actual = await func.InvokeAsync(SomeInput, CancellationToken.None);
+
+        var expected = new ClaimsProvideOut
+        {
+            Data = new AuthenticationEventResponseData
+            {
+                Actions =
+                [
+                    new TokenIssuanceAction
+                    {
+                        Claims = new Claims
+                        {
+                            SystemUserId = Guid.Parse("eea93cde-6bbf-4137-a6b9-f6c75d8ea10c")
+                        }
+                    }
+                ]
+            }
+        };
+        
+        Assert.StrictEqual(actual, expected);
+    }
 }
