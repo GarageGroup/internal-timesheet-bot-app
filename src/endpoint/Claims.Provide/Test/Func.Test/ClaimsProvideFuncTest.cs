@@ -14,6 +14,7 @@ public static partial class ClaimsProvideFuncTest
         {
             AuthenticationContext = new()
             {
+                CorrelationId = Guid.Parse("1282002b-6a8b-418f-b481-67844abb0cc5"),
                 User = new()
                 {
                     Id = Guid.Parse("5b228f06-d220-4006-844a-374df853108d")
