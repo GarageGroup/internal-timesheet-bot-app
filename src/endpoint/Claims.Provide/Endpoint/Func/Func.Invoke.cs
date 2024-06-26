@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using GarageGroup.Infra;
 using GarageGroup.Internal.Timesheet.Inner;
 
 namespace GarageGroup.Internal.Timesheet;
@@ -18,9 +19,9 @@ partial class ClaimsProvideFunc
             UserJson.BuildGetInput)
         .ForwardValue(
             dataverseApi.GetEntityAsync<UserJson>,
-            static failure => failure.WithFailureCode(ClaimsProvideFailureCode.Unknown))
+            static failure => failure.MapFailureCode(MapFailureCodeWhenSearchingForUser))
         .MapSuccess(
-            static systemUser => new ClaimsProvideOut
+            systemUser => new ClaimsProvideOut
             {
                 Data = new AuthenticationEventResponseData
                 {
@@ -30,6 +31,7 @@ partial class ClaimsProvideFunc
                         {
                             Claims = new Claims
                             {
+                                CorrelationId = input.Data!.AuthenticationContext!.CorrelationId,
                                 SystemUserId = systemUser.Value.Id
                             }
                         }

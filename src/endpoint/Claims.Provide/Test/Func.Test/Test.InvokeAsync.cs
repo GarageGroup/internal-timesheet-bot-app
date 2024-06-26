@@ -57,19 +57,19 @@ partial class ClaimsProvideFuncTest
     }
     
     [Theory]
-    [InlineData(DataverseFailureCode.Unknown)]
-    [InlineData(DataverseFailureCode.Unauthorized)]
-    [InlineData(DataverseFailureCode.RecordNotFound)]
-    [InlineData(DataverseFailureCode.PicklistValueOutOfRange)]
-    [InlineData(DataverseFailureCode.UserNotEnabled)]
-    [InlineData(DataverseFailureCode.PrivilegeDenied)]
-    [InlineData(DataverseFailureCode.Throttling)]
-    [InlineData(DataverseFailureCode.SearchableEntityNotFound)]
-    [InlineData(DataverseFailureCode.DuplicateRecord)]
-    [InlineData(DataverseFailureCode.InvalidPayload)]
-    [InlineData(DataverseFailureCode.InvalidFileSize)]
+    [InlineData(DataverseFailureCode.Unknown, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.Unauthorized, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.RecordNotFound, ClaimsProvideFailureCode.UserNotFound)]
+    [InlineData(DataverseFailureCode.PicklistValueOutOfRange, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.UserNotEnabled, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.PrivilegeDenied, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.Throttling, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.SearchableEntityNotFound, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.DuplicateRecord, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.InvalidPayload, ClaimsProvideFailureCode.Unknown)]
+    [InlineData(DataverseFailureCode.InvalidFileSize, ClaimsProvideFailureCode.Unknown)]
     public static async Task InvokeAsync_GetUserResultIsFailure_ExpectUnknownFailure(
-        DataverseFailureCode sourceFailureCode)
+        DataverseFailureCode sourceFailureCode, ClaimsProvideFailureCode expectedFailureCode)
     {
         var sourceException = new Exception("Some exception message");
         var dataverseFailure = sourceException.ToFailure(sourceFailureCode, "Some failure text");
@@ -80,7 +80,7 @@ partial class ClaimsProvideFuncTest
         var cancellationToken = CancellationToken.None;
         
         var actual = await func.InvokeAsync(SomeInput, cancellationToken);
-        var expected = Failure.Create(ClaimsProvideFailureCode.Unknown, "Some failure text", sourceException);
+        var expected = Failure.Create(expectedFailureCode, "Some failure text", sourceException);
         
         Assert.StrictEqual(expected, actual);
     }
@@ -94,8 +94,21 @@ partial class ClaimsProvideFuncTest
         });
         var mockDataverseApi = BuildDataverseMock(dataverseGetUserResult);
 
+        var input = new ClaimsProvideIn(
+            new AuthenticationEventData
+            {
+                AuthenticationContext = new AuthenticationContext
+                {
+                    CorrelationId = Guid.Parse("97d7f13b-24e2-461e-9b57-8d8e3d9d9ba3"),
+                    User = new User
+                    {
+                        Id = Guid.Parse("ac9fdb67-8321-4757-8bd8-3066ca55f7d9")
+                    }
+                }
+            });
+        
         var func = new ClaimsProvideFunc(mockDataverseApi.Object);
-        var actual = await func.InvokeAsync(SomeInput, CancellationToken.None);
+        var actual = await func.InvokeAsync(input, CancellationToken.None);
 
         var expected = new ClaimsProvideOut
         {
@@ -107,6 +120,7 @@ partial class ClaimsProvideFuncTest
                     {
                         Claims = new Claims
                         {
+                            CorrelationId = Guid.Parse("97d7f13b-24e2-461e-9b57-8d8e3d9d9ba3"),
                             SystemUserId = Guid.Parse("eea93cde-6bbf-4137-a6b9-f6c75d8ea10c")
                         }
                     }
