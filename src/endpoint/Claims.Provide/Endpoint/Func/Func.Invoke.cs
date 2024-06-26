@@ -31,7 +31,7 @@ partial class ClaimsProvideFunc
                         {
                             Claims = new Claims
                             {
-                                CorrelationId = input.Data!.AuthenticationContext!.CorrelationId,
+                                CorrelationId = input.Data?.AuthenticationContext?.CorrelationId ?? default,
                                 SystemUserId = systemUser.Value.Id
                             }
                         }
