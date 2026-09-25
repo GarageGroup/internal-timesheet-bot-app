@@ -1,6 +1,8 @@
 ﻿using System;
 using GarageGroup.Infra;
 using GarageGroup.Infra.Telegram.Bot;
+using Azure.Core;
+using Azure.Identity;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +25,31 @@ partial class ApplicationHost
         .RegisterBotProvider()
         .RegisterDataverseApi()
         .RegisterUserAuthorizationApi()
+        .RegisterAgentApi()
         .RegisterWelcomeOption();
+
+    private static IServiceCollection RegisterAgentApi(this IServiceCollection services)
+    {
+        services.AddSingleton<TokenCredential>(new ManagedIdentityCredential(ManagedIdentityId.SystemAssigned));
+        services.AddTransient<AgentAccessTokenHandler>();
+
+        _ = services.AddHttpClient<IAgentProfileApi, AgentProfileApi>(static (serviceProvider, client) =>
+        {
+            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+            var baseAddress = configuration["AgentApi:BaseAddress"];
+
+            if (Uri.TryCreate(baseAddress, UriKind.Absolute, out var uri) is false)
+            {
+                throw new InvalidOperationException("AgentApi:BaseAddress must be an absolute URI.");
+            }
+
+            client.BaseAddress = uri;
+            client.Timeout = TimeSpan.FromSeconds(30);
+        })
+        .AddHttpMessageHandler<AgentAccessTokenHandler>();
+
+        return services;
+    }
 
     private static IServiceCollection RegisterBotProvider(this IServiceCollection services)
         =>
