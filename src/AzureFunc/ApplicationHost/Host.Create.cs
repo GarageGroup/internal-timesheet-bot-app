@@ -1,7 +1,6 @@
 ﻿using System;
 using GarageGroup.Infra;
 using GarageGroup.Infra.Telegram.Bot;
-using Azure.Core;
 using Azure.Identity;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
@@ -30,8 +29,10 @@ partial class ApplicationHost
 
     private static IServiceCollection RegisterAgentApi(this IServiceCollection services)
     {
-        services.AddSingleton<TokenCredential>(new ManagedIdentityCredential(ManagedIdentityId.SystemAssigned));
-        services.AddTransient<AgentAccessTokenHandler>();
+        services.AddTransient(static serviceProvider =>
+            new AgentAccessTokenHandler(
+                new ManagedIdentityCredential(ManagedIdentityId.SystemAssigned),
+                serviceProvider.GetRequiredService<IConfiguration>()));
 
         _ = services.AddHttpClient<IAgentProfileApi, AgentProfileApi>(static (serviceProvider, client) =>
         {
