@@ -1,5 +1,6 @@
 ﻿using System;
 using GarageGroup.Infra;
+using System.Net.Http;
 using GarageGroup.Infra.Telegram.Bot;
 using Azure.Identity;
 using Microsoft.Azure.Functions.Worker;
@@ -35,6 +36,16 @@ partial class ApplicationHost
                 serviceProvider.GetRequiredService<IConfiguration>()));
 
         _ = services.AddHttpClient<IAgentProfileApi, AgentProfileApi>(static (serviceProvider, client) =>
+            ConfigureAgentApiClient(serviceProvider, client))
+        .AddHttpMessageHandler<AgentAccessTokenHandler>();
+
+        _ = services.AddHttpClient<IAgentMessageApi, AgentMessageApi>(static (serviceProvider, client) =>
+            ConfigureAgentApiClient(serviceProvider, client))
+        .AddHttpMessageHandler<AgentAccessTokenHandler>();
+
+        return services;
+
+        static void ConfigureAgentApiClient(IServiceProvider serviceProvider, HttpClient client)
         {
             var configuration = serviceProvider.GetRequiredService<IConfiguration>();
             var baseAddress = configuration["AgentApi:BaseAddress"];
@@ -45,11 +56,8 @@ partial class ApplicationHost
             }
 
             client.BaseAddress = uri;
-            client.Timeout = TimeSpan.FromSeconds(30);
-        })
-        .AddHttpMessageHandler<AgentAccessTokenHandler>();
-
-        return services;
+            client.Timeout = TimeSpan.FromSeconds(60);
+        }
     }
 
     private static IServiceCollection RegisterBotProvider(this IServiceCollection services)

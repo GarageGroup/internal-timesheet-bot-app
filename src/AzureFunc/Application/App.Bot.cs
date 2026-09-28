@@ -35,6 +35,8 @@ partial class Application
         .With(
             "profile", UseAgentProfileCommand())
         .With(
+            UseAgentMessageCommand())
+        .With(
             UseWelcomeCommand())
         .BuildWebHookHandler();
 
@@ -61,4 +63,10 @@ partial class Application
         Dependency.From(
             ServiceProviderServiceExtensions.GetRequiredService<IAgentProfileApi>)
         .UseAgentProfileCommand();
+
+    private static Dependency<IChatCommand<AgentMessageCommandIn, Unit>> UseAgentMessageCommand()
+        =>
+        Dependency.From(
+            ServiceProviderServiceExtensions.GetRequiredService<IAgentMessageApi>)
+        .UseAgentMessageCommand();
 }
