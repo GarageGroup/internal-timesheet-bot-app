@@ -8,12 +8,8 @@ using Microsoft.Extensions.Logging;
 namespace GarageGroup.Internal.Timesheet;
 
 internal sealed class AgentProfileCommand(IAgentProfileApi agentApi)
-    : IChatCommand<AgentProfileCommandIn, Unit>, IChatCommandParser<AgentProfileCommandIn>
+    : IChatCommand<AgentProfileCommandIn, Unit>
 {
-    public Optional<AgentProfileCommandIn> Parse(ChatUpdate update)
-        =>
-        AgentProfileCommandIn.Instance;
-
     public async ValueTask<ChatCommandResult<Unit>> SendAsync(
         ChatCommandRequest<AgentProfileCommandIn, Unit> request,
         CancellationToken cancellationToken)
