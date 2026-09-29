@@ -5,8 +5,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra.Telegram.Bot;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Localization;
 
 namespace GarageGroup.Internal.Timesheet;
+
+using static AgentMessageResource;
 
 internal sealed class AgentMessageCommand(IAgentMessageApi agentApi)
     : IChatCommand<AgentMessageCommandIn, Unit>, IChatCommandParser<AgentMessageCommandIn>
@@ -28,13 +31,15 @@ internal sealed class AgentMessageCommand(IAgentMessageApi agentApi)
             userId,
             update.Chat.Id,
             message.Text,
-            message.From?.LanguageCode ?? update.User.LanguageCode);
+            update.User.LanguageCode);
     }
 
     public async ValueTask<ChatCommandResult<Unit>> SendAsync(
         ChatCommandRequest<AgentMessageCommandIn, Unit> request,
         CancellationToken cancellationToken)
     {
+        var localizer = request.Context.GetLocalizer(BaseName);
+
         try
         {
             var input = request.Value;
@@ -50,7 +55,9 @@ internal sealed class AgentMessageCommand(IAgentMessageApi agentApi)
                 new(WebUtility.HtmlEncode(response.Text))
                 {
                     ParseMode = BotParseMode.Html,
-                    ReplyMarkup = response.PreparedAction is null ? new BotReplyKeyboardRemove() : BuildActionKeyboard(response.PreparedAction.ActionId)
+                    ReplyMarkup = response.PreparedAction is null
+                        ? new BotReplyKeyboardRemove()
+                        : BuildActionKeyboard(response.PreparedAction.ActionId, localizer)
                 },
                 cancellationToken).ConfigureAwait(false);
 
@@ -59,7 +66,7 @@ internal sealed class AgentMessageCommand(IAgentMessageApi agentApi)
         catch (AgentMessageApiException exception) when (exception.StatusCode is HttpStatusCode.NotFound)
         {
             _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
-                "Профиль не найден. Откройте Mini App и выполните вход.",
+                localizer[ProfileNotFound],
                 cancellationToken).ConfigureAwait(false);
 
             return request.Context.CreateCompleteResult<Unit>(default);
@@ -67,7 +74,7 @@ internal sealed class AgentMessageCommand(IAgentMessageApi agentApi)
         catch (AgentMessageApiException exception) when (exception.StatusCode is HttpStatusCode.Conflict)
         {
             _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
-                "Диалог уже обрабатывает другое сообщение. Попробуйте ещё раз.",
+                localizer[ConversationConflict],
                 cancellationToken).ConfigureAwait(false);
 
             return request.Context.CreateCompleteResult<Unit>(default);
@@ -76,22 +83,22 @@ internal sealed class AgentMessageCommand(IAgentMessageApi agentApi)
         {
             request.Context.GetLogger<AgentMessageCommand>().LogError(exception, "Agent message request failed");
             _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
-                "Не удалось получить ответ агента. Попробуйте позже.",
+                localizer[UnexpectedError],
                 cancellationToken).ConfigureAwait(false);
 
             return request.Context.CreateCancelledResult<Unit>();
         }
     }
 
-    private static BotInlineKeyboardMarkup BuildActionKeyboard(Guid actionId)
+    private static BotInlineKeyboardMarkup BuildActionKeyboard(Guid actionId, IStringLocalizer localizer)
         =>
         new()
         {
             InlineKeyboard =
             [
                 [
-                    new("✅ Подтвердить") { CallbackData = AgentActionCommand.BuildCallbackData(actionId, AgentActionDecision.Confirm) },
-                    new("❌ Отменить") { CallbackData = AgentActionCommand.BuildCallbackData(actionId, AgentActionDecision.Cancel) }
+                    new(localizer[ConfirmButton]) { CallbackData = AgentActionCommand.BuildCallbackData(actionId, AgentActionDecision.Confirm) },
+                    new(localizer[CancelButton]) { CallbackData = AgentActionCommand.BuildCallbackData(actionId, AgentActionDecision.Cancel) }
                 ]
             ]
         };

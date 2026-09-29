@@ -36,7 +36,13 @@ internal sealed class AgentActionApi(HttpClient httpClient) : IAgentActionApi
 
         if (response.IsSuccessStatusCode is false)
         {
-            throw new AgentMessageApiException(response.StatusCode);
+            var problem = await ReadProblemAsync(response.Content, cancellationToken).ConfigureAwait(false);
+
+            throw new AgentMessageApiException(
+                response.StatusCode,
+                problem?.Title,
+                problem?.Detail ?? problem?.FailureMessage,
+                problem?.FailureCode);
         }
 
         var result = await HttpContentJsonExtensions.ReadFromJsonAsync<AgentActionDecisionOut>(
@@ -52,4 +58,72 @@ internal sealed class AgentActionApi(HttpClient httpClient) : IAgentActionApi
         long TelegramUserId,
         long TelegramChatId,
         AgentActionDecision Decision);
+
+    private static async ValueTask<AgentApiProblem?> ReadProblemAsync(
+        HttpContent content,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var stream = await content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+            using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var root = document.RootElement;
+
+            return new(
+                GetString(root, "title"),
+                GetString(root, "detail"),
+                GetFailureCode(root),
+                GetString(root, "failureMessage"));
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string? GetString(JsonElement root, string propertyName)
+    {
+        if (root.TryGetProperty(propertyName, out var property) is false || property.ValueKind is not JsonValueKind.String)
+        {
+            return null;
+        }
+
+        return property.GetString();
+    }
+
+    private static string? GetFailureCode(JsonElement root)
+    {
+        if (root.TryGetProperty("failureCode", out var property) is false)
+        {
+            return null;
+        }
+
+        if (property.ValueKind is JsonValueKind.String)
+        {
+            return property.GetString();
+        }
+
+        if (property.ValueKind is not JsonValueKind.Number || property.TryGetInt32(out var code) is false)
+        {
+            return null;
+        }
+
+        return code switch
+        {
+            1 => "InvalidIdentity",
+            2 => "UserNotLinked",
+            3 => "UserUnavailable",
+            4 => "WriteDisabled",
+            5 => "InvalidDecision",
+            6 => "ActionNotFound",
+            7 => "ActionExpired",
+            8 => "InvalidActionState",
+            9 => "ActionConflict",
+            10 => "InvalidTimesheet",
+            11 => "TimesheetForbidden",
+            12 => "ProjectNotFound",
+            13 => "Indeterminate",
+            _ => null
+        };
+    }
 }

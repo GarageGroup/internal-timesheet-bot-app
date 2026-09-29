@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ConfirmSuccess" xml:space="preserve"><value>✅ Time logged successfully.</value></data>
+  <data name="CancelSuccess" xml:space="preserve"><value>Time logging was cancelled.</value></data>
+  <data name="ProfileNotFound" xml:space="preserve"><value>Profile not found. Open the Mini App and sign in.</value></data>
+  <data name="ProfileUnavailable" xml:space="preserve"><value>The profile link is unavailable. Open the Mini App and sign in again.</value></data>
+  <data name="WriteDisabled" xml:space="preserve"><value>Time logging through the agent is temporarily disabled.</value></data>
+  <data name="ActionExpired" xml:space="preserve"><value>The confirmation period has expired. Prepare the time entry again.</value></data>
+  <data name="ActionProcessed" xml:space="preserve"><value>This action has already been processed.</value></data>
+  <data name="Indeterminate" xml:space="preserve"><value>The time entry result could not be determined. Check your time entries before trying again.</value></data>
+  <data name="FutureDate" xml:space="preserve"><value>Time cannot be logged for a future date. Prepare the action with a valid date.</value></data>
+  <data name="InvalidTimesheet" xml:space="preserve"><value>Unable to create the time entry. Check the date, duration, project, and comment.</value></data>
+  <data name="Forbidden" xml:space="preserve"><value>You do not have permission to create the time entry.</value></data>
+  <data name="ProjectNotFound" xml:space="preserve"><value>The project is no longer available. Prepare the time entry again.</value></data>
+  <data name="ActionNotFound" xml:space="preserve"><value>The action was not found or is no longer available.</value></data>
+  <data name="Conflict" xml:space="preserve"><value>The action has already been processed, has expired, or its result requires verification. Check your time entries before trying again.</value></data>
+  <data name="BadRequest" xml:space="preserve"><value>Unable to perform the action because its data is invalid.</value></data>
+  <data name="ForbiddenFallback" xml:space="preserve"><value>This action is unavailable.</value></data>
+  <data name="UnexpectedError" xml:space="preserve"><value>Unable to perform the action. Please try again later.</value></data>
+</root>

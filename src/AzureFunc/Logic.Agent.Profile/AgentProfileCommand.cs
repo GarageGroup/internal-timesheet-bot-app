@@ -4,8 +4,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra.Telegram.Bot;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Localization;
 
 namespace GarageGroup.Internal.Timesheet;
+
+using static AgentProfileResource;
 
 internal sealed class AgentProfileCommand(IAgentProfileApi agentApi)
     : IChatCommand<AgentProfileCommandIn, Unit>
@@ -14,6 +17,7 @@ internal sealed class AgentProfileCommand(IAgentProfileApi agentApi)
         ChatCommandRequest<AgentProfileCommandIn, Unit> request,
         CancellationToken cancellationToken)
     {
+        var localizer = request.Context.GetLocalizer(BaseName);
         var chatId = request.Context.Update.Chat.Id;
 
         try
@@ -21,7 +25,7 @@ internal sealed class AgentProfileCommand(IAgentProfileApi agentApi)
             var profile = await agentApi.GetProfileAsync(chatId, chatId, cancellationToken).ConfigureAwait(false);
             var userName = WebUtility.HtmlEncode(profile.UserName);
             var languageCode = WebUtility.HtmlEncode(profile.LanguageCode);
-            var text = $"Agent API: OK\nПользователь: {userName}\nЯзык: {languageCode}";
+            var text = localizer.GetString(ProfileTemplate, userName, languageCode);
 
             _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(text, cancellationToken).ConfigureAwait(false);
             return request.Context.CreateCompleteResult<Unit>(default);
@@ -29,7 +33,7 @@ internal sealed class AgentProfileCommand(IAgentProfileApi agentApi)
         catch (AgentProfileApiException ex) when (ex.StatusCode is HttpStatusCode.NotFound)
         {
             _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
-                "Профиль не найден. Откройте Mini App и выполните вход.",
+                localizer[ProfileNotFound],
                 cancellationToken).ConfigureAwait(false);
 
             return request.Context.CreateCompleteResult<Unit>(default);
@@ -38,7 +42,7 @@ internal sealed class AgentProfileCommand(IAgentProfileApi agentApi)
         {
             request.Context.GetLogger<AgentProfileCommand>().LogError(ex, "Agent profile diagnostic request failed");
             _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
-                "Не удалось проверить подключение к Agent API.",
+                localizer[UnexpectedError],
                 cancellationToken).ConfigureAwait(false);
 
             return request.Context.CreateCancelledResult<Unit>();

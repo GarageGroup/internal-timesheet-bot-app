@@ -5,8 +5,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra.Telegram.Bot;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Localization;
 
 namespace GarageGroup.Internal.Timesheet;
+
+using static AgentActionResource;
 
 internal sealed class AgentActionCommand(IAgentActionApi agentApi)
     : IChatCommand<AgentActionCommandIn, Unit>, IChatCommandParser<AgentActionCommandIn>
@@ -36,6 +39,7 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
         ChatCommandRequest<AgentActionCommandIn, Unit> request,
         CancellationToken cancellationToken)
     {
+        var localizer = request.Context.GetLocalizer(BaseName);
         AgentActionDecisionOut response;
 
         try
@@ -49,30 +53,26 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
                 input.Decision,
                 cancellationToken).ConfigureAwait(false);
         }
-        catch (AgentMessageApiException exception) when (exception.StatusCode is HttpStatusCode.NotFound)
-        {
-            return await SendFailureAsync(request, "Действие не найдено или больше недоступно.", cancellationToken).ConfigureAwait(false);
-        }
-        catch (AgentMessageApiException exception) when (exception.StatusCode is HttpStatusCode.Conflict)
+        catch (AgentMessageApiException exception)
         {
             return await SendFailureAsync(
                 request,
-                "Действие уже обработано, истекло или его результат требует проверки. Проверьте списания перед повторной попыткой.",
+                GetFailureMessage(exception, localizer),
                 cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception)
         {
             request.Context.GetLogger<AgentActionCommand>().LogError(exception, "Agent action decision request failed");
 
-            return await SendFailureAsync(request, "Не удалось выполнить действие. Попробуйте позже.", cancellationToken).ConfigureAwait(false);
+            return await SendFailureAsync(request, localizer[UnexpectedError], cancellationToken).ConfigureAwait(false);
         }
 
         await RemoveKeyboardAsync(request, cancellationToken).ConfigureAwait(false);
         await SendResultAsync(
             request,
             response.Decision is AgentActionDecision.Confirm
-                ? "✅ Время успешно списано."
-                : "Списание отменено.",
+                ? localizer[ConfirmSuccess]
+                : localizer[CancelSuccess],
             cancellationToken).ConfigureAwait(false);
 
         return request.Context.CreateCompleteResult<Unit>(default);
@@ -84,6 +84,80 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
             CallbackPrefix,
             decision is AgentActionDecision.Confirm ? "c:" : "x:",
             actionId.ToString("N", CultureInfo.InvariantCulture));
+
+    private static string GetFailureMessage(AgentMessageApiException exception, IStringLocalizer localizer)
+    {
+        if (IsFailure(exception, "UserNotLinked", "Telegram user is not linked"))
+        {
+            return localizer[ProfileNotFound];
+        }
+
+        if (IsFailure(exception, "UserUnavailable", "Telegram user binding is unavailable"))
+        {
+            return localizer[ProfileUnavailable];
+        }
+
+        if (IsFailure(exception, "WriteDisabled", "Agent write operations are disabled"))
+        {
+            return localizer[WriteDisabled];
+        }
+
+        if (IsFailure(exception, "ActionExpired", "Agent action has expired"))
+        {
+            return localizer[ActionExpired];
+        }
+
+        if (IsFailure(exception, "InvalidActionState", "Agent action is not pending") ||
+            IsFailure(exception, "ActionConflict", "Agent action was changed by another request"))
+        {
+            return localizer[ActionProcessed];
+        }
+
+        if (IsFailure(exception, "Indeterminate", "Timesheet creation result is indeterminate"))
+        {
+            return localizer[Indeterminate];
+        }
+
+        if (IsFailure(exception, "InvalidTimesheet", "Timesheet data is invalid"))
+        {
+            return IsFutureDateProblem(exception.ProblemDetail)
+                ? localizer[FutureDate]
+                : localizer[InvalidTimesheet];
+        }
+
+        if (IsFailure(exception, "TimesheetForbidden", "Timesheet creation is forbidden"))
+        {
+            return localizer[Forbidden];
+        }
+
+        if (IsFailure(exception, "ProjectNotFound", "Timesheet project was not found"))
+        {
+            return localizer[ProjectNotFound];
+        }
+
+        if (IsFailure(exception, "ActionNotFound", "Agent action was not found") ||
+            exception.StatusCode is HttpStatusCode.NotFound)
+        {
+            return localizer[ActionNotFound];
+        }
+
+        if (exception.StatusCode is HttpStatusCode.Conflict)
+        {
+            return localizer[Conflict];
+        }
+
+        if (exception.StatusCode is HttpStatusCode.BadRequest)
+        {
+            return localizer[BadRequest];
+        }
+
+        if (exception.StatusCode is HttpStatusCode.Forbidden)
+        {
+            return localizer[ForbiddenFallback];
+        }
+
+        return localizer[UnexpectedError];
+    }
 
     private static bool TryParseCallbackData(string? data, out Guid actionId, out AgentActionDecision decision)
     {
@@ -110,6 +184,15 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
 
         return Enum.IsDefined(decision) && Guid.TryParseExact(value[2..], "N", out actionId);
     }
+
+    private static bool IsFutureDateProblem(string? detail)
+        =>
+        detail?.Contains("date cannot be in the future", StringComparison.OrdinalIgnoreCase) is true;
+
+    private static bool IsFailure(AgentMessageApiException exception, string failureCode, string problemDetail)
+        =>
+        string.Equals(exception.FailureCode, failureCode, StringComparison.Ordinal) ||
+        string.Equals(exception.ProblemDetail, problemDetail, StringComparison.Ordinal);
 
     private static async ValueTask<ChatCommandResult<Unit>> SendFailureAsync(
         ChatCommandRequest<AgentActionCommandIn, Unit> request,
