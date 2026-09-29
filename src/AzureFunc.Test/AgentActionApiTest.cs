@@ -33,7 +33,7 @@ public static class AgentActionApiTest
             return new(HttpStatusCode.OK)
             {
                 Content = new StringContent(
-                    $"{{\"actionId\":\"{SomeActionId:D}\",\"decision\":0}}",
+                    $"{{\"actionId\":\"{SomeActionId:D}\",\"decision\":\"Confirm\"}}",
                     Encoding.UTF8,
                     "application/json")
             };

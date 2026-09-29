@@ -1,6 +1,8 @@
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,6 +10,16 @@ namespace GarageGroup.Internal.Timesheet;
 
 internal sealed class AgentActionApi(HttpClient httpClient) : IAgentActionApi
 {
+    private static readonly JsonSerializerOptions ResponseSerializerOptions
+        =
+        new(JsonSerializerDefaults.Web)
+        {
+            Converters =
+            {
+                new JsonStringEnumConverter()
+            }
+        };
+
     public async ValueTask<AgentActionDecisionOut> DecideAsync(
         Guid actionId,
         long telegramUpdateId,
@@ -29,6 +41,7 @@ internal sealed class AgentActionApi(HttpClient httpClient) : IAgentActionApi
 
         var result = await HttpContentJsonExtensions.ReadFromJsonAsync<AgentActionDecisionOut>(
             response.Content,
+            ResponseSerializerOptions,
             cancellationToken).ConfigureAwait(false);
 
         return result ?? throw new InvalidOperationException("Agent API returned an empty action decision response.");
