@@ -8,6 +8,10 @@ internal static class AgentMessageResource
 
     public const string CancelButton = "CancelButton";
 
+    public const string CreatePreview = "CreatePreview";
+
+    public const string DeletePreview = "DeletePreview";
+
     public const string ProfileNotFound = "ProfileNotFound";
 
     public const string ConversationConflict = "ConversationConflict";

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -51,13 +52,15 @@ internal sealed class AgentMessageCommand(IAgentMessageApi agentApi)
                 input.Locale,
                 cancellationToken).ConfigureAwait(false);
 
+            var preparedAction = GetPreparedAction(response);
+
             _ = await request.Context.Api.SendMessageAsync(
-                new(WebUtility.HtmlEncode(response.Text))
+                new(BuildMessageText(response, localizer))
                 {
                     ParseMode = BotParseMode.Html,
-                    ReplyMarkup = response.PreparedAction is null
+                    ReplyMarkup = preparedAction is null
                         ? new BotReplyKeyboardRemove()
-                        : BuildActionKeyboard(response.PreparedAction.ActionId, localizer)
+                        : BuildActionKeyboard(preparedAction.Value.ActionId, preparedAction.Value.ActionType, localizer)
                 },
                 cancellationToken).ConfigureAwait(false);
 
@@ -90,15 +93,71 @@ internal sealed class AgentMessageCommand(IAgentMessageApi agentApi)
         }
     }
 
-    private static BotInlineKeyboardMarkup BuildActionKeyboard(Guid actionId, IStringLocalizer localizer)
+    private static (Guid ActionId, AgentActionType ActionType)? GetPreparedAction(AgentMessage message)
+    {
+        if (message.PreparedCreateAction is not null && message.PreparedDeleteAction is not null)
+        {
+            throw new InvalidOperationException("Agent response contains more than one prepared action");
+        }
+
+        if (message.PreparedCreateAction is not null)
+        {
+            return (message.PreparedCreateAction.ActionId, AgentActionType.Create);
+        }
+
+        if (message.PreparedDeleteAction is not null)
+        {
+            return (message.PreparedDeleteAction.ActionId, AgentActionType.Delete);
+        }
+
+        return null;
+    }
+
+    private static string BuildMessageText(AgentMessage message, IStringLocalizer localizer)
+    {
+        if (message.PreparedCreateAction is AgentPreparedCreateAction createAction)
+        {
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                localizer[CreatePreview],
+                createAction.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                WebUtility.HtmlEncode(createAction.ProjectName),
+                createAction.Duration.ToString("0.##", CultureInfo.CurrentCulture),
+                WebUtility.HtmlEncode(createAction.Description));
+        }
+
+        if (message.PreparedDeleteAction is AgentPreparedDeleteAction deleteAction)
+        {
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                localizer[DeletePreview],
+                deleteAction.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                WebUtility.HtmlEncode(deleteAction.ProjectName),
+                deleteAction.Duration.ToString("0.##", CultureInfo.CurrentCulture),
+                WebUtility.HtmlEncode(deleteAction.Description));
+        }
+
+        return WebUtility.HtmlEncode(message.Text);
+    }
+
+    private static BotInlineKeyboardMarkup BuildActionKeyboard(
+        Guid actionId,
+        AgentActionType actionType,
+        IStringLocalizer localizer)
         =>
         new()
         {
             InlineKeyboard =
             [
                 [
-                    new(localizer[ConfirmButton]) { CallbackData = AgentActionCommand.BuildCallbackData(actionId, AgentActionDecision.Confirm) },
-                    new(localizer[CancelButton]) { CallbackData = AgentActionCommand.BuildCallbackData(actionId, AgentActionDecision.Cancel) }
+                    new(localizer[ConfirmButton])
+                    {
+                        CallbackData = AgentActionCommand.BuildCallbackData(actionId, actionType, AgentActionDecision.Confirm)
+                    },
+                    new(localizer[CancelButton])
+                    {
+                        CallbackData = AgentActionCommand.BuildCallbackData(actionId, actionType, AgentActionDecision.Cancel)
+                    }
                 ]
             ]
         };

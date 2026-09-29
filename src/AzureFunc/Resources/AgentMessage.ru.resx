@@ -6,6 +6,8 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="ConfirmButton" xml:space="preserve"><value>✅ Подтвердить</value></data>
   <data name="CancelButton" xml:space="preserve"><value>❌ Отменить</value></data>
+  <data name="CreatePreview" xml:space="preserve"><value>Подготовлено списание. Пока ничего не создано.&#10;&#10;&lt;b&gt;Дата:&lt;/b&gt; {0}&#10;&lt;b&gt;Проект:&lt;/b&gt; {1}&#10;&lt;b&gt;Длительность:&lt;/b&gt; {2} ч&#10;&lt;b&gt;Комментарий:&lt;/b&gt; {3}&#10;&#10;Проверьте параметры и подтвердите действие.</value></data>
+  <data name="DeletePreview" xml:space="preserve"><value>Подготовлено удаление списания. Пока ничего не удалено.&#10;&#10;&lt;b&gt;Дата:&lt;/b&gt; {0}&#10;&lt;b&gt;Проект:&lt;/b&gt; {1}&#10;&lt;b&gt;Длительность:&lt;/b&gt; {2} ч&#10;&lt;b&gt;Комментарий:&lt;/b&gt; {3}&#10;&#10;Проверьте параметры и подтвердите удаление.</value></data>
   <data name="ProfileNotFound" xml:space="preserve"><value>Профиль не найден. Откройте Mini App и выполните вход.</value></data>
   <data name="ConversationConflict" xml:space="preserve"><value>Диалог уже обрабатывает другое сообщение. Попробуйте ещё раз.</value></data>
   <data name="UnexpectedError" xml:space="preserve"><value>Не удалось получить ответ агента. Попробуйте позже.</value></data>

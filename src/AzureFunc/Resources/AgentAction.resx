@@ -4,16 +4,20 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <data name="ConfirmSuccess" xml:space="preserve"><value>✅ Time logged successfully.</value></data>
-  <data name="CancelSuccess" xml:space="preserve"><value>Time logging was cancelled.</value></data>
+  <data name="CreateConfirmSuccess" xml:space="preserve"><value>✅ Time logged successfully.</value></data>
+  <data name="DeleteConfirmSuccess" xml:space="preserve"><value>✅ Time entry deleted successfully.</value></data>
+  <data name="CreateCancelSuccess" xml:space="preserve"><value>Time logging was cancelled.</value></data>
+  <data name="DeleteCancelSuccess" xml:space="preserve"><value>Time entry deletion was cancelled.</value></data>
   <data name="ProfileNotFound" xml:space="preserve"><value>Profile not found. Open the Mini App and sign in.</value></data>
   <data name="ProfileUnavailable" xml:space="preserve"><value>The profile link is unavailable. Open the Mini App and sign in again.</value></data>
   <data name="WriteDisabled" xml:space="preserve"><value>Time logging through the agent is temporarily disabled.</value></data>
   <data name="ActionExpired" xml:space="preserve"><value>The confirmation period has expired. Prepare the time entry again.</value></data>
   <data name="ActionProcessed" xml:space="preserve"><value>This action has already been processed.</value></data>
-  <data name="Indeterminate" xml:space="preserve"><value>The time entry result could not be determined. Check your time entries before trying again.</value></data>
+  <data name="CreateIndeterminate" xml:space="preserve"><value>The time entry creation result could not be determined. Check your time entries before trying again.</value></data>
+  <data name="DeleteIndeterminate" xml:space="preserve"><value>The time entry deletion result could not be determined. Check your time entries before trying again.</value></data>
   <data name="FutureDate" xml:space="preserve"><value>Time cannot be logged for a future date. Prepare the action with a valid date.</value></data>
-  <data name="InvalidTimesheet" xml:space="preserve"><value>Unable to create the time entry. Check the date, duration, project, and comment.</value></data>
+  <data name="InvalidCreate" xml:space="preserve"><value>Unable to create the time entry. Check the date, duration, project, and comment.</value></data>
+  <data name="InvalidDelete" xml:space="preserve"><value>Unable to delete the time entry. It may be read-only or no longer available.</value></data>
   <data name="Forbidden" xml:space="preserve"><value>You do not have permission to create the time entry.</value></data>
   <data name="ProjectNotFound" xml:space="preserve"><value>The project is no longer available. Prepare the time entry again.</value></data>
   <data name="ActionNotFound" xml:space="preserve"><value>The action was not found or is no longer available.</value></data>

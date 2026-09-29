@@ -4,9 +4,21 @@ internal static class AgentActionResource
 {
     public const string BaseName = "AgentAction";
 
-    public const string ConfirmSuccess = "ConfirmSuccess";
+    public const string CreateConfirmSuccess = "CreateConfirmSuccess";
 
-    public const string CancelSuccess = "CancelSuccess";
+    public const string DeleteConfirmSuccess = "DeleteConfirmSuccess";
+
+    public const string CreateCancelSuccess = "CreateCancelSuccess";
+
+    public const string DeleteCancelSuccess = "DeleteCancelSuccess";
+
+    public const string CreateIndeterminate = "CreateIndeterminate";
+
+    public const string DeleteIndeterminate = "DeleteIndeterminate";
+
+    public const string InvalidCreate = "InvalidCreate";
+
+    public const string InvalidDelete = "InvalidDelete";
 
     public const string ProfileNotFound = "ProfileNotFound";
 
@@ -18,11 +30,7 @@ internal static class AgentActionResource
 
     public const string ActionProcessed = "ActionProcessed";
 
-    public const string Indeterminate = "Indeterminate";
-
     public const string FutureDate = "FutureDate";
-
-    public const string InvalidTimesheet = "InvalidTimesheet";
 
     public const string Forbidden = "Forbidden";
 

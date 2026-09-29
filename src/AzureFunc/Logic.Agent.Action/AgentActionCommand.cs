@@ -21,7 +21,8 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
         var callback = update.CallbackQuery;
         var message = callback?.Message;
 
-        if (callback is null || message is null || TryParseCallbackData(callback.Data, out var actionId, out var decision) is false)
+        if (callback is null || message is null ||
+            TryParseCallbackData(callback.Data, out var actionId, out var actionType, out var decision) is false)
         {
             return default;
         }
@@ -32,6 +33,7 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
             message.Chat.Id,
             message.MessageId,
             actionId,
+            actionType,
             decision);
     }
 
@@ -57,7 +59,7 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
         {
             return await SendFailureAsync(
                 request,
-                GetFailureMessage(exception, localizer),
+                GetFailureMessage(exception, request.Value.ActionType, localizer),
                 cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception)
@@ -70,22 +72,37 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
         await RemoveKeyboardAsync(request, cancellationToken).ConfigureAwait(false);
         await SendResultAsync(
             request,
-            response.Decision is AgentActionDecision.Confirm
-                ? localizer[ConfirmSuccess]
-                : localizer[CancelSuccess],
+            GetSuccessMessage(request.Value.ActionType, response.Decision, localizer),
             cancellationToken).ConfigureAwait(false);
 
         return request.Context.CreateCompleteResult<Unit>(default);
     }
 
-    internal static string BuildCallbackData(Guid actionId, AgentActionDecision decision)
+    internal static string BuildCallbackData(Guid actionId, AgentActionType actionType, AgentActionDecision decision)
         =>
         string.Concat(
             CallbackPrefix,
             decision is AgentActionDecision.Confirm ? "c:" : "x:",
+            actionType is AgentActionType.Create ? "c:" : "d:",
             actionId.ToString("N", CultureInfo.InvariantCulture));
 
-    private static string GetFailureMessage(AgentMessageApiException exception, IStringLocalizer localizer)
+    private static string GetSuccessMessage(
+        AgentActionType actionType,
+        AgentActionDecision decision,
+        IStringLocalizer localizer)
+        =>
+        (actionType, decision) switch
+        {
+            (AgentActionType.Create, AgentActionDecision.Confirm) => localizer[CreateConfirmSuccess],
+            (AgentActionType.Delete, AgentActionDecision.Confirm) => localizer[DeleteConfirmSuccess],
+            (AgentActionType.Create, AgentActionDecision.Cancel) => localizer[CreateCancelSuccess],
+            _ => localizer[DeleteCancelSuccess]
+        };
+
+    private static string GetFailureMessage(
+        AgentMessageApiException exception,
+        AgentActionType actionType,
+        IStringLocalizer localizer)
     {
         if (IsFailure(exception, "UserNotLinked", "Telegram user is not linked"))
         {
@@ -115,14 +132,18 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
 
         if (IsFailure(exception, "Indeterminate", "Timesheet creation result is indeterminate"))
         {
-            return localizer[Indeterminate];
+            return actionType is AgentActionType.Create
+                ? localizer[CreateIndeterminate]
+                : localizer[DeleteIndeterminate];
         }
 
         if (IsFailure(exception, "InvalidTimesheet", "Timesheet data is invalid"))
         {
             return IsFutureDateProblem(exception.ProblemDetail)
                 ? localizer[FutureDate]
-                : localizer[InvalidTimesheet];
+                : actionType is AgentActionType.Create
+                    ? localizer[InvalidCreate]
+                    : localizer[InvalidDelete];
         }
 
         if (IsFailure(exception, "TimesheetForbidden", "Timesheet creation is forbidden"))
@@ -159,9 +180,14 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
         return localizer[UnexpectedError];
     }
 
-    private static bool TryParseCallbackData(string? data, out Guid actionId, out AgentActionDecision decision)
+    private static bool TryParseCallbackData(
+        string? data,
+        out Guid actionId,
+        out AgentActionType actionType,
+        out AgentActionDecision decision)
     {
         actionId = default;
+        actionType = default;
         decision = default;
 
         if (data is null || data.StartsWith(CallbackPrefix, StringComparison.Ordinal) is false)
@@ -170,7 +196,7 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
         }
 
         var value = data.AsSpan(CallbackPrefix.Length);
-        if (value.Length is not 34 || value[1] is not ':')
+        if (value.Length is not 36 || value[1] is not ':' || value[3] is not ':')
         {
             return false;
         }
@@ -182,7 +208,16 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
             _ => (AgentActionDecision)(-1)
         };
 
-        return Enum.IsDefined(decision) && Guid.TryParseExact(value[2..], "N", out actionId);
+        actionType = value[2] switch
+        {
+            'c' => AgentActionType.Create,
+            'd' => AgentActionType.Delete,
+            _ => (AgentActionType)(-1)
+        };
+
+        return Enum.IsDefined(decision) &&
+            Enum.IsDefined(actionType) &&
+            Guid.TryParseExact(value[4..], "N", out actionId);
     }
 
     private static bool IsFutureDateProblem(string? detail)

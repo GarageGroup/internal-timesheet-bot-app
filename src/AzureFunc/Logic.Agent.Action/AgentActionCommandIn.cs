@@ -9,6 +9,7 @@ internal sealed record class AgentActionCommandIn(
     long TelegramChatId,
     int TelegramMessageId,
     Guid ActionId,
+    AgentActionType ActionType,
     AgentActionDecision Decision) : IChatCommandIn<Unit>
 {
     public static string Type { get; } = "AgentAction";
