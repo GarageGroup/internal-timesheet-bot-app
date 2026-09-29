@@ -1,0 +1,15 @@
+using System;
+using GarageGroup.Infra.Telegram.Bot;
+
+namespace GarageGroup.Internal.Timesheet;
+
+internal sealed record class AgentActionCommandIn(
+    int TelegramUpdateId,
+    long TelegramUserId,
+    long TelegramChatId,
+    int TelegramMessageId,
+    Guid ActionId,
+    AgentActionDecision Decision) : IChatCommandIn<Unit>
+{
+    public static string Type { get; } = "AgentAction";
+}

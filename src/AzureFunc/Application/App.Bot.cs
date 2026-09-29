@@ -35,6 +35,8 @@ partial class Application
         .With(
             "profile", UseAgentProfileCommand())
         .With(
+            UseAgentActionCommand())
+        .With(
             UseAgentMessageCommand())
         .With(
             UseWelcomeCommand())
@@ -69,4 +71,10 @@ partial class Application
         Dependency.From(
             ServiceProviderServiceExtensions.GetRequiredService<IAgentMessageApi>)
         .UseAgentMessageCommand();
+
+    private static Dependency<IChatCommand<AgentActionCommandIn, Unit>> UseAgentActionCommand()
+        =>
+        Dependency.From(
+            ServiceProviderServiceExtensions.GetRequiredService<IAgentActionApi>)
+        .UseAgentActionCommand();
 }

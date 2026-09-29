@@ -17,7 +17,10 @@ public static class AgentMessageApiTest
             Assert.Equal(HttpMethod.Post, request.Method);
             Assert.Equal("https://example.com/internal/agent/messages", request.RequestUri?.AbsoluteUri);
 
-            var body = await request.Content!.ReadAsStringAsync(TestContext.Current.CancellationToken);
+            var content = request.Content;
+            Assert.NotNull(content);
+
+            var body = await content.ReadAsStringAsync(TestContext.Current.CancellationToken);
             Assert.Contains("\"telegramUpdateId\":101", body, StringComparison.Ordinal);
             Assert.Contains("\"telegramUserId\":202", body, StringComparison.Ordinal);
             Assert.Contains("\"telegramChatId\":303", body, StringComparison.Ordinal);
@@ -26,7 +29,24 @@ public static class AgentMessageApiTest
 
             return new(HttpStatusCode.OK)
             {
-                Content = new StringContent("{\"text\":\"Some response\"}", Encoding.UTF8, "application/json")
+                Content = new StringContent(
+                    """
+                    {
+                      "text": "Some response",
+                      "preparedAction": {
+                        "actionId": "78302d93-e6dc-4fd6-be63-2480c8984382",
+                        "date": "2026-09-29",
+                        "projectId": "2b36961d-7645-4e74-a87d-f309acd84f09",
+                        "projectName": "Some project",
+                        "projectType": 1,
+                        "duration": 2.5,
+                        "description": "Some work",
+                        "expiresAt": "2026-09-29T12:00:00+00:00"
+                      }
+                    }
+                    """,
+                    Encoding.UTF8,
+                    "application/json")
             };
         });
 
@@ -39,7 +59,19 @@ public static class AgentMessageApiTest
             "ru",
             TestContext.Current.CancellationToken);
 
-        Assert.Equal(new AgentMessage("Some response"), actual);
+        Assert.Equal(
+            new AgentMessage(
+                "Some response",
+                new(
+                    new("78302d93-e6dc-4fd6-be63-2480c8984382"),
+                    new(2026, 9, 29),
+                    new("2b36961d-7645-4e74-a87d-f309acd84f09"),
+                    "Some project",
+                    1,
+                    2.5m,
+                    "Some work",
+                    new(2026, 9, 29, 12, 0, 0, TimeSpan.Zero))),
+            actual);
     }
 
     [Fact]

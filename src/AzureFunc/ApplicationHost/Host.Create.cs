@@ -43,6 +43,10 @@ partial class ApplicationHost
             ConfigureAgentApiClient(serviceProvider, client))
         .AddHttpMessageHandler<AgentAccessTokenHandler>();
 
+        _ = services.AddHttpClient<IAgentActionApi, AgentActionApi>(static (serviceProvider, client) =>
+            ConfigureAgentApiClient(serviceProvider, client))
+        .AddHttpMessageHandler<AgentAccessTokenHandler>();
+
         return services;
 
         static void ConfigureAgentApiClient(IServiceProvider serviceProvider, HttpClient client)

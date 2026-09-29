@@ -46,8 +46,12 @@ internal sealed class AgentMessageCommand(IAgentMessageApi agentApi)
                 input.Locale,
                 cancellationToken).ConfigureAwait(false);
 
-            _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
-                WebUtility.HtmlEncode(response.Text),
+            _ = await request.Context.Api.SendMessageAsync(
+                new(WebUtility.HtmlEncode(response.Text))
+                {
+                    ParseMode = BotParseMode.Html,
+                    ReplyMarkup = response.PreparedAction is null ? new BotReplyKeyboardRemove() : BuildActionKeyboard(response.PreparedAction.ActionId)
+                },
                 cancellationToken).ConfigureAwait(false);
 
             return request.Context.CreateCompleteResult<Unit>(default);
@@ -78,4 +82,17 @@ internal sealed class AgentMessageCommand(IAgentMessageApi agentApi)
             return request.Context.CreateCancelledResult<Unit>();
         }
     }
+
+    private static BotInlineKeyboardMarkup BuildActionKeyboard(Guid actionId)
+        =>
+        new()
+        {
+            InlineKeyboard =
+            [
+                [
+                    new("✅ Подтвердить") { CallbackData = AgentActionCommand.BuildCallbackData(actionId, AgentActionDecision.Confirm) },
+                    new("❌ Отменить") { CallbackData = AgentActionCommand.BuildCallbackData(actionId, AgentActionDecision.Cancel) }
+                ]
+            ]
+        };
 }
