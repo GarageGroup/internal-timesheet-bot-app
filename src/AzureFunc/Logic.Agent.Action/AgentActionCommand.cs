@@ -83,7 +83,12 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
         string.Concat(
             CallbackPrefix,
             decision is AgentActionDecision.Confirm ? "c:" : "x:",
-            actionType is AgentActionType.Create ? "c:" : "d:",
+            actionType switch
+            {
+                AgentActionType.Create => "c:",
+                AgentActionType.Delete => "d:",
+                _ => "u:"
+            },
             actionId.ToString("N", CultureInfo.InvariantCulture));
 
     private static string GetSuccessMessage(
@@ -95,8 +100,10 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
         {
             (AgentActionType.Create, AgentActionDecision.Confirm) => localizer[CreateConfirmSuccess],
             (AgentActionType.Delete, AgentActionDecision.Confirm) => localizer[DeleteConfirmSuccess],
+            (AgentActionType.Update, AgentActionDecision.Confirm) => localizer[UpdateConfirmSuccess],
             (AgentActionType.Create, AgentActionDecision.Cancel) => localizer[CreateCancelSuccess],
-            _ => localizer[DeleteCancelSuccess]
+            (AgentActionType.Delete, AgentActionDecision.Cancel) => localizer[DeleteCancelSuccess],
+            _ => localizer[UpdateCancelSuccess]
         };
 
     private static string GetFailureMessage(
@@ -132,18 +139,24 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
 
         if (IsFailure(exception, "Indeterminate", "Timesheet creation result is indeterminate"))
         {
-            return actionType is AgentActionType.Create
-                ? localizer[CreateIndeterminate]
-                : localizer[DeleteIndeterminate];
+            return actionType switch
+            {
+                AgentActionType.Create => localizer[CreateIndeterminate],
+                AgentActionType.Delete => localizer[DeleteIndeterminate],
+                _ => localizer[UpdateIndeterminate]
+            };
         }
 
         if (IsFailure(exception, "InvalidTimesheet", "Timesheet data is invalid"))
         {
             return IsFutureDateProblem(exception.ProblemDetail)
                 ? localizer[FutureDate]
-                : actionType is AgentActionType.Create
-                    ? localizer[InvalidCreate]
-                    : localizer[InvalidDelete];
+                : actionType switch
+                {
+                    AgentActionType.Create => localizer[InvalidCreate],
+                    AgentActionType.Delete => localizer[InvalidDelete],
+                    _ => localizer[InvalidUpdate]
+                };
         }
 
         if (IsFailure(exception, "TimesheetForbidden", "Timesheet creation is forbidden"))
@@ -212,6 +225,7 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
         {
             'c' => AgentActionType.Create,
             'd' => AgentActionType.Delete,
+            'u' => AgentActionType.Update,
             _ => (AgentActionType)(-1)
         };
 

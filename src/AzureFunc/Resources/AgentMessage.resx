@@ -8,6 +8,7 @@
   <data name="CancelButton" xml:space="preserve"><value>❌ Cancel</value></data>
   <data name="CreatePreview" xml:space="preserve"><value>Prepared a time entry. Nothing has been created yet.&#10;&#10;&lt;b&gt;Date:&lt;/b&gt; {0}&#10;&lt;b&gt;Project:&lt;/b&gt; {1}&#10;&lt;b&gt;Duration:&lt;/b&gt; {2} h&#10;&lt;b&gt;Comment:&lt;/b&gt; {3}&#10;&#10;Check the details and confirm the action.</value></data>
   <data name="DeletePreview" xml:space="preserve"><value>Prepared a time entry for deletion. Nothing has been deleted yet.&#10;&#10;&lt;b&gt;Date:&lt;/b&gt; {0}&#10;&lt;b&gt;Project:&lt;/b&gt; {1}&#10;&lt;b&gt;Duration:&lt;/b&gt; {2} h&#10;&lt;b&gt;Comment:&lt;/b&gt; {3}&#10;&#10;Check the details and confirm the deletion.</value></data>
+  <data name="UpdatePreview" xml:space="preserve"><value>Prepared changes to a time entry. Nothing has been changed yet.&#10;&#10;&lt;b&gt;Date:&lt;/b&gt; {0}&#10;&lt;b&gt;Project:&lt;/b&gt; {1}&#10;&lt;b&gt;Duration:&lt;/b&gt; {2} h&#10;&lt;b&gt;Comment:&lt;/b&gt; {3}&#10;&#10;Check the details and confirm the changes.</value></data>
   <data name="ProfileNotFound" xml:space="preserve"><value>Profile not found. Open the Mini App and sign in.</value></data>
   <data name="ConversationConflict" xml:space="preserve"><value>Another message is already being processed. Please try again.</value></data>
   <data name="UnexpectedError" xml:space="preserve"><value>Unable to get an agent response. Please try again later.</value></data>

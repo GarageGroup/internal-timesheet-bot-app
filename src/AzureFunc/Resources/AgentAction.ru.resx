@@ -6,8 +6,10 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="CreateConfirmSuccess" xml:space="preserve"><value>✅ Время успешно списано.</value></data>
   <data name="DeleteConfirmSuccess" xml:space="preserve"><value>✅ Списание успешно удалено.</value></data>
+  <data name="UpdateConfirmSuccess" xml:space="preserve"><value>✅ Списание успешно изменено.</value></data>
   <data name="CreateCancelSuccess" xml:space="preserve"><value>Списание отменено.</value></data>
   <data name="DeleteCancelSuccess" xml:space="preserve"><value>Удаление списания отменено.</value></data>
+  <data name="UpdateCancelSuccess" xml:space="preserve"><value>Изменение списания отменено.</value></data>
   <data name="ProfileNotFound" xml:space="preserve"><value>Профиль не найден. Откройте Mini App и выполните вход.</value></data>
   <data name="ProfileUnavailable" xml:space="preserve"><value>Привязка профиля недоступна. Откройте Mini App и выполните вход повторно.</value></data>
   <data name="WriteDisabled" xml:space="preserve"><value>Списание времени через агента временно отключено.</value></data>
@@ -15,9 +17,11 @@
   <data name="ActionProcessed" xml:space="preserve"><value>Это действие уже было обработано.</value></data>
   <data name="CreateIndeterminate" xml:space="preserve"><value>Результат создания списания не удалось определить. Проверьте списания перед любыми повторными действиями.</value></data>
   <data name="DeleteIndeterminate" xml:space="preserve"><value>Результат удаления списания не удалось определить. Проверьте списания перед любыми повторными действиями.</value></data>
+  <data name="UpdateIndeterminate" xml:space="preserve"><value>Результат изменения списания не удалось определить. Проверьте списания перед любыми повторными действиями.</value></data>
   <data name="FutureDate" xml:space="preserve"><value>Нельзя списать время на будущую дату. Подготовьте действие с допустимой датой.</value></data>
   <data name="InvalidCreate" xml:space="preserve"><value>Не удалось создать списание: проверьте дату, длительность, проект и комментарий.</value></data>
   <data name="InvalidDelete" xml:space="preserve"><value>Не удалось удалить списание: возможно, оно доступно только для чтения или уже недоступно.</value></data>
+  <data name="InvalidUpdate" xml:space="preserve"><value>Не удалось изменить списание: проверьте дату, длительность, проект и комментарий либо убедитесь, что запись доступна для изменения.</value></data>
   <data name="Forbidden" xml:space="preserve"><value>Недостаточно прав для создания списания.</value></data>
   <data name="ProjectNotFound" xml:space="preserve"><value>Проект больше недоступен. Подготовьте списание заново.</value></data>
   <data name="ActionNotFound" xml:space="preserve"><value>Действие не найдено или больше недоступно.</value></data>

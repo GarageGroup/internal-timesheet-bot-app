@@ -8,17 +8,25 @@ internal static class AgentActionResource
 
     public const string DeleteConfirmSuccess = "DeleteConfirmSuccess";
 
+    public const string UpdateConfirmSuccess = "UpdateConfirmSuccess";
+
     public const string CreateCancelSuccess = "CreateCancelSuccess";
 
     public const string DeleteCancelSuccess = "DeleteCancelSuccess";
+
+    public const string UpdateCancelSuccess = "UpdateCancelSuccess";
 
     public const string CreateIndeterminate = "CreateIndeterminate";
 
     public const string DeleteIndeterminate = "DeleteIndeterminate";
 
+    public const string UpdateIndeterminate = "UpdateIndeterminate";
+
     public const string InvalidCreate = "InvalidCreate";
 
     public const string InvalidDelete = "InvalidDelete";
+
+    public const string InvalidUpdate = "InvalidUpdate";
 
     public const string ProfileNotFound = "ProfileNotFound";
 

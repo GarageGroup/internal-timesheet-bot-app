@@ -95,7 +95,14 @@ internal sealed class AgentMessageCommand(IAgentMessageApi agentApi)
 
     private static (Guid ActionId, AgentActionType ActionType)? GetPreparedAction(AgentMessage message)
     {
-        if (message.PreparedCreateAction is not null && message.PreparedDeleteAction is not null)
+        var actionCount = new object?[]
+        {
+            message.PreparedCreateAction,
+            message.PreparedDeleteAction,
+            message.PreparedUpdateAction
+        }.Count(static action => action is not null);
+
+        if (actionCount > 1)
         {
             throw new InvalidOperationException("Agent response contains more than one prepared action");
         }
@@ -108,6 +115,11 @@ internal sealed class AgentMessageCommand(IAgentMessageApi agentApi)
         if (message.PreparedDeleteAction is not null)
         {
             return (message.PreparedDeleteAction.ActionId, AgentActionType.Delete);
+        }
+
+        if (message.PreparedUpdateAction is not null)
+        {
+            return (message.PreparedUpdateAction.ActionId, AgentActionType.Update);
         }
 
         return null;
@@ -135,6 +147,17 @@ internal sealed class AgentMessageCommand(IAgentMessageApi agentApi)
                 WebUtility.HtmlEncode(deleteAction.ProjectName),
                 deleteAction.Duration.ToString("0.##", CultureInfo.CurrentCulture),
                 WebUtility.HtmlEncode(deleteAction.Description));
+        }
+
+        if (message.PreparedUpdateAction is AgentPreparedUpdateAction updateAction)
+        {
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                localizer[UpdatePreview],
+                updateAction.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                WebUtility.HtmlEncode(updateAction.ProjectName),
+                updateAction.Duration.ToString("0.##", CultureInfo.CurrentCulture),
+                WebUtility.HtmlEncode(updateAction.Description));
         }
 
         return WebUtility.HtmlEncode(message.Text);
