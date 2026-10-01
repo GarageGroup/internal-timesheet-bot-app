@@ -29,4 +29,14 @@
   <data name="BadRequest" xml:space="preserve"><value>Unable to perform the action because its data is invalid.</value></data>
   <data name="ForbiddenFallback" xml:space="preserve"><value>This action is unavailable.</value></data>
   <data name="UnexpectedError" xml:space="preserve"><value>Unable to perform the action. Please try again later.</value></data>
+  <data name="CurrentTimesheets" xml:space="preserve"><value>Time entries for {0}:</value></data>
+  <data name="NoCurrentTimesheets" xml:space="preserve"><value>There are no time entries for {0}.</value></data>
+  <data name="TimesheetsUnavailable" xml:space="preserve"><value>The action was completed, but the current time entries could not be loaded.</value></data>
+  <data name="TimesheetId" xml:space="preserve"><value>Entry ID</value></data>
+  <data name="DurationHours" xml:space="preserve"><value>{0} h</value></data>
+  <data name="InactiveTimesheet" xml:space="preserve"><value>Read-only</value></data>
+  <data name="ProjectTypeProject" xml:space="preserve"><value>Project</value></data>
+  <data name="ProjectTypeOpportunity" xml:space="preserve"><value>Opportunity</value></data>
+  <data name="ProjectTypeLead" xml:space="preserve"><value>Lead</value></data>
+  <data name="ProjectTypeIncident" xml:space="preserve"><value>Incident</value></data>
 </root>

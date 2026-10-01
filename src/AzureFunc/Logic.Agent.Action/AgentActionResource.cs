@@ -53,4 +53,24 @@ internal static class AgentActionResource
     public const string ForbiddenFallback = "ForbiddenFallback";
 
     public const string UnexpectedError = "UnexpectedError";
+
+    public const string CurrentTimesheets = "CurrentTimesheets";
+
+    public const string NoCurrentTimesheets = "NoCurrentTimesheets";
+
+    public const string TimesheetsUnavailable = "TimesheetsUnavailable";
+
+    public const string TimesheetId = "TimesheetId";
+
+    public const string DurationHours = "DurationHours";
+
+    public const string InactiveTimesheet = "InactiveTimesheet";
+
+    public const string ProjectTypeProject = "ProjectTypeProject";
+
+    public const string ProjectTypeOpportunity = "ProjectTypeOpportunity";
+
+    public const string ProjectTypeLead = "ProjectTypeLead";
+
+    public const string ProjectTypeIncident = "ProjectTypeIncident";
 }
