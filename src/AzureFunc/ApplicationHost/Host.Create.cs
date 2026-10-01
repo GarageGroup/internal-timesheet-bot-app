@@ -30,12 +30,24 @@ partial class ApplicationHost
 
     private static IServiceCollection RegisterAgentApi(this IServiceCollection services)
     {
-        _ = services.AddSingleton<IAgentVoiceFileApi>(static _ =>
-            new AgentVoiceFileApi(
-                new HttpClient(new SocketsHttpHandler())
-                {
-                    Timeout = TimeSpan.FromSeconds(30)
-                }));
+        _ = services.AddSingleton<IAgentVoiceFileApi>(static serviceProvider =>
+        {
+            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+            var apiKey = configuration["TelegramBot:ApiKey"];
+
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new InvalidOperationException("TelegramBot:ApiKey must be specified.");
+            }
+
+            var client = new HttpClient(new SocketsHttpHandler())
+            {
+                Timeout = TimeSpan.FromSeconds(30)
+            };
+            client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", apiKey);
+
+            return new AgentVoiceFileApi(client);
+        });
         _ = services.AddSingleton(ResolveAgentVoiceOption);
 
         services.AddTransient(static serviceProvider =>
