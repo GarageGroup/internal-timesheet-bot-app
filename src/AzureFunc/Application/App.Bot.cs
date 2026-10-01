@@ -62,6 +62,10 @@ partial class Application
         =>
         Dependency.From(
             ServiceProviderServiceExtensions.GetRequiredService<IAgentMessageApi>)
+        .With(
+            ServiceProviderServiceExtensions.GetRequiredService<IAgentVoiceFileApi>)
+        .With(
+            ServiceProviderServiceExtensions.GetRequiredService<AgentVoiceOption>)
         .UseAgentMessageCommand();
 
     private static Dependency<IChatCommand<AgentActionCommandIn, Unit>> UseAgentActionCommand()

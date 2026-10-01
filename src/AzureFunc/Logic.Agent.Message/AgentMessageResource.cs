@@ -19,4 +19,10 @@ internal static class AgentMessageResource
     public const string ConversationConflict = "ConversationConflict";
 
     public const string UnexpectedError = "UnexpectedError";
+
+    public const string VoiceTooLarge = "VoiceTooLarge";
+
+    public const string VoiceDownloadError = "VoiceDownloadError";
+
+    public const string VoiceRecognitionError = "VoiceRecognitionError";
 }

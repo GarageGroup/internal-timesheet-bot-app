@@ -12,4 +12,7 @@
   <data name="ProfileNotFound" xml:space="preserve"><value>Профиль не найден. Откройте Mini App и выполните вход.</value></data>
   <data name="ConversationConflict" xml:space="preserve"><value>Диалог уже обрабатывает другое сообщение. Попробуйте ещё раз.</value></data>
   <data name="UnexpectedError" xml:space="preserve"><value>Не удалось получить ответ агента. Попробуйте позже.</value></data>
+  <data name="VoiceTooLarge" xml:space="preserve"><value>Голосовое сообщение слишком большое. Отправьте более короткое сообщение.</value></data>
+  <data name="VoiceDownloadError" xml:space="preserve"><value>Не удалось скачать голосовое сообщение. Попробуйте ещё раз.</value></data>
+  <data name="VoiceRecognitionError" xml:space="preserve"><value>Не удалось распознать голосовое сообщение. Попробуйте ещё раз или отправьте запрос текстом.</value></data>
 </root>

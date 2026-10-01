@@ -30,6 +30,14 @@ partial class ApplicationHost
 
     private static IServiceCollection RegisterAgentApi(this IServiceCollection services)
     {
+        _ = services.AddSingleton<IAgentVoiceFileApi>(static _ =>
+            new AgentVoiceFileApi(
+                new HttpClient(new SocketsHttpHandler())
+                {
+                    Timeout = TimeSpan.FromSeconds(30)
+                }));
+        _ = services.AddSingleton(ResolveAgentVoiceOption);
+
         services.AddTransient(static serviceProvider =>
             new AgentAccessTokenHandler(
                 new ManagedIdentityCredential(ManagedIdentityId.SystemAssigned),
@@ -57,6 +65,20 @@ partial class ApplicationHost
 
             client.BaseAddress = uri;
             client.Timeout = TimeSpan.FromSeconds(60);
+        }
+
+        static AgentVoiceOption ResolveAgentVoiceOption(IServiceProvider serviceProvider)
+        {
+            var maxFileSizeBytes = serviceProvider.GetRequiredService<IConfiguration>().GetValue(
+                "AgentVoice:MaxFileSizeBytes",
+                5 * 1024 * 1024);
+
+            if (maxFileSizeBytes <= 0)
+            {
+                throw new InvalidOperationException("AgentVoice:MaxFileSizeBytes must be positive.");
+            }
+
+            return new(maxFileSizeBytes);
         }
     }
 

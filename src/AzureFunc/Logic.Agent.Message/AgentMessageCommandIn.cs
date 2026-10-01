@@ -8,7 +8,10 @@ internal sealed record class AgentMessageCommandIn(
     long TelegramUserId,
     long TelegramChatId,
     string Text,
-    string? Locale) : IChatCommandIn<Unit>
+    string VoiceFileId,
+    string VoiceMimeType,
+    long VoiceFileSize,
+    string Locale) : IChatCommandIn<Unit>
 {
     public static string Type { get; } = "AgentMessage";
 }

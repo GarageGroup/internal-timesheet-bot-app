@@ -10,6 +10,17 @@ internal interface IAgentMessageApi
         long telegramUserId,
         long telegramChatId,
         string text,
-        string? locale,
+        string locale,
+        CancellationToken cancellationToken);
+
+    ValueTask<AgentMessage> SendVoiceMessageAsync(
+        int telegramUpdateId,
+        long telegramUserId,
+        long telegramChatId,
+        byte[] audio,
+        string mimeType,
+        string fileName,
+        string language,
+        string locale,
         CancellationToken cancellationToken);
 }
