@@ -35,10 +35,6 @@ partial class ApplicationHost
                 new ManagedIdentityCredential(ManagedIdentityId.SystemAssigned),
                 serviceProvider.GetRequiredService<IConfiguration>()));
 
-        _ = services.AddHttpClient<IAgentProfileApi, AgentProfileApi>(static (serviceProvider, client) =>
-            ConfigureAgentApiClient(serviceProvider, client))
-        .AddHttpMessageHandler<AgentAccessTokenHandler>();
-
         _ = services.AddHttpClient<IAgentMessageApi, AgentMessageApi>(static (serviceProvider, client) =>
             ConfigureAgentApiClient(serviceProvider, client))
         .AddHttpMessageHandler<AgentAccessTokenHandler>();
