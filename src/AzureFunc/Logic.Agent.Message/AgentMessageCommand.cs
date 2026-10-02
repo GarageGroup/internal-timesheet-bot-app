@@ -2,6 +2,8 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra.Telegram.Bot;
@@ -18,6 +20,10 @@ internal sealed class AgentMessageCommand(
     AgentVoiceOption voiceOption)
     : IChatCommand<AgentMessageCommandIn, Unit>, IChatCommandParser<AgentMessageCommandIn>
 {
+    private static readonly Regex TelegramHtmlTagRegex = new(
+        "</?(?:b|i|code)>",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
     public Optional<AgentMessageCommandIn> Parse(ChatUpdate update)
     {
         var message = update.Message;
@@ -261,7 +267,25 @@ internal sealed class AgentMessageCommand(
                 WebUtility.HtmlEncode(updateAction.Description));
         }
 
-        return WebUtility.HtmlEncode(message.Text);
+        return SanitizeAgentHtml(message.Text);
+    }
+
+    private static string SanitizeAgentHtml(string text)
+    {
+        var builder = new StringBuilder(text.Length);
+        var currentIndex = 0;
+
+        foreach (Match match in TelegramHtmlTagRegex.Matches(text))
+        {
+            _ = builder
+                .Append(WebUtility.HtmlEncode(WebUtility.HtmlDecode(text[currentIndex..match.Index])))
+                .Append(match.Value);
+            currentIndex = match.Index + match.Length;
+        }
+
+        return builder
+            .Append(WebUtility.HtmlEncode(WebUtility.HtmlDecode(text[currentIndex..])))
+            .ToString();
     }
 
     private static BotInlineKeyboardMarkup BuildActionKeyboard(
