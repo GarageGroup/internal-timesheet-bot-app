@@ -60,17 +60,5 @@ internal static class AgentActionResource
 
     public const string TimesheetsUnavailable = "TimesheetsUnavailable";
 
-    public const string TimesheetId = "TimesheetId";
-
     public const string DurationHours = "DurationHours";
-
-    public const string InactiveTimesheet = "InactiveTimesheet";
-
-    public const string ProjectTypeProject = "ProjectTypeProject";
-
-    public const string ProjectTypeOpportunity = "ProjectTypeOpportunity";
-
-    public const string ProjectTypeLead = "ProjectTypeLead";
-
-    public const string ProjectTypeIncident = "ProjectTypeIncident";
 }

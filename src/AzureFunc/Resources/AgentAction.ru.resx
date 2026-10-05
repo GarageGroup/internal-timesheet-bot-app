@@ -29,14 +29,8 @@
   <data name="BadRequest" xml:space="preserve"><value>Не удалось выполнить действие из-за некорректных данных.</value></data>
   <data name="ForbiddenFallback" xml:space="preserve"><value>Выполнение действия недоступно.</value></data>
   <data name="UnexpectedError" xml:space="preserve"><value>Не удалось выполнить действие. Попробуйте позже.</value></data>
-  <data name="CurrentTimesheets" xml:space="preserve"><value>Списания за {0}:</value></data>
-  <data name="NoCurrentTimesheets" xml:space="preserve"><value>За {0} списаний нет.</value></data>
+  <data name="CurrentTimesheets" xml:space="preserve"><value>Списания за {0} — всего {1}:</value></data>
+  <data name="NoCurrentTimesheets" xml:space="preserve"><value>За {0} списаний нет. Всего {1}.</value></data>
   <data name="TimesheetsUnavailable" xml:space="preserve"><value>Действие выполнено, но актуальные списания загрузить не удалось.</value></data>
-  <data name="TimesheetId" xml:space="preserve"><value>ID списания</value></data>
   <data name="DurationHours" xml:space="preserve"><value>{0} ч</value></data>
-  <data name="InactiveTimesheet" xml:space="preserve"><value>Недоступно для изменения</value></data>
-  <data name="ProjectTypeProject" xml:space="preserve"><value>Проект</value></data>
-  <data name="ProjectTypeOpportunity" xml:space="preserve"><value>Сделка</value></data>
-  <data name="ProjectTypeLead" xml:space="preserve"><value>Лид</value></data>
-  <data name="ProjectTypeIncident" xml:space="preserve"><value>Инцидент</value></data>
 </root>

@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -128,60 +129,43 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
             return string.Concat(
                 successMessage,
                 "\n\n",
-                localizer[NoCurrentTimesheets, response.Date.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)]);
+                localizer[
+                    NoCurrentTimesheets,
+                    response.Date.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture),
+                    localizer[DurationHours, "0"]]);
         }
 
+        var totalDuration = response.Timesheets.Sum(static timesheet => timesheet.Duration);
         var builder = new StringBuilder(successMessage)
             .Append("\n\n<b>")
-            .Append(WebUtility.HtmlEncode(localizer[CurrentTimesheets, response.Date.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)]))
+            .Append(WebUtility.HtmlEncode(localizer[
+                CurrentTimesheets,
+                response.Date.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture),
+                localizer[DurationHours, totalDuration.ToString("0.##", CultureInfo.InvariantCulture)]]))
             .Append("</b>");
 
         for (var index = 0; index < response.Timesheets.Length; index++)
         {
             var timesheet = response.Timesheets[index];
             _ = builder
-                .Append('\n')
+                .Append("\n\n")
                 .Append(index + 1)
-                .Append(". <code>")
-                .Append(WebUtility.HtmlEncode(timesheet.ProjectName))
-                .Append("</code> (")
-                .Append(WebUtility.HtmlEncode(GetProjectType(timesheet.ProjectType, localizer)))
-                .Append(") — ")
+                .Append(". ")
                 .Append(WebUtility.HtmlEncode(localizer[
                     DurationHours,
-                    timesheet.Duration.ToString("0.##", CultureInfo.InvariantCulture)]));
+                    timesheet.Duration.ToString("0.##", CultureInfo.InvariantCulture)]))
+                .Append(" <code>")
+                .Append(WebUtility.HtmlEncode(timesheet.ProjectName))
+                .Append("</code>");
 
             if (string.IsNullOrWhiteSpace(timesheet.Description) is false)
             {
-                _ = builder.Append("\n   ").Append(WebUtility.HtmlEncode(timesheet.Description));
+                _ = builder.Append('\n').Append(WebUtility.HtmlEncode(timesheet.Description));
             }
-
-            if (timesheet.IsActive is false)
-            {
-                _ = builder.Append("\n   <i>").Append(WebUtility.HtmlEncode(localizer[InactiveTimesheet])).Append("</i>");
-            }
-
-            _ = builder
-                .Append("\n   ")
-                .Append(WebUtility.HtmlEncode(localizer[TimesheetId]))
-                .Append(": <code>")
-                .Append(timesheet.Id.ToString("D", CultureInfo.InvariantCulture))
-                .Append("</code>");
         }
 
         return builder.ToString();
     }
-
-    private static string GetProjectType(string projectType, IStringLocalizer localizer)
-        =>
-        projectType switch
-        {
-            "Project" => localizer[ProjectTypeProject],
-            "Opportunity" => localizer[ProjectTypeOpportunity],
-            "Lead" => localizer[ProjectTypeLead],
-            "Incident" => localizer[ProjectTypeIncident],
-            _ => projectType
-        };
 
     private static string GetFailureMessage(
         AgentMessageApiException exception,
