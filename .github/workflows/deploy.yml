@@ -1,0 +1,99 @@
+name: Deploy Release Artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target GitHub Environment
+        required: true
+        type: choice
+        default: Test
+        options: [Test, Prod]
+      version:
+        description: Existing release tag, for example v1.2.3
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Validate version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: '[[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]'
+      - name: Download release artifact from Azure Blob Storage
+        env:
+          VERSION: ${{ inputs.version }}
+          ARTIFACT_NAME: ${{ vars.AZURE_ARTIFACT_NAME }}
+          ARTIFACT_CONTAINER: ${{ vars.AZURE_ARTIFACT_CONTAINER_NAME }}
+          ARTIFACT_ACCOUNT: ${{ vars.AZURE_ARTIFACT_ACCOUNT_NAME }}
+          ARTIFACT_ACCOUNT_KEY: ${{ secrets.AZURE_ACCOUNT_KEY_ARTIFACT }}
+        run: |
+          mkdir -p ./publish
+          az storage blob download --name "${ARTIFACT_NAME}-${VERSION}.zip" --file "./publish/${ARTIFACT_NAME}-${VERSION}.zip" --account-name "$ARTIFACT_ACCOUNT" --container-name "$ARTIFACT_CONTAINER" --account-key "$ARTIFACT_ACCOUNT_KEY" --only-show-errors
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.DEPLOY_CLIENT_ID }}
+          tenant-id: ${{ vars.DEPLOY_TENANT_ID }}
+          subscription-id: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
+      - name: Deploy release artifact
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ vars.FUNCTION_APP_NAME }}
+          package: ./publish/${{ vars.AZURE_ARTIFACT_NAME }}-${{ inputs.version }}.zip
+      - name: Record deployment time
+        uses: azure/cli@v3
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          FUNCTION_APP: ${{ vars.FUNCTION_APP_NAME }}
+        with:
+          inlineScript: az functionapp config appsettings set --resource-group "$RESOURCE_GROUP" --name "$FUNCTION_APP" --settings "Info__DeployDateTime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" --output none --only-show-errors
+      - name: Azure logout
+        if: ${{ always() }}
+        uses: azure/cli@v3
+        with:
+          inlineScript: az logout
+
+  health:
+    needs: deploy
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.DEPLOY_CLIENT_ID }}
+          tenant-id: ${{ vars.DEPLOY_TENANT_ID }}
+          subscription-id: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
+      - name: Resolve health function key
+        id: health
+        uses: azure/cli@v3
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          FUNCTION_APP: ${{ vars.FUNCTION_APP_NAME }}
+        with:
+          inlineScript: |
+            key="$(az functionapp function keys list --resource-group "$RESOURCE_GROUP" --name "$FUNCTION_APP" --function-name HealthCheck --query default --output tsv --only-show-errors)"
+            [[ -n "$key" ]] || { echo 'HealthCheck function key was not found' >&2; exit 1; }
+            echo "::add-mask::$key"
+            echo "key=$key" >> "$GITHUB_OUTPUT"
+      - name: Ping health endpoint
+        uses: GarageGroup/platform-ping-app@v0.1.0
+        with:
+          health_check_url: https://${{ vars.FUNCTION_APP_NAME }}.azurewebsites.net/health?code=${{ steps.health.outputs.key }}
+          contains: ${{ inputs.version }}
+          is_end_of_line_match: true
+          retry_delay_in_seconds: 15
+          max_attempts: 30
+      - name: Azure logout
+        if: ${{ always() }}
+        uses: azure/cli@v3
+        with:
+          inlineScript: az logout

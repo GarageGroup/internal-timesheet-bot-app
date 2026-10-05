@@ -1,0 +1,216 @@
+name: Install Timesheet Bot Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target GitHub Environment
+        required: true
+        type: choice
+        default: Test
+        options: [Test, Prod]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  infrastructure:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    outputs:
+      function_app_name: ${{ steps.install.outputs.function_app_name }}
+      dataverse_identity_client_id: ${{ steps.install.outputs.dataverse_identity_client_id }}
+      agent_identity_client_id: ${{ steps.install.outputs.agent_identity_client_id }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.DEPLOY_CLIENT_ID }}
+          tenant-id: ${{ vars.DEPLOY_TENANT_ID }}
+          subscription-id: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
+      - name: Install infrastructure resources
+        id: install
+        uses: azure/cli@v3
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
+          AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+          ENVIRONMENT_NAME: ${{ vars.AZURE_NAME_POSTFIX }}
+          FUNCTION_APP_NAME: ${{ vars.FUNCTION_APP_NAME }}
+          APP_SERVICE_PLAN_NAME: ${{ vars.APP_SERVICE_PLAN_NAME }}
+          STORAGE_ACCOUNT_NAME: ${{ vars.STORAGE_ACCOUNT_NAME }}
+          APPLICATION_INSIGHTS_NAME: ${{ vars.APPLICATION_INSIGHTS_NAME }}
+          DATAVERSE_MANAGED_IDENTITY_NAME: ${{ vars.DATAVERSE_MANAGED_IDENTITY_NAME }}
+        with:
+          inlineScript: bash .infra/scripts/install-azure-resources.sh
+      - name: Configure Timesheet Bot APIM
+        uses: azure/cli@v3
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
+          AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+          ENVIRONMENT_NAME: ${{ vars.AZURE_NAME_POSTFIX }}
+          FUNCTION_APP_NAME: ${{ steps.install.outputs.function_app_name }}
+          API_WEB_APP_NAME: ${{ vars.API_WEB_APP_NAME }}
+          BOT_APIM_SERVICE_NAME: ${{ vars.BOT_APIM_SERVICE_NAME }}
+          BOT_APIM_LOCATION: ${{ vars.BOT_APIM_LOCATION }}
+          BOT_APIM_PUBLISHER_EMAIL: ${{ vars.BOT_APIM_PUBLISHER_EMAIL }}
+          BOT_APIM_PUBLISHER_NAME: ${{ vars.BOT_APIM_PUBLISHER_NAME }}
+        with:
+          inlineScript: bash .infra/scripts/configure-apim.sh
+      - name: Configure Function App settings
+        uses: azure/cli@v3
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
+          AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          FUNCTION_APP_NAME: ${{ steps.install.outputs.function_app_name }}
+          STORAGE_ACCOUNT_NAME: ${{ vars.STORAGE_ACCOUNT_NAME }}
+          APPLICATION_INSIGHTS_NAME: ${{ vars.APPLICATION_INSIGHTS_NAME }}
+          DATAVERSE_MANAGED_IDENTITY_CLIENT_ID: ${{ steps.install.outputs.dataverse_identity_client_id }}
+          AGENT_MANAGED_IDENTITY_CLIENT_ID: ${{ steps.install.outputs.agent_identity_client_id }}
+          API_WEB_APP_NAME: ${{ vars.API_WEB_APP_NAME }}
+          APIM_SERVICE_NAME: ${{ vars.APIM_SERVICE_NAME }}
+          APIM_AGENT_API_PATH: ${{ vars.APIM_AGENT_API_PATH }}
+          BOT_APIM_SERVICE_NAME: ${{ vars.BOT_APIM_SERVICE_NAME }}
+          DATAVERSE_SERVICE_URL: ${{ vars.DATAVERSE_SERVICE_URL }}
+          BOT_WEB_APP_BASE_ADDRESS: ${{ vars.BOT_WEB_APP_BASE_ADDRESS }}
+          WELCOME_IMAGE_URL: ${{ vars.WELCOME_IMAGE_URL }}
+          TIMESHEET_LIMITATION_DAY_OF_MONTH: ${{ vars.TIMESHEET_LIMITATION_DAY_OF_MONTH }}
+        with:
+          inlineScript: bash .infra/scripts/set-function-app-settings.sh
+      - name: Validate Azure deployment
+        uses: azure/cli@v3
+        env:
+          AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          FUNCTION_APP_NAME: ${{ steps.install.outputs.function_app_name }}
+        with:
+          inlineScript: bash .infra/scripts/validate-deployment.sh
+      - name: Ensure release container
+        uses: azure/cli@v3
+        env:
+          ARTIFACT_ACCOUNT: ${{ vars.AZURE_ARTIFACT_ACCOUNT_NAME }}
+          ARTIFACT_CONTAINER: ${{ vars.AZURE_ARTIFACT_CONTAINER_NAME }}
+          ARTIFACT_ACCOUNT_KEY: ${{ secrets.AZURE_ACCOUNT_KEY_ARTIFACT }}
+        with:
+          inlineScript: az storage container create --name "$ARTIFACT_CONTAINER" --account-name "$ARTIFACT_ACCOUNT" --account-key "$ARTIFACT_ACCOUNT_KEY" --output none --only-show-errors
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Add Garage Group NuGet source
+        run: >
+          dotnet nuget add source "${{ vars.GG_NUGET_SOURCE_URL }}"
+          --name garage
+          --username "${{ secrets.GG_NUGET_SOURCE_USER_NAME }}"
+          --password "${{ secrets.GG_NUGET_SOURCE_USER_PASSWORD }}"
+          --store-password-in-clear-text
+      - name: Build and test
+        run: |
+          dotnet restore Internal.Timesheet.Bot.slnx
+          dotnet build Internal.Timesheet.Bot.slnx --no-restore --configuration Release
+          dotnet test Internal.Timesheet.Bot.slnx --no-build --no-restore --configuration Release
+      - name: Publish bootstrap artifact
+        id: bootstrap
+        env:
+          ARTIFACT_NAME: ${{ vars.AZURE_ARTIFACT_NAME }}
+          ENVIRONMENT_NAME: ${{ vars.AZURE_NAME_POSTFIX }}
+        run: |
+          version="bootstrap-${ENVIRONMENT_NAME}-${GITHUB_SHA:0:12}"
+          dotnet publish src/AzureFunc/AzureFunc.csproj --configuration Release --runtime linux-x64 --self-contained false --output ./publish
+          jq --arg version "$version" --arg date "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" '.Info.ApiVersion = $version | .Info.BuildDateTime = $date' ./publish/appsettings.json > ./publish/appsettings.tmp.json
+          mv ./publish/appsettings.tmp.json ./publish/appsettings.json
+          (cd ./publish && zip -r "${ARTIFACT_NAME}-${version}.zip" ./)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Upload bootstrap artifact to Blob Storage
+        uses: azure/cli@v3
+        env:
+          VERSION: ${{ steps.bootstrap.outputs.version }}
+          ARTIFACT_NAME: ${{ vars.AZURE_ARTIFACT_NAME }}
+          ARTIFACT_CONTAINER: ${{ vars.AZURE_ARTIFACT_CONTAINER_NAME }}
+          ARTIFACT_ACCOUNT: ${{ vars.AZURE_ARTIFACT_ACCOUNT_NAME }}
+          ARTIFACT_ACCOUNT_KEY: ${{ secrets.AZURE_ACCOUNT_KEY_ARTIFACT }}
+        with:
+          inlineScript: az storage blob upload --container-name "$ARTIFACT_CONTAINER" --file "./publish/${ARTIFACT_NAME}-${VERSION}.zip" --name "${ARTIFACT_NAME}-${VERSION}.zip" --account-name "$ARTIFACT_ACCOUNT" --account-key "$ARTIFACT_ACCOUNT_KEY" --overwrite true --output none --only-show-errors
+      - name: Deploy bootstrap artifact
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ steps.install.outputs.function_app_name }}
+          package: ./publish/${{ vars.AZURE_ARTIFACT_NAME }}-${{ steps.bootstrap.outputs.version }}.zip
+      - name: Record deployment time
+        uses: azure/cli@v3
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          FUNCTION_APP: ${{ steps.install.outputs.function_app_name }}
+        with:
+          inlineScript: az functionapp config appsettings set --resource-group "$RESOURCE_GROUP" --name "$FUNCTION_APP" --settings "Info__DeployDateTime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" --output none --only-show-errors
+      - name: Bind bot APIM to deployed Function App
+        uses: azure/cli@v3
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
+          AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          FUNCTION_APP_NAME: ${{ steps.install.outputs.function_app_name }}
+          BOT_APIM_SERVICE_NAME: ${{ vars.BOT_APIM_SERVICE_NAME }}
+        with:
+          inlineScript: bash .infra/scripts/finalize-apim.sh
+      - name: Resolve health function key
+        id: health
+        uses: azure/cli@v3
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          FUNCTION_APP: ${{ steps.install.outputs.function_app_name }}
+        with:
+          inlineScript: |
+            key=''
+            for _ in {1..12}; do
+              key="$(az functionapp function keys list --resource-group "$RESOURCE_GROUP" --name "$FUNCTION_APP" --function-name HealthCheck --query default --output tsv --only-show-errors 2>/dev/null || true)"
+              [[ -n "$key" ]] && break
+              sleep 10
+            done
+            [[ -n "$key" ]] || { echo 'HealthCheck function key was not found' >&2; exit 1; }
+            echo "::add-mask::$key"
+            echo "key=$key" >> "$GITHUB_OUTPUT"
+      - name: Check bootstrap health
+        uses: GarageGroup/platform-ping-app@v0.1.0
+        with:
+          health_check_url: https://${{ steps.install.outputs.function_app_name }}.azurewebsites.net/health?code=${{ steps.health.outputs.key }}
+          contains: ${{ steps.bootstrap.outputs.version }}
+          is_end_of_line_match: true
+          retry_delay_in_seconds: 15
+          max_attempts: 30
+      - name: Resolve bot APIM subscription key
+        id: bot_apim
+        uses: azure/cli@v3
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
+          AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          BOT_APIM_SERVICE_NAME: ${{ vars.BOT_APIM_SERVICE_NAME }}
+        with:
+          inlineScript: |
+            url="https://management.azure.com/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AZURE_RESOURCE_GROUP_NAME/providers/Microsoft.ApiManagement/service/$BOT_APIM_SERVICE_NAME/subscriptions/TelegramBotSubscription/listSecrets?api-version=2024-05-01"
+            key="$(az rest --method POST --url "$url" --query primaryKey --output tsv --only-show-errors)"
+            [[ -n "$key" ]] || { echo 'Bot APIM subscription key was not found' >&2; exit 1; }
+            echo "::add-mask::$key"
+            echo "key=$key" >> "$GITHUB_OUTPUT"
+      - name: Check bot APIM route
+        uses: GarageGroup/platform-ping-app@v0.1.0
+        with:
+          health_check_url: https://${{ vars.BOT_APIM_SERVICE_NAME }}.azure-api.net/bot/health?subscription-key=${{ steps.bot_apim.outputs.key }}
+          contains: ${{ steps.bootstrap.outputs.version }}
+          is_end_of_line_match: true
+          retry_delay_in_seconds: 15
+          max_attempts: 30
+      - name: Configure Telegram webhook
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
+          AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          API_WEB_APP_NAME: ${{ vars.API_WEB_APP_NAME }}
+          BOT_APIM_SERVICE_NAME: ${{ vars.BOT_APIM_SERVICE_NAME }}
+        run: bash .infra/scripts/configure-telegram-webhook.sh
+      - name: Azure logout
+        if: ${{ always() }}
+        uses: azure/cli@v3
+        with:
+          inlineScript: az logout

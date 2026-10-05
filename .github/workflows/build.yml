@@ -1,35 +1,39 @@
-name: Build Bot App
+name: Build Timesheet Bot
 
 on:
   push:
-    branches: [ '**' ]
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout GitHub Action
-      uses: actions/checkout@v4
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '8.0.x'
-
-    - name: Add Garage Group NuGet Source
-      run: >
-        dotnet nuget add source ${{ vars.GG_NUGET_SOURCE_URL }}
-        -n garage
-        -u ${{ secrets.GG_NUGET_SOURCE_USER_NAME }}
-        -p ${{ secrets.GG_NUGET_SOURCE_USER_PASSWORD }}
-        --store-password-in-clear-text
-
-    - name: Restore
-      run: dotnet restore
-
-    - name: Build
-      run: dotnet build --no-restore -c Release
-
-    - name: Test
-      run: dotnet test --no-restore -c Release
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Validate Bicep
+        run: |
+          az bicep build --file .infra/main.bicep --outfile /tmp/timesheet-bot.json
+          az bicep build --file .infra/apim/main.bicep --outfile /tmp/timesheet-bot-apim.json
+      - name: Validate shell scripts
+        run: bash -n .infra/scripts/*.sh
+      - name: Add Garage Group NuGet source
+        run: >
+          dotnet nuget add source "${{ vars.GG_NUGET_SOURCE_URL }}"
+          --name garage
+          --username "${{ secrets.GG_NUGET_SOURCE_USER_NAME }}"
+          --password "${{ secrets.GG_NUGET_SOURCE_USER_PASSWORD }}"
+          --store-password-in-clear-text
+      - name: Restore
+        run: dotnet restore Internal.Timesheet.Bot.slnx
+      - name: Build
+        run: dotnet build Internal.Timesheet.Bot.slnx --no-restore --configuration Release
+      - name: Test
+        run: dotnet test Internal.Timesheet.Bot.slnx --no-build --no-restore --configuration Release
