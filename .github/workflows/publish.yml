@@ -32,7 +32,9 @@ jobs:
       - name: Test
         run: dotnet test Internal.Timesheet.Bot.slnx --no-build --no-restore --configuration Release
       - name: Publish Function App
-        run: dotnet publish src/AzureFunc/AzureFunc.csproj --configuration Release --runtime linux-x64 --self-contained false --output '${{ github.workspace }}/publish'
+        run: |
+          dotnet publish src/AzureFunc/AzureFunc.csproj --configuration Release --runtime linux-x64 --self-contained false --output '${{ github.workspace }}/publish'
+          bash .infra/scripts/validate-function-package.sh ./publish
       - name: Resolve release information
         id: release
         run: |
@@ -51,7 +53,9 @@ jobs:
         env:
           VERSION: ${{ steps.release.outputs.version }}
           ARTIFACT_NAME: ${{ vars.AZURE_ARTIFACT_NAME }}
-        run: cd ./publish && zip -r "${ARTIFACT_NAME}-${VERSION}.zip" ./
+        run: |
+          (cd ./publish && zip -r "${ARTIFACT_NAME}-${VERSION}.zip" ./)
+          bash .infra/scripts/validate-function-package.sh "./publish/${ARTIFACT_NAME}-${VERSION}.zip"
       - name: Upload artifact to Azure Blob Storage
         uses: azure/cli@v3
         env:
@@ -68,6 +72,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: Test
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
       - name: Download release artifact from Azure Blob Storage
         env:
           VERSION: ${{ github.event.release.tag_name }}
@@ -78,12 +84,26 @@ jobs:
         run: |
           mkdir -p ./publish
           az storage blob download --name "${ARTIFACT_NAME}-${VERSION}.zip" --file "./publish/${ARTIFACT_NAME}-${VERSION}.zip" --account-name "$ARTIFACT_ACCOUNT" --container-name "$ARTIFACT_CONTAINER" --account-key "$ARTIFACT_ACCOUNT_KEY" --only-show-errors
+      - name: Validate release artifact
+        env:
+          VERSION: ${{ github.event.release.tag_name }}
+          ARTIFACT_NAME: ${{ vars.AZURE_ARTIFACT_NAME }}
+        run: bash .infra/scripts/validate-function-package.sh "./publish/${ARTIFACT_NAME}-${VERSION}.zip"
       - name: Log in to Azure with OIDC
         uses: azure/login@v3
         with:
           client-id: ${{ vars.DEPLOY_CLIENT_ID }}
           tenant-id: ${{ vars.DEPLOY_TENANT_ID }}
           subscription-id: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
+      - name: Validate Function App runtime
+        uses: azure/cli@v3
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          FUNCTION_APP: ${{ vars.FUNCTION_APP_NAME }}
+        with:
+          inlineScript: |
+            runtime="$(az functionapp config show --resource-group "$RESOURCE_GROUP" --name "$FUNCTION_APP" --query linuxFxVersion --output tsv --only-show-errors)"
+            [[ "$runtime" == 'DOTNET-ISOLATED|10.0' ]] || { echo "Unexpected Function runtime: $runtime" >&2; exit 1; }
       - name: Deploy release artifact to Test
         uses: Azure/functions-action@v1
         with:

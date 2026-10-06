@@ -249,3 +249,25 @@ Azure при подготовке файлов не изменялся.
 
 Все изменения Azure, Entra ID и production-параметров должны фиксироваться в проектной документации
 без публикации секретных значений.
+
+## .NET 10 Function worker
+
+Для этого проекта важно оставить в `AzureFunc.csproj` параметры
+`FunctionsEnableWorkerIndexing=false`, `FunctionsEnableExecutorSourceGen=false` и
+`FunctionsAutoRegisterGeneratedFunctionsExecutor=false`. Они повторяют конфигурацию
+рабочих .NET 10 Function-проектов AMBY. Без них `worker.config.json` содержит
+`workerIndexing: true`: локальный Azure Functions Core Tools 4.8.0 запускает worker,
+но сообщает `No job functions found`, хотя `functions.metadata` содержит функции.
+С параметрами выше `workerIndexing: false`, функции индексируются хостом.
+
+При ручной ZIP-публикации проверьте, что пути внутри архива используют `/`, а
+`host.json`, `functions.metadata` и `worker.config.json` лежат в корне. На Windows
+`Compress-Archive` записывает вложенные пути с `\`; такой архив не следует
+публиковать без проверки. Маршрут `/health` имеет `authLevel: Function`, поэтому
+прямой запрос без `x-functions-key` корректно возвращает 401.
+
+CI/CD запускает `.infra/scripts/validate-function-package.sh` после публикации и
+перед развёртыванием готового ZIP. Скрипт проверяет индексирование, наличие
+`HealthCheck`, `HandleBotHttp`, `HandleBotEntity`, корневые файлы и пути архива.
+Обычный deploy также останавливается до публикации, если Function App не настроена
+на `DOTNET-ISOLATED|10.0`. После публикации остаётся проверка `/health` с ключом.

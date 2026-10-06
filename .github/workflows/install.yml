@@ -120,9 +120,11 @@ jobs:
         run: |
           version="bootstrap-${ENVIRONMENT_NAME}-${GITHUB_SHA:0:12}"
           dotnet publish src/AzureFunc/AzureFunc.csproj --configuration Release --runtime linux-x64 --self-contained false --output ./publish
+          bash .infra/scripts/validate-function-package.sh ./publish
           jq --arg version "$version" --arg date "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" '.Info.ApiVersion = $version | .Info.BuildDateTime = $date' ./publish/appsettings.json > ./publish/appsettings.tmp.json
           mv ./publish/appsettings.tmp.json ./publish/appsettings.json
           (cd ./publish && zip -r "${ARTIFACT_NAME}-${version}.zip" ./)
+          bash .infra/scripts/validate-function-package.sh "./publish/${ARTIFACT_NAME}-${version}.zip"
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Upload bootstrap artifact to Blob Storage
         uses: azure/cli@v3

@@ -37,3 +37,7 @@ jobs:
         run: dotnet build Internal.Timesheet.Bot.slnx --no-restore --configuration Release
       - name: Test
         run: dotnet test Internal.Timesheet.Bot.slnx --no-build --no-restore --configuration Release
+      - name: Validate Function publish output
+        run: |
+          dotnet publish src/AzureFunc/AzureFunc.csproj --configuration Release --runtime linux-x64 --self-contained false --output ./publish
+          bash .infra/scripts/validate-function-package.sh ./publish

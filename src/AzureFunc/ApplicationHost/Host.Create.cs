@@ -50,7 +50,7 @@ partial class ApplicationHost
         });
         _ = services.AddSingleton(ResolveAgentVoiceOption);
 
-        services.AddTransient(static serviceProvider =>
+        _ = services.AddSingleton(static serviceProvider =>
         {
             var configuration = serviceProvider.GetRequiredService<IConfiguration>();
             var clientId = configuration["AgentApi:ManagedIdentityClientId"];
@@ -60,10 +60,12 @@ partial class ApplicationHost
                 throw new InvalidOperationException("AgentApi:ManagedIdentityClientId must be configured.");
             }
 
-            return new AgentAccessTokenHandler(
-                new ManagedIdentityCredential(ManagedIdentityId.FromUserAssignedClientId(clientId)),
-                configuration);
+            return new ManagedIdentityCredential(ManagedIdentityId.FromUserAssignedClientId(clientId));
         });
+
+        _ = services.AddTransient(static serviceProvider => new AgentAccessTokenHandler(
+            serviceProvider.GetRequiredService<ManagedIdentityCredential>(),
+            serviceProvider.GetRequiredService<IConfiguration>()));
 
         _ = services.AddHttpClient<IAgentMessageApi, AgentMessageApi>(static (serviceProvider, client) =>
             ConfigureAgentApiClient(serviceProvider, client))

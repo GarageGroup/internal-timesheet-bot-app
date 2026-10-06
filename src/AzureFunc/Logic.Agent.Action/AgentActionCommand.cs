@@ -62,13 +62,18 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
             return await SendFailureAsync(
                 request,
                 GetFailureMessage(exception, request.Value.ActionType, localizer),
+                removeKeyboard: IsTemporaryFailure(exception) is false,
                 cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception)
         {
             request.Context.GetLogger<AgentActionCommand>().LogError(exception, "Agent action decision request failed");
 
-            return await SendFailureAsync(request, localizer[UnexpectedError], cancellationToken).ConfigureAwait(false);
+            return await SendFailureAsync(
+                request,
+                localizer[UnexpectedError],
+                removeKeyboard: false,
+                cancellationToken).ConfigureAwait(false);
         }
 
         await RemoveKeyboardAsync(request, cancellationToken).ConfigureAwait(false);
@@ -304,12 +309,22 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
         string.Equals(exception.FailureCode, failureCode, StringComparison.Ordinal) ||
         string.Equals(exception.ProblemDetail, problemDetail, StringComparison.Ordinal);
 
+    private static bool IsTemporaryFailure(AgentMessageApiException exception)
+        =>
+        exception.StatusCode is HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests ||
+        (int)exception.StatusCode >= 500;
+
     private static async ValueTask<ChatCommandResult<Unit>> SendFailureAsync(
         ChatCommandRequest<AgentActionCommandIn, Unit> request,
         string text,
+        bool removeKeyboard,
         CancellationToken cancellationToken)
     {
-        await RemoveKeyboardAsync(request, cancellationToken).ConfigureAwait(false);
+        if (removeKeyboard)
+        {
+            await RemoveKeyboardAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+
         await SendResultAsync(request, text, cancellationToken).ConfigureAwait(false);
 
         return request.Context.CreateCancelledResult<Unit>();

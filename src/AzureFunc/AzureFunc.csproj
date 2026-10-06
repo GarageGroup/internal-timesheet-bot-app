@@ -4,6 +4,9 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
+    <FunctionsEnableWorkerIndexing>false</FunctionsEnableWorkerIndexing>
+    <FunctionsEnableExecutorSourceGen>false</FunctionsEnableExecutorSourceGen>
+    <FunctionsAutoRegisterGeneratedFunctionsExecutor>false</FunctionsAutoRegisterGeneratedFunctionsExecutor>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <InvariantGlobalization>false</InvariantGlobalization>
@@ -30,6 +33,7 @@
     <PackageReference Include="GarageGroup.Infra.Telegram.Bot.Api" Version="0.3.0" />
     <PackageReference Include="GarageGroup.Infra.Telegram.Bot.Authorization.Api.Dataverse" Version="0.2.0" />
     <PackageReference Include="GarageGroup.Infra.Telegram.Bot.Engine" Version="0.4.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.52.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.3.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.1.0" OutputItemType="Analyzer" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.12" />
