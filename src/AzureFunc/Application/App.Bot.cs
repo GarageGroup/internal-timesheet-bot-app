@@ -33,6 +33,10 @@ partial class Application
         .With(
             "info", BotCommand.UseBotInfoCommand())
         .With(
+            UseAgentActionCommand())
+        .With(
+            UseAgentMessageCommand())
+        .With(
             UseWelcomeCommand())
         .BuildWebHookHandler();
 
@@ -53,4 +57,20 @@ partial class Application
         Dependency.From(
             ServiceProviderServiceExtensions.GetRequiredService<WelcomeOption>)
         .UseWelcomeCommand();
+
+    private static Dependency<IChatCommand<AgentMessageCommandIn, Unit>> UseAgentMessageCommand()
+        =>
+        Dependency.From(
+            ServiceProviderServiceExtensions.GetRequiredService<IAgentMessageApi>)
+        .With(
+            ServiceProviderServiceExtensions.GetRequiredService<IAgentVoiceFileApi>)
+        .With(
+            ServiceProviderServiceExtensions.GetRequiredService<AgentVoiceOption>)
+        .UseAgentMessageCommand();
+
+    private static Dependency<IChatCommand<AgentActionCommandIn, Unit>> UseAgentActionCommand()
+        =>
+        Dependency.From(
+            ServiceProviderServiceExtensions.GetRequiredService<IAgentActionApi>)
+        .UseAgentActionCommand();
 }

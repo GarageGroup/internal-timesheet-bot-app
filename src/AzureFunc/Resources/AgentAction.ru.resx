@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="CreateConfirmSuccess" xml:space="preserve"><value>✅ Время успешно списано.</value></data>
+  <data name="DeleteConfirmSuccess" xml:space="preserve"><value>✅ Списание успешно удалено.</value></data>
+  <data name="UpdateConfirmSuccess" xml:space="preserve"><value>✅ Списание успешно изменено.</value></data>
+  <data name="CreateCancelSuccess" xml:space="preserve"><value>Списание отменено.</value></data>
+  <data name="DeleteCancelSuccess" xml:space="preserve"><value>Удаление списания отменено.</value></data>
+  <data name="UpdateCancelSuccess" xml:space="preserve"><value>Изменение списания отменено.</value></data>
+  <data name="ProfileNotFound" xml:space="preserve"><value>Профиль не найден. Откройте Mini App и выполните вход.</value></data>
+  <data name="ProfileUnavailable" xml:space="preserve"><value>Привязка профиля недоступна. Откройте Mini App и выполните вход повторно.</value></data>
+  <data name="WriteDisabled" xml:space="preserve"><value>Списание времени через агента временно отключено.</value></data>
+  <data name="ActionExpired" xml:space="preserve"><value>Срок подтверждения истёк. Подготовьте списание заново.</value></data>
+  <data name="ActionProcessed" xml:space="preserve"><value>Это действие уже было обработано.</value></data>
+  <data name="CreateIndeterminate" xml:space="preserve"><value>Результат создания списания не удалось определить. Проверьте списания перед любыми повторными действиями.</value></data>
+  <data name="DeleteIndeterminate" xml:space="preserve"><value>Результат удаления списания не удалось определить. Проверьте списания перед любыми повторными действиями.</value></data>
+  <data name="UpdateIndeterminate" xml:space="preserve"><value>Результат изменения списания не удалось определить. Проверьте списания перед любыми повторными действиями.</value></data>
+  <data name="FutureDate" xml:space="preserve"><value>Нельзя списать время на будущую дату. Подготовьте действие с допустимой датой.</value></data>
+  <data name="InvalidCreate" xml:space="preserve"><value>Не удалось создать списание: проверьте дату, длительность, проект и комментарий.</value></data>
+  <data name="InvalidDelete" xml:space="preserve"><value>Не удалось удалить списание: возможно, оно доступно только для чтения или уже недоступно.</value></data>
+  <data name="InvalidUpdate" xml:space="preserve"><value>Не удалось изменить списание: проверьте дату, длительность, проект и комментарий либо убедитесь, что запись доступна для изменения.</value></data>
+  <data name="Forbidden" xml:space="preserve"><value>Недостаточно прав для создания списания.</value></data>
+  <data name="ProjectNotFound" xml:space="preserve"><value>Проект больше недоступен. Подготовьте списание заново.</value></data>
+  <data name="ActionNotFound" xml:space="preserve"><value>Действие не найдено или больше недоступно.</value></data>
+  <data name="Conflict" xml:space="preserve"><value>Действие уже обработано, истекло или его результат требует проверки. Проверьте списания перед повторной попыткой.</value></data>
+  <data name="BadRequest" xml:space="preserve"><value>Не удалось выполнить действие из-за некорректных данных.</value></data>
+  <data name="ForbiddenFallback" xml:space="preserve"><value>Выполнение действия недоступно.</value></data>
+  <data name="UnexpectedError" xml:space="preserve"><value>Не удалось выполнить действие. Попробуйте позже.</value></data>
+  <data name="CurrentTimesheets" xml:space="preserve"><value>Списания за {0} — всего {1}:</value></data>
+  <data name="NoCurrentTimesheets" xml:space="preserve"><value>За {0} списаний нет. Всего {1}.</value></data>
+  <data name="TimesheetsUnavailable" xml:space="preserve"><value>Действие выполнено, но актуальные списания загрузить не удалось.</value></data>
+  <data name="DurationHours" xml:space="preserve"><value>{0} ч</value></data>
+</root>
