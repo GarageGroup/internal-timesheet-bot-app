@@ -162,9 +162,6 @@ Resource Group и location. `GITHUB_ENVIRONMENT` сохраняет регист
 
 | Имя | Тип | Назначение |
 | --- | --- | --- |
-| `GG_NUGET_SOURCE_URL` | Variable | URL приватного Garage Group NuGet source |
-| `GG_NUGET_SOURCE_USER_NAME` | Secret | Пользователь NuGet source |
-| `GG_NUGET_SOURCE_USER_PASSWORD` | Secret | Пароль NuGet source |
 | `AZURE_ARTIFACT_NAME` | Variable | Базовое имя ZIP, например `internal-timesheet-bot` |
 | `AZURE_ARTIFACT_ACCOUNT_NAME` | Variable | Общий artifact Storage Account |
 | `AZURE_ARTIFACT_CONTAINER_NAME` | Variable | Blob Container релизов; будет создан при установке |
@@ -271,3 +268,11 @@ CI/CD запускает `.infra/scripts/validate-function-package.sh` посл�
 `HealthCheck`, `HandleBotHttp`, `HandleBotEntity`, корневые файлы и пути архива.
 Обычный deploy также останавливается до публикации, если Function App не настроена
 на `DOTNET-ISOLATED|10.0`. После публикации остаётся проверка `/health` с ключом.
+
+## Источники NuGet
+
+23.11.2026 восстановление решения проверено только из nuget.org с отдельной конфигурацией,
+пустым кэшем пакетов и отключённым HTTP-кэшем. Все прямые и транзитивные зависимости доступны
+публично. Из build, install и publish удалено подключение приватного Azure Artifacts feed,
+который возвращал HTTP 401 и задерживал Restore. Credentials приватного feed больше не нужны.
+Изменение одобрено владельцем для коммита; проверка новых workflow в GitHub ещё не выполнялась.
