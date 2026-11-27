@@ -35,8 +35,6 @@ partial class Application
         .With(
             "logout", UseAgentSignOutCommand())
         .With(
-            UseAgentActionCommand())
-        .With(
             UseAgentToolActionCommand())
         .With(
             UseAgentMessageCommand())
@@ -65,8 +63,6 @@ partial class Application
     private static Dependency<IChatCommand<AgentMessageCommandIn, Unit>> UseAgentMessageCommand()
         =>
         Dependency.From(
-            ServiceProviderServiceExtensions.GetRequiredService<IAgentMessageApi>)
-        .With(
             ServiceProviderServiceExtensions.GetRequiredService<IAgentVoiceFileApi>)
         .With(
             ServiceProviderServiceExtensions.GetRequiredService<AgentVoiceOption>)
@@ -83,10 +79,4 @@ partial class Application
         =>
         Dependency.From<IChatCommand<AgentSignOutCommandIn, Unit>>(
             static serviceProvider => new AgentSignOutCommand(serviceProvider.GetRequiredService<AgentChatFeature>()));
-
-    private static Dependency<IChatCommand<AgentActionCommandIn, Unit>> UseAgentActionCommand()
-        =>
-        Dependency.From(
-            ServiceProviderServiceExtensions.GetRequiredService<IAgentActionApi>)
-        .UseAgentActionCommand();
 }

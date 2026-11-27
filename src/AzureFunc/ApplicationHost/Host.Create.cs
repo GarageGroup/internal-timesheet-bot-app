@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using GarageGroup.Infra;
 using System.Net.Http;
 using GarageGroup.Infra.Telegram.Bot;
-using Azure.Identity;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,11 +24,11 @@ partial class ApplicationHost
         .RegisterBotProvider()
         .RegisterDataverseApi()
         .RegisterUserAuthorizationApi()
-        .RegisterAgentApi()
+        .RegisterAgentVoiceFileApi()
         .RegisterAgent()
         .RegisterWelcomeOption();
 
-    private static IServiceCollection RegisterAgentApi(this IServiceCollection services)
+    private static IServiceCollection RegisterAgentVoiceFileApi(this IServiceCollection services)
     {
         _ = services.AddSingleton<IAgentVoiceFileApi>(static serviceProvider =>
         {
@@ -51,46 +50,7 @@ partial class ApplicationHost
         });
         _ = services.AddSingleton(ResolveAgentVoiceOption);
 
-        _ = services.AddSingleton(static serviceProvider =>
-        {
-            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-            var clientId = configuration["AgentApi:ManagedIdentityClientId"];
-
-            if (string.IsNullOrWhiteSpace(clientId))
-            {
-                throw new InvalidOperationException("AgentApi:ManagedIdentityClientId must be configured.");
-            }
-
-            return new ManagedIdentityCredential(ManagedIdentityId.FromUserAssignedClientId(clientId));
-        });
-
-        _ = services.AddTransient(static serviceProvider => new AgentAccessTokenHandler(
-            serviceProvider.GetRequiredService<ManagedIdentityCredential>(),
-            serviceProvider.GetRequiredService<IConfiguration>()));
-
-        _ = services.AddHttpClient<IAgentMessageApi, AgentMessageApi>(static (serviceProvider, client) =>
-            ConfigureAgentApiClient(serviceProvider, client))
-        .AddHttpMessageHandler<AgentAccessTokenHandler>();
-
-        _ = services.AddHttpClient<IAgentActionApi, AgentActionApi>(static (serviceProvider, client) =>
-            ConfigureAgentApiClient(serviceProvider, client))
-        .AddHttpMessageHandler<AgentAccessTokenHandler>();
-
         return services;
-
-        static void ConfigureAgentApiClient(IServiceProvider serviceProvider, HttpClient client)
-        {
-            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-            var baseAddress = configuration["AgentApi:BaseAddress"];
-
-            if (Uri.TryCreate(baseAddress, UriKind.Absolute, out var uri) is false)
-            {
-                throw new InvalidOperationException("AgentApi:BaseAddress must be an absolute URI.");
-            }
-
-            client.BaseAddress = uri;
-            client.Timeout = TimeSpan.FromSeconds(60);
-        }
 
         static AgentVoiceOption ResolveAgentVoiceOption(IServiceProvider serviceProvider)
         {

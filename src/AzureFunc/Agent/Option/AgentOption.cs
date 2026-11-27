@@ -4,8 +4,6 @@ namespace GarageGroup.Internal.Timesheet;
 
 internal sealed record class AgentOption
 {
-    public bool Enabled { get; init; }
-
     public required AgentFoundryOption Foundry { get; init; }
 
     public required AgentMessageOption Message { get; init; }

@@ -29,14 +29,14 @@ partial class ApplicationHost
         var option = serviceProvider.GetRequiredService<AgentOption>();
         var signInAudience = Array.Find(option.Tools, static tool => string.IsNullOrEmpty(tool.Audience) is false)?.Audience;
 
-        if (option.Enabled is false || option.SignIn is not AgentSignInOption signIn || signInAudience is null)
+        if (option.SignIn is not AgentSignInOption signIn || signInAudience is null)
         {
             return new(Service: null);
         }
 
         if (string.IsNullOrEmpty(signIn.ManagedIdentityClientId))
         {
-            throw new InvalidOperationException("Agent:SignIn:ManagedIdentityClientId or AgentApi:ManagedIdentityClientId must be specified.");
+            throw new InvalidOperationException("Agent:SignIn:ManagedIdentityClientId or Agent:Foundry:ManagedIdentityClientId must be specified.");
         }
 
         var credential = new ManagedIdentityCredential(ManagedIdentityId.FromUserAssignedClientId(signIn.ManagedIdentityClientId));
@@ -68,11 +68,6 @@ partial class ApplicationHost
     private static AgentChatFeature ResolveAgentChatFeature(IServiceProvider serviceProvider)
     {
         var option = serviceProvider.GetRequiredService<AgentOption>();
-        if (option.Enabled is false)
-        {
-            return new(Enabled: false, Service: new DisabledAgentChatService());
-        }
-
         if (string.IsNullOrWhiteSpace(option.Storage.ConnectionString))
         {
             throw new InvalidOperationException("Agent:Storage:ConnectionString or AzureWebJobsStorage must be specified.");
@@ -122,7 +117,7 @@ partial class ApplicationHost
                     option.Voice.DeploymentName, option.Voice.Endpoint.AbsoluteUri, foundryCredential, option.Voice.ModelId));
 #pragma warning restore SKEXP0010
 
-        return new(Enabled: true, Service: chatService)
+        return new(chatService)
         {
             SignIn = serviceProvider.GetRequiredService<AgentSignInRuntime>().Service,
             Voice = voiceTranscriber
