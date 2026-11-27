@@ -80,6 +80,7 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
         await SendResultAsync(
             request,
             BuildSuccessMessage(request.Value.ActionType, response, localizer),
+            BuildSuccessRichMessage(request.Value.ActionType, response, localizer),
             cancellationToken).ConfigureAwait(false);
 
         return request.Context.CreateCompleteResult<Unit>(default);
@@ -170,6 +171,49 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
         }
 
         return builder.ToString();
+    }
+
+    private static string? BuildSuccessRichMessage(
+        AgentActionType actionType,
+        AgentActionDecisionOut response,
+        IStringLocalizer localizer)
+    {
+        if (response.Decision is not AgentActionDecision.Confirm ||
+            response.TimesheetsLoaded is false ||
+            response.Timesheets.Length is 0)
+        {
+            return null;
+        }
+
+        var totalDuration = response.Timesheets.Sum(static timesheet => timesheet.Duration);
+        var builder = new StringBuilder("<p>")
+            .Append(WebUtility.HtmlEncode(GetSuccessMessage(actionType, response.Decision, localizer)))
+            .Append("</p><p><b>")
+            .Append(WebUtility.HtmlEncode(localizer[
+                CurrentTimesheets,
+                response.Date.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture),
+                localizer[DurationHours, totalDuration.ToString("0.##", CultureInfo.InvariantCulture)]]))
+            .Append("</b></p><table bordered striped><tr><th align=\"left\">")
+            .Append(WebUtility.HtmlEncode(localizer[ProjectColumn]))
+            .Append("</th><th align=\"right\">")
+            .Append(WebUtility.HtmlEncode(localizer[DurationColumn]))
+            .Append("</th><th align=\"left\">")
+            .Append(WebUtility.HtmlEncode(localizer[DescriptionColumn]))
+            .Append("</th></tr>");
+
+        foreach (var timesheet in response.Timesheets)
+        {
+            _ = builder
+                .Append("<tr><td>")
+                .Append(WebUtility.HtmlEncode(timesheet.ProjectName))
+                .Append("</td><td align=\"right\">")
+                .Append(timesheet.Duration.ToString("0.##", CultureInfo.InvariantCulture))
+                .Append("</td><td>")
+                .Append(WebUtility.HtmlEncode(timesheet.Description))
+                .Append("</td></tr>");
+        }
+
+        return builder.Append("</table>").ToString();
     }
 
     private static string GetFailureMessage(
@@ -325,7 +369,7 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
             await RemoveKeyboardAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
-        await SendResultAsync(request, text, cancellationToken).ConfigureAwait(false);
+        await SendResultAsync(request, text, richHtml: null, cancellationToken).ConfigureAwait(false);
 
         return request.Context.CreateCancelledResult<Unit>();
     }
@@ -349,11 +393,23 @@ internal sealed class AgentActionCommand(IAgentActionApi agentApi)
     private static async ValueTask SendResultAsync(
         ChatCommandRequest<AgentActionCommandIn, Unit> request,
         string text,
+        string? richHtml,
         CancellationToken cancellationToken)
     {
         try
         {
-            _ = await request.Context.Api.SendHtmlModeTextAsync(text, cancellationToken).ConfigureAwait(false);
+            if (richHtml is null)
+            {
+                _ = await request.Context.Api.SendHtmlModeTextAsync(text, cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            _ = await request.Context.Api.SendRichHtmlOrFallbackAsync(
+                richHtml,
+                text,
+                replyMarkup: null,
+                request.Context.GetLogger<AgentActionCommand>(),
+                cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception)
         {

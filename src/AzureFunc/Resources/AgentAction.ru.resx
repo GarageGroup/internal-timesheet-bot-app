@@ -33,4 +33,7 @@
   <data name="NoCurrentTimesheets" xml:space="preserve"><value>За {0} списаний нет. Всего {1}.</value></data>
   <data name="TimesheetsUnavailable" xml:space="preserve"><value>Действие выполнено, но актуальные списания загрузить не удалось.</value></data>
   <data name="DurationHours" xml:space="preserve"><value>{0} ч</value></data>
+  <data name="ProjectColumn" xml:space="preserve"><value>Проект</value></data>
+  <data name="DurationColumn" xml:space="preserve"><value>Часы</value></data>
+  <data name="DescriptionColumn" xml:space="preserve"><value>Комментарий</value></data>
 </root>

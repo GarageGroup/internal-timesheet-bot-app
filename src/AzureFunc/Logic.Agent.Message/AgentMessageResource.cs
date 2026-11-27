@@ -14,6 +14,12 @@ internal static class AgentMessageResource
 
     public const string UpdatePreview = "UpdatePreview";
 
+    public const string CreatePreviewRich = "CreatePreviewRich";
+
+    public const string DeletePreviewRich = "DeletePreviewRich";
+
+    public const string UpdatePreviewRich = "UpdatePreviewRich";
+
     public const string ProfileNotFound = "ProfileNotFound";
 
     public const string ConversationConflict = "ConversationConflict";

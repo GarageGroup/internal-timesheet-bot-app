@@ -61,4 +61,10 @@ internal static class AgentActionResource
     public const string TimesheetsUnavailable = "TimesheetsUnavailable";
 
     public const string DurationHours = "DurationHours";
+
+    public const string ProjectColumn = "ProjectColumn";
+
+    public const string DurationColumn = "DurationColumn";
+
+    public const string DescriptionColumn = "DescriptionColumn";
 }

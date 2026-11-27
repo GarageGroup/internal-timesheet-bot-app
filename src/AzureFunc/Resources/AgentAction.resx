@@ -33,4 +33,7 @@
   <data name="NoCurrentTimesheets" xml:space="preserve"><value>There are no time entries for {0}. Total: {1}.</value></data>
   <data name="TimesheetsUnavailable" xml:space="preserve"><value>The action was completed, but the current time entries could not be loaded.</value></data>
   <data name="DurationHours" xml:space="preserve"><value>{0} h</value></data>
+  <data name="ProjectColumn" xml:space="preserve"><value>Project</value></data>
+  <data name="DurationColumn" xml:space="preserve"><value>Hours</value></data>
+  <data name="DescriptionColumn" xml:space="preserve"><value>Comment</value></data>
 </root>
