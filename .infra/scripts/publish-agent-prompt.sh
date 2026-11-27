@@ -7,22 +7,28 @@ set -euo pipefail
 required=(
   AZURE_RESOURCE_GROUP_NAME
   STORAGE_ACCOUNT_NAME
-  PACKAGE_PATH
 )
 
 for variable in "${required[@]}"; do
   [[ -n "${!variable:-}" ]] || { echo "Missing $variable" >&2; exit 1; }
 done
 
+# The prompt comes either from a file of the repository (PROMPT_FILE) or from a release package (PACKAGE_PATH).
+[[ -n "${PROMPT_FILE:-}" || -n "${PACKAGE_PATH:-}" ]] || { echo 'Missing PROMPT_FILE or PACKAGE_PATH' >&2; exit 1; }
+
 container_name="${AGENT_PROMPT_CONTAINER_NAME:-agent}"
 blob_name="${AGENT_PROMPT_BLOB_NAME:-AgentSystem.md}"
-
-[[ -f "$PACKAGE_PATH" ]] || { echo "Function package was not found: $PACKAGE_PATH" >&2; exit 1; }
 
 prompt_file="$(mktemp)"
 trap 'rm -f "$prompt_file"' EXIT
 
-python3 - "$PACKAGE_PATH" "$prompt_file" <<'PYTHON'
+if [[ -n "${PROMPT_FILE:-}" ]]; then
+  [[ -f "$PROMPT_FILE" ]] || { echo "Prompt file was not found: $PROMPT_FILE" >&2; exit 1; }
+  cp "$PROMPT_FILE" "$prompt_file"
+else
+  [[ -f "$PACKAGE_PATH" ]] || { echo "Function package was not found: $PACKAGE_PATH" >&2; exit 1; }
+
+  python3 - "$PACKAGE_PATH" "$prompt_file" <<'PYTHON'
 import sys
 import zipfile
 
@@ -35,12 +41,12 @@ with zipfile.ZipFile(package_path) as package:
         sys.exit('The package does not contain Prompts/AgentSystem.md')
     content = package.read(entry)
 
-if not content.strip():
-    sys.exit('The agent prompt in the package is empty')
-
 with open(prompt_path, 'wb') as prompt:
     prompt.write(content)
 PYTHON
+fi
+
+[[ -n "$(tr -d '[:space:]' < "$prompt_file")" ]] || { echo 'The agent prompt is empty' >&2; exit 1; }
 
 storage_key="$(az storage account keys list \
   --resource-group "$AZURE_RESOURCE_GROUP_NAME" \

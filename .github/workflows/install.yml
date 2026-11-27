@@ -9,6 +9,30 @@ on:
         type: choice
         default: Test
         options: [Test, Prod]
+      infrastructure:
+        description: Deploy Azure resources (Function App, agent identity, Foundry)
+        type: boolean
+        default: true
+      apim:
+        description: Configure the bot API Management
+        type: boolean
+        default: true
+      settings:
+        description: Update Function App settings
+        type: boolean
+        default: true
+      code:
+        description: Build, test and deploy the bot code
+        type: boolean
+        default: true
+      prompt:
+        description: Publish the agent prompt to Blob Storage
+        type: boolean
+        default: true
+      webhook:
+        description: Configure the Telegram webhook
+        type: boolean
+        default: true
 
 permissions:
   id-token: write
@@ -35,10 +59,11 @@ jobs:
           client-id: ${{ vars.DEPLOY_CLIENT_ID }}
           tenant-id: ${{ vars.DEPLOY_TENANT_ID }}
           subscription-id: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
-      - name: Install infrastructure resources
+      - name: Install or resolve infrastructure resources
         id: install
         uses: azure/cli@v3
         env:
+          DEPLOY_INFRASTRUCTURE: ${{ inputs.infrastructure }}
           AZURE_SUBSCRIPTION_ID: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
           AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
           AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
@@ -66,6 +91,7 @@ jobs:
         with:
           inlineScript: bash .infra/scripts/install-azure-resources.sh
       - name: Configure Timesheet Bot APIM
+        if: ${{ inputs.apim }}
         uses: azure/cli@v3
         env:
           AZURE_SUBSCRIPTION_ID: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
@@ -81,6 +107,7 @@ jobs:
         with:
           inlineScript: bash .infra/scripts/configure-apim.sh
       - name: Configure Function App settings
+        if: ${{ inputs.settings }}
         uses: azure/cli@v3
         env:
           AZURE_SUBSCRIPTION_ID: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
@@ -114,6 +141,7 @@ jobs:
         with:
           inlineScript: bash .infra/scripts/set-function-app-settings.sh
       - name: Grant agent access to Foundry
+        if: ${{ inputs.infrastructure }}
         uses: azure/cli@v3
         env:
           FOUNDRY_ACCOUNT_ID: ${{ steps.install.outputs.foundry_account_id }}
@@ -121,6 +149,7 @@ jobs:
         with:
           inlineScript: bash .infra/scripts/grant-foundry-access.sh
       - name: Validate Azure deployment
+        if: ${{ inputs.infrastructure }}
         uses: azure/cli@v3
         env:
           AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
@@ -128,6 +157,7 @@ jobs:
         with:
           inlineScript: bash .infra/scripts/validate-deployment.sh
       - name: Ensure release container
+        if: ${{ inputs.code }}
         uses: azure/cli@v3
         env:
           ARTIFACT_ACCOUNT: ${{ vars.AZURE_ARTIFACT_ACCOUNT_NAME }}
@@ -136,15 +166,18 @@ jobs:
         with:
           inlineScript: az storage container create --name "$ARTIFACT_CONTAINER" --account-name "$ARTIFACT_ACCOUNT" --account-key "$ARTIFACT_ACCOUNT_KEY" --output none --only-show-errors
       - name: Setup .NET
+        if: ${{ inputs.code }}
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
       - name: Build and test
+        if: ${{ inputs.code }}
         run: |
           dotnet restore Internal.Timesheet.Bot.slnx
           dotnet build Internal.Timesheet.Bot.slnx --no-restore --configuration Release
           dotnet test Internal.Timesheet.Bot.slnx --no-build --no-restore --configuration Release
       - name: Publish bootstrap artifact
+        if: ${{ inputs.code }}
         id: bootstrap
         env:
           ARTIFACT_NAME: ${{ vars.AZURE_ARTIFACT_NAME }}
@@ -159,6 +192,7 @@ jobs:
           bash .infra/scripts/validate-function-package.sh "./publish/${ARTIFACT_NAME}-${version}.zip"
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Upload bootstrap artifact to Blob Storage
+        if: ${{ inputs.code }}
         uses: azure/cli@v3
         env:
           VERSION: ${{ steps.bootstrap.outputs.version }}
@@ -169,21 +203,24 @@ jobs:
         with:
           inlineScript: az storage blob upload --container-name "$ARTIFACT_CONTAINER" --file "./publish/${ARTIFACT_NAME}-${VERSION}.zip" --name "${ARTIFACT_NAME}-${VERSION}.zip" --account-name "$ARTIFACT_ACCOUNT" --account-key "$ARTIFACT_ACCOUNT_KEY" --overwrite true --output none --only-show-errors
       - name: Deploy bootstrap artifact
+        if: ${{ inputs.code }}
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ steps.install.outputs.function_app_name }}
           package: ./publish/${{ vars.AZURE_ARTIFACT_NAME }}-${{ steps.bootstrap.outputs.version }}.zip
       - name: Publish agent prompt
+        if: ${{ inputs.prompt }}
         uses: azure/cli@v3
         env:
           AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
           STORAGE_ACCOUNT_NAME: ${{ vars.STORAGE_ACCOUNT_NAME }}
           AGENT_PROMPT_CONTAINER_NAME: ${{ vars.AGENT_PROMPT_CONTAINER_NAME }}
           AGENT_PROMPT_BLOB_NAME: ${{ vars.AGENT_PROMPT_BLOB_NAME }}
-          PACKAGE_PATH: ./publish/${{ vars.AZURE_ARTIFACT_NAME }}-${{ steps.bootstrap.outputs.version }}.zip
+          PROMPT_FILE: ./src/AzureFunc/Prompts/AgentSystem.md
         with:
           inlineScript: bash .infra/scripts/publish-agent-prompt.sh
       - name: Record deployment time
+        if: ${{ inputs.code }}
         uses: azure/cli@v3
         env:
           RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
@@ -191,6 +228,7 @@ jobs:
         with:
           inlineScript: az functionapp config appsettings set --resource-group "$RESOURCE_GROUP" --name "$FUNCTION_APP" --settings "Info__DeployDateTime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" --output none --only-show-errors
       - name: Bind bot APIM to deployed Function App
+        if: ${{ inputs.apim }}
         uses: azure/cli@v3
         env:
           AZURE_SUBSCRIPTION_ID: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
@@ -200,6 +238,7 @@ jobs:
         with:
           inlineScript: bash .infra/scripts/finalize-apim.sh
       - name: Resolve health function key
+        if: ${{ inputs.code }}
         id: health
         uses: azure/cli@v3
         env:
@@ -217,6 +256,7 @@ jobs:
             echo "::add-mask::$key"
             echo "key=$key" >> "$GITHUB_OUTPUT"
       - name: Check bootstrap health
+        if: ${{ inputs.code }}
         uses: GarageGroup/platform-ping-app@v0.1.0
         with:
           health_check_url: https://${{ steps.install.outputs.function_app_name }}.azurewebsites.net/health?code=${{ steps.health.outputs.key }}
@@ -225,6 +265,7 @@ jobs:
           retry_delay_in_seconds: 15
           max_attempts: 30
       - name: Resolve bot APIM subscription key
+        if: ${{ inputs.code }}
         id: bot_apim
         uses: azure/cli@v3
         env:
@@ -239,6 +280,7 @@ jobs:
             echo "::add-mask::$key"
             echo "key=$key" >> "$GITHUB_OUTPUT"
       - name: Check bot APIM route
+        if: ${{ inputs.code }}
         uses: GarageGroup/platform-ping-app@v0.1.0
         with:
           health_check_url: https://${{ vars.BOT_APIM_SERVICE_NAME }}.azure-api.net/bot/health?subscription-key=${{ steps.bot_apim.outputs.key }}
@@ -247,6 +289,7 @@ jobs:
           retry_delay_in_seconds: 15
           max_attempts: 30
       - name: Configure Telegram webhook
+        if: ${{ inputs.webhook }}
         env:
           AZURE_SUBSCRIPTION_ID: ${{ vars.DEPLOY_SUBSCRIPTION_ID }}
           AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
