@@ -80,7 +80,12 @@ internal sealed class AgentToolInvocationFilter(
             _ => value.GetRawText()
         };
 
-        return new(name, text, value.ValueKind is JsonValueKind.String ? entityCache.FindDisplay(telegramUserId, text) : null);
+        var entity = value.ValueKind is JsonValueKind.String ? entityCache.Find(telegramUserId, text) : null;
+
+        return new(name, text, entity?.Display)
+        {
+            Details = entity?.Details
+        };
     }
 
     private static JsonElement ToJsonElement(object value)
