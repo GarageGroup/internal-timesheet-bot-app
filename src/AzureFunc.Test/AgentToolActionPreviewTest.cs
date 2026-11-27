@@ -14,6 +14,8 @@ public static class AgentToolActionPreviewTest
         {
             ["DefaultTitle"] = "Подготовлено действие: {0}",
             ["PreviewHint"] = "Проверьте параметры.",
+            ["PreviewHintMany"] = "Проверьте действия и подтвердите их все.",
+            ["PreviewTitleMany"] = "Подготовлено действий: {0}",
             ["Title_create-timesheet"] = "Создать списание",
             ["Arg_date"] = "Дата",
             ["Arg_id"] = "Проект",
@@ -196,9 +198,31 @@ public static class AgentToolActionPreviewTest
         Assert.Null(cache.FindDisplay(16, "839bb7ea-6e1f-4ba0-a5fb-a63769a20e65"));
     }
 
+    [Fact]
+    public static void Build_SeveralCalls_ExpectCommonHeadingAndNumberedActions()
+    {
+        var action = new AgentPendingAction(
+            "id",
+            new(15, 27),
+            [
+                new("Timesheet", "create-timesheet", "{}", [new("date", "2026-11-23"), new("duration", "2")]),
+                new("Timesheet", "create-timesheet", "{}", [new("date", "2026-11-24"), new("duration", "3")])
+            ],
+            DateTimeOffset.MaxValue);
+
+        var (rich, fallback) = AgentToolActionPreview.Build(action, Localizer, "ru");
+
+        Assert.StartsWith("<h3>Подготовлено действий: 2</h3><p><b>1. Создать списание</b></p><table compact>", rich);
+        Assert.Contains("</table><p><b>2. Создать списание</b></p><table compact>", rich);
+        Assert.EndsWith("<p>Проверьте действия и подтвердите их все.</p>", rich);
+
+        Assert.StartsWith("<b>Подготовлено действий: 2</b>\n\n<b>1. Создать списание</b>\n", fallback);
+        Assert.Contains("\n\n<b>2. Создать списание</b>\n", fallback);
+    }
+
     private static AgentPendingAction CreateAction(string functionName, params AgentActionArgument[] arguments)
         =>
-        new("id", new(15, 27), "Timesheet", functionName, "{}", arguments, DateTimeOffset.MaxValue);
+        new("id", new(15, 27), [new("Timesheet", functionName, "{}", arguments)], DateTimeOffset.MaxValue);
 
     private sealed class DictionaryLocalizer(Dictionary<string, string> values) : IStringLocalizer
     {

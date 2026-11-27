@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,49 +54,28 @@ internal sealed class AgentChatService(
         await using var toolSet = await toolLoader.LoadAsync(user, cancellationToken).ConfigureAwait(false);
 
         var action = await actionStore.TakeAsync(user.TelegramUserId, actionId, cancellationToken).ConfigureAwait(false);
-        if (action is null || action.ExpiresAt <= timeProvider.GetUtcNow())
+        if (action is null || action.Calls.Length is 0 || action.ExpiresAt <= timeProvider.GetUtcNow())
         {
             return new(AgentActionStatus.NotFound);
         }
 
-        var function = toolSet.Plugins
-            .FirstOrDefault(plugin => string.Equals(plugin.Name, action.ToolName, StringComparison.Ordinal))?
-            .FirstOrDefault(function => string.Equals(function.Name, action.FunctionName, StringComparison.Ordinal));
+        // The calls do not depend on each other, so they run in parallel and a failed one does not stop the rest
+        var results = await Task.WhenAll(
+            action.Calls.Select(call => InvokeCallAsync(toolSet, call, cancellationToken))).ConfigureAwait(false);
 
-        var status = AgentActionStatus.Failed;
-        string result;
-
-        if (function is null)
+        var succeededCount = results.Count(static result => result.IsSucceeded);
+        var status = succeededCount switch
         {
-            result = "The operation is no longer available.";
-        }
-        else
-        {
-            try
-            {
-                var functionResult = await function.InvokeAsync(
-                    new Kernel(), ReadArguments(action.ArgumentsJson), cancellationToken).ConfigureAwait(false);
+            0 => AgentActionStatus.Failed,
+            _ when succeededCount == results.Length => AgentActionStatus.Succeeded,
+            _ => AgentActionStatus.PartiallySucceeded
+        };
 
-                result = functionResult.ToString();
-                status = AgentActionStatus.Succeeded;
-            }
-            catch (Exception exception) when (exception is not OperationCanceledException)
-            {
-                logger.LogWarning(exception, "The confirmed agent action {tool}.{function} has failed", action.ToolName, action.FunctionName);
-                result = "The request has failed: " + exception.Message;
-            }
-        }
+        var eventText = BuildConfirmedEventText(action.Calls, results);
 
-        var eventText =
-            $"[System event, not a user message] The user has confirmed the action '{action.FunctionName}' " +
-            $"with the arguments {action.ArgumentsJson}. " +
-            (status is AgentActionStatus.Succeeded ? "It has been executed. Result: " : "It has NOT been executed. Error: ") +
-            Truncate(result) +
-            " Tell the user the outcome in one short sentence. " +
-            "If the action changed the time entries of a day, get the entries of that day and show them with the total.";
-
-        var userSettingsChanged = status is AgentActionStatus.Succeeded &&
-            option.UserSettingsFunctions.Contains(AgentToolInvocationFilter.GetKey(action.ToolName, action.FunctionName));
+        var userSettingsChanged = action.Calls
+            .Where((_, index) => results[index].IsSucceeded)
+            .Any(call => option.UserSettingsFunctions.Contains(AgentToolInvocationFilter.GetKey(call.ToolName, call.FunctionName)));
 
         try
         {
@@ -126,8 +106,8 @@ internal sealed class AgentChatService(
 
         await historyStore.AppendAsync(
             user,
-            $"[System event, not a user message] The user has cancelled the action '{action.FunctionName}'.",
-            "The action has been cancelled and has not been executed.",
+            "[System event, not a user message] The user has cancelled the prepared actions: " + DescribeCalls(action.Calls),
+            "The actions have been cancelled and have not been executed.",
             option.Message.MaxHistoryMessageCount,
             cancellationToken).ConfigureAwait(false);
 
@@ -169,7 +149,8 @@ internal sealed class AgentChatService(
                 history,
                 new PromptExecutionSettings
                 {
-                    FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+                    // Several actions requested by the user come as several tool calls of one model answer
+                    FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(options: new() { AllowParallelCalls = true })
                 },
                 kernel,
                 cancellationToken).ConfigureAwait(false);
@@ -181,15 +162,12 @@ internal sealed class AgentChatService(
             throw new AgentChatException(AgentChatFailureCode.Unknown, "The chat model request has failed.", exception);
         }
 
-        if (filter.CapturedCall is AgentCapturedCall call)
+        if (filter.CapturedCalls.Count > 0)
         {
             var action = new AgentPendingAction(
                 Id: Guid.NewGuid().ToString("N"),
                 User: user,
-                ToolName: call.ToolName,
-                FunctionName: call.FunctionName,
-                ArgumentsJson: call.ArgumentsJson,
-                Arguments: call.Arguments,
+                Calls: [.. filter.CapturedCalls],
                 ExpiresAt: timeProvider.GetUtcNow().Add(option.ActionTtl));
 
             await actionStore.SaveAsync(action, cancellationToken).ConfigureAwait(false);
@@ -197,8 +175,8 @@ internal sealed class AgentChatService(
             await historyStore.AppendAsync(
                 user,
                 text,
-                $"I have prepared the action '{call.FunctionName}' with the arguments {call.ArgumentsJson}. " +
-                "It is shown to the user and waits for the confirmation by a button. It has not been executed yet.",
+                "I have prepared the actions: " + DescribeCalls(action.Calls) + " " +
+                "They are shown to the user and wait for the confirmation by one button. They have not been executed yet.",
                 option.Message.MaxHistoryMessageCount,
                 cancellationToken).ConfigureAwait(false);
 
@@ -222,6 +200,65 @@ internal sealed class AgentChatService(
         };
     }
 
+    private async Task<CallResult> InvokeCallAsync(AgentToolSet toolSet, AgentActionCall call, CancellationToken cancellationToken)
+    {
+        var function = toolSet.Plugins
+            .FirstOrDefault(plugin => string.Equals(plugin.Name, call.ToolName, StringComparison.Ordinal))?
+            .FirstOrDefault(function => string.Equals(function.Name, call.FunctionName, StringComparison.Ordinal));
+
+        if (function is null)
+        {
+            return new(IsSucceeded: false, "The operation is no longer available.");
+        }
+
+        try
+        {
+            var result = await function.InvokeAsync(new Kernel(), ReadArguments(call.ArgumentsJson), cancellationToken).ConfigureAwait(false);
+            return new(IsSucceeded: true, result.ToString());
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogWarning(exception, "The confirmed agent action {tool}.{function} has failed", call.ToolName, call.FunctionName);
+            return new(IsSucceeded: false, "The request has failed: " + exception.Message);
+        }
+    }
+
+    private static string BuildConfirmedEventText(AgentActionCall[] calls, CallResult[] results)
+    {
+        // The results share the length limit, so a large batch does not overflow the model context
+        var maxResultLength = Math.Max(200, MaxToolResultLength / calls.Length);
+        var builder = new StringBuilder("[System event, not a user message] The user has confirmed the prepared actions.");
+
+        for (var index = 0; index < calls.Length; index++)
+        {
+            _ = builder
+                .Append("\n").Append(index + 1).Append(". '").Append(calls[index].FunctionName)
+                .Append("' with the arguments ").Append(calls[index].ArgumentsJson)
+                .Append(results[index].IsSucceeded ? " — EXECUTED. Result: " : " — NOT executed. Error: ")
+                .Append(Truncate(results[index].Text, maxResultLength));
+        }
+
+        var failedCount = results.Count(static result => result.IsSucceeded is false);
+        _ = builder.Append("\n").Append(
+            failedCount switch
+            {
+                0 => "All the actions have been executed. Tell the user the outcome in one short sentence.",
+                _ when failedCount == calls.Length => "None of the actions has been executed. Tell the user so in one short sentence.",
+                _ => $"{calls.Length - failedCount} of {calls.Length} actions have been executed. Tell the user how many have been executed " +
+                    "and list each action that has NOT been executed, so the user can repeat it."
+            });
+
+        return builder
+            .Append(" If the executed actions changed time entries, get the entries of the affected days and show them with the totals.")
+            .ToString();
+    }
+
+    private static string DescribeCalls(AgentActionCall[] calls)
+        =>
+        string.Join("; ", calls.Select(static call => $"'{call.FunctionName}' with the arguments {call.ArgumentsJson}")) + ".";
+
+    private sealed record class CallResult(bool IsSucceeded, string Text);
+
     private static KernelArguments ReadArguments(string argumentsJson)
     {
         var arguments = new KernelArguments();
@@ -241,7 +278,7 @@ internal sealed class AgentChatService(
         return arguments;
     }
 
-    private static string Truncate(string value)
+    private static string Truncate(string value, int maxLength)
         =>
-        value.Length > MaxToolResultLength ? value[..MaxToolResultLength] : value;
+        value.Length > maxLength ? value[..maxLength] : value;
 }

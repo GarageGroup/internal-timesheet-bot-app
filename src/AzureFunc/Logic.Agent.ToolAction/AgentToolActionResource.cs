@@ -18,6 +18,11 @@ internal static class AgentToolActionResource
 
     public const string PreviewHint = "PreviewHint";
 
+    public const string PreviewHintMany = "PreviewHintMany";
+
+    // The heading of several actions prepared at once: {0} is their number
+    public const string PreviewTitleMany = "PreviewTitleMany";
+
     public const string ConfirmButton = "ConfirmButton";
 
     public const string CancelButton = "CancelButton";
@@ -29,6 +34,8 @@ internal static class AgentToolActionResource
     public const string Succeeded = "Succeeded";
 
     public const string Failed = "Failed";
+
+    public const string PartiallySucceeded = "PartiallySucceeded";
 
     public const string SignInRequired = "SignInRequired";
 

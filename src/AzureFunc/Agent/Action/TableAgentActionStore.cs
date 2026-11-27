@@ -21,10 +21,7 @@ internal sealed class TableAgentActionStore(TableClient tableClient) : IAgentAct
         var entity = new TableEntity(GetPartitionKey(action.User.TelegramUserId), action.Id)
         {
             ["TelegramChatId"] = action.User.TelegramChatId,
-            ["ToolName"] = action.ToolName,
-            ["FunctionName"] = action.FunctionName,
-            ["ArgumentsJson"] = action.ArgumentsJson,
-            ["PreviewJson"] = JsonSerializer.Serialize(action.Arguments),
+            ["CallsJson"] = JsonSerializer.Serialize(action.Calls),
             ["ExpiresAt"] = action.ExpiresAt
         };
 
@@ -62,11 +59,26 @@ internal sealed class TableAgentActionStore(TableClient tableClient) : IAgentAct
         return new(
             Id: actionId,
             User: new(telegramUserId, entity.GetInt64("TelegramChatId") ?? default),
-            ToolName: entity.GetString("ToolName").OrEmpty(),
-            FunctionName: entity.GetString("FunctionName").OrEmpty(),
-            ArgumentsJson: entity.GetString("ArgumentsJson").OrEmpty(),
-            Arguments: JsonSerializer.Deserialize<AgentActionArgument[]>(entity.GetString("PreviewJson").OrNullIfEmpty() ?? "[]") ?? [],
+            Calls: ReadCalls(entity),
             ExpiresAt: entity.GetDateTimeOffset("ExpiresAt") ?? default);
+    }
+
+    private static AgentActionCall[] ReadCalls(TableEntity entity)
+    {
+        if (entity.GetString("CallsJson").OrNullIfEmpty() is string callsJson)
+        {
+            return JsonSerializer.Deserialize<AgentActionCall[]>(callsJson) ?? [];
+        }
+
+        // An action saved by the previous version holds a single call in separate properties
+        return
+        [
+            new(
+                ToolName: entity.GetString("ToolName").OrEmpty(),
+                FunctionName: entity.GetString("FunctionName").OrEmpty(),
+                ArgumentsJson: entity.GetString("ArgumentsJson").OrEmpty(),
+                Arguments: JsonSerializer.Deserialize<AgentActionArgument[]>(entity.GetString("PreviewJson").OrNullIfEmpty() ?? "[]") ?? [])
+        ];
     }
 
     private async ValueTask EnsureTableAsync(CancellationToken cancellationToken)

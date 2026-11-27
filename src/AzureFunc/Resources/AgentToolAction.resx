@@ -39,4 +39,7 @@
   <data name="TimesheetTotal" xml:space="preserve"><value>Total</value></data>
   <data name="TimesheetPeriodTotal" xml:space="preserve"><value>Period total</value></data>
   <data name="HoursUnit" xml:space="preserve"><value>h</value></data>
+  <data name="PreviewHintMany" xml:space="preserve"><value>Nothing has been changed yet. Check the actions and confirm them all with one button.</value></data>
+  <data name="PreviewTitleMany" xml:space="preserve"><value>Actions prepared: {0}</value></data>
+  <data name="PartiallySucceeded" xml:space="preserve"><value>⚠️ Only some of the actions have been completed. Check your time entries before trying again.</value></data>
 </root>
