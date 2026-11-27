@@ -20,7 +20,8 @@ public static class AgentToolActionPreviewTest
             ["Arg_delete-timesheet_id"] = "Списание",
             ["Value_Project"] = "Проект",
             ["Value_Lead"] = "Лид",
-            ["LabelFrom_create-timesheet_id"] = "type"
+            ["LabelFrom_create-timesheet_id"] = "type",
+            ["LabelFrom_id"] = "type"
         });
 
     [Fact]
@@ -106,6 +107,61 @@ public static class AgentToolActionPreviewTest
             CreateAction("delete-timesheet", new AgentActionArgument("id", "27a82cb6-ee49-45a1-a623-75f9304ed000", display)), Localizer, "ru");
 
         Assert.Contains("<td>27 ноября 2026, пятница · Лид Test · 2</td>".Replace("·", "&#183;"), rich);
+    }
+
+    [Fact]
+    public static void Build_DeleteTimeEntry_ExpectFieldsOfTheEntryAsRowsLikeOnCreation()
+    {
+        var cache = new AgentEntityCache();
+        cache.Remember(
+            15,
+            """
+            {"timesheets":[{"id":"27a82cb6-ee49-45a1-a623-75f9304ed000","projectId":"839bb7ea-6e1f-4ba0-a5fb-a63769a20e65",
+              "projectType":"Lead","projectName":"Test","duration":1.5,"description":"Созвон","date":"2026-11-27","isActive":true}]}
+            """);
+
+        var entity = cache.Find(15, "27a82cb6-ee49-45a1-a623-75f9304ed000");
+        var action = CreateAction(
+            "delete-timesheet",
+            new AgentActionArgument("timesheetId", "27a82cb6-ee49-45a1-a623-75f9304ed000", entity?.Display) { Details = entity?.Details });
+
+        var (rich, fallback) = AgentToolActionPreview.Build(action, Localizer, "ru");
+
+        Assert.Contains(
+            "<table compact>" +
+            "<tr><th align=\"left\">Дата</th><td>27 ноября 2026, пятница</td></tr>" +
+            "<tr><th align=\"left\">Лид</th><td>Test</td></tr>" +
+            "<tr><th align=\"left\">duration</th><td>1.5</td></tr>" +
+            "<tr><th align=\"left\">description</th><td>Созвон</td></tr>" +
+            "</table>",
+            rich);
+
+        Assert.Contains("\n<b>Дата:</b> 27 ноября 2026, пятница\n<b>Лид:</b> Test\n", fallback);
+        Assert.DoesNotContain("timesheetId", rich);
+    }
+
+    [Fact]
+    public static void Build_UpdateTimeEntryWithNewValues_ExpectEntryIsOneRowAndNewValuesAreRows()
+    {
+        var details = new AgentActionArgument[] { new("date", "2026-11-27"), new("duration", "1.5") };
+        var action = CreateAction(
+            "update-timesheet",
+            new AgentActionArgument("timesheetId", "27a82cb6-ee49-45a1-a623-75f9304ed000", "2026-11-27 Test 1.5") { Details = details },
+            new AgentActionArgument("duration", "2"));
+
+        var (rich, _) = AgentToolActionPreview.Build(action, Localizer, "ru");
+
+        Assert.Contains("<th align=\"left\">timesheetId</th><td>27 ноября 2026, пятница Test 1.5</td>", rich);
+        Assert.Contains("<th align=\"left\">duration</th><td>2</td>", rich);
+    }
+
+    [Fact]
+    public static void Build_DeleteWithUnknownEntry_ExpectIdentifierRow()
+    {
+        var (rich, _) = AgentToolActionPreview.Build(
+            CreateAction("delete-timesheet", new AgentActionArgument("timesheetId", "27a82cb6-ee49-45a1-a623-75f9304ed000")), Localizer, "ru");
+
+        Assert.Contains("<th align=\"left\">timesheetId</th><td>27a82cb6-ee49-45a1-a623-75f9304ed000</td>", rich);
     }
 
     [Fact]

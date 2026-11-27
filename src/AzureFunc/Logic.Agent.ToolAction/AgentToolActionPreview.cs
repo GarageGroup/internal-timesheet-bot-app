@@ -48,12 +48,15 @@ internal static partial class AgentToolActionPreview
     // This is how a project is shown as one row "<type> | <name>" instead of two rows "Project" and "Type"
     private static IEnumerable<(string Label, string Value)> GetRows(AgentPendingAction action, IStringLocalizer localizer, string locale)
     {
+        // An action with a single reference to an object, such as deleting a time entry, shows the fields of that object.
+        // So the user sees the same table as when the object is created, not one line with everything in it
+        var arguments = action.Arguments is [{ Details.Length: > 0 } reference] ? reference.Details : action.Arguments;
         var labelSources = new Dictionary<string, AgentActionArgument>(StringComparer.Ordinal);
 
-        foreach (var argument in action.Arguments)
+        foreach (var argument in arguments)
         {
             var sourceName = FindForArgument(localizer, LabelFromPrefix, action, argument);
-            var source = sourceName is null ? null : Array.Find(action.Arguments, item => string.Equals(item.Name, sourceName, StringComparison.Ordinal));
+            var source = sourceName is null ? null : Array.Find(arguments, item => string.Equals(item.Name, sourceName, StringComparison.Ordinal));
 
             if (source is not null)
             {
@@ -61,7 +64,7 @@ internal static partial class AgentToolActionPreview
             }
         }
 
-        foreach (var argument in action.Arguments)
+        foreach (var argument in arguments)
         {
             if (labelSources.Values.Contains(argument))
             {

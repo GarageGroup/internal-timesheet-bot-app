@@ -10,6 +10,9 @@ namespace GarageGroup.Internal.Timesheet;
 
 // Remembers objects returned by the tools (projects, time entries) so that identifiers in a prepared action
 // can be shown to the user as names. The names come from the API, not from the model, so the preview can be trusted
+// An object returned by a tool: its one-line description and, for objects without a name, its fields
+internal sealed record class AgentEntity(string Display, AgentActionArgument[]? Details = null);
+
 internal sealed partial class AgentEntityCache
 {
     private const int MaxEntitiesPerUser = 500;
@@ -49,6 +52,10 @@ internal sealed partial class AgentEntityCache
 
     public string? FindDisplay(long telegramUserId, string id)
         =>
+        Find(telegramUserId, id)?.Display;
+
+    public AgentEntity? Find(long telegramUserId, string id)
+        =>
         users.TryGetValue(telegramUserId, out var entities) ? entities.Find(id) : null;
 
     private static void Remember(UserEntities entities, JsonElement element, int depth)
@@ -76,7 +83,7 @@ internal sealed partial class AgentEntityCache
         if (element.TryGetProperty("id", out var idElement) && idElement.ValueKind is JsonValueKind.String &&
             Guid.TryParse(idElement.GetString(), out var id) && BuildDisplay(element) is string display)
         {
-            entities.Set(id.ToString("D"), display);
+            entities.Set(id.ToString("D"), new(display, BuildDetails(element)));
         }
 
         foreach (var property in element.EnumerateObject())
@@ -95,6 +102,38 @@ internal sealed partial class AgentEntityCache
 
         var parts = SummaryFields.Select(field => GetSummaryText(element, field)).Where(static text => string.IsNullOrWhiteSpace(text) is false).ToArray();
         return parts.Length > 0 ? string.Join(" · ", parts) : null;
+    }
+
+    // A time entry is described with the same fields as the arguments that create it: date, project, duration, description
+    private static AgentActionArgument[]? BuildDetails(JsonElement element)
+    {
+        if (element.TryGetProperty("name", out _))
+        {
+            return null;
+        }
+
+        var details = new List<AgentActionArgument>();
+        AddDetail(details, "date", GetText(element, "date"));
+
+        var projectName = GetText(element, "projectName");
+        if (string.IsNullOrWhiteSpace(projectName) is false)
+        {
+            details.Add(new("id", GetText(element, "projectId") ?? projectName, projectName));
+            AddDetail(details, "type", GetText(element, "projectType"));
+        }
+
+        AddDetail(details, "duration", GetText(element, "duration"));
+        AddDetail(details, "description", GetText(element, "description"));
+
+        return details.Count > 1 ? [.. details] : null;
+    }
+
+    private static void AddDetail(List<AgentActionArgument> details, string name, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value) is false)
+        {
+            details.Add(new(name, value));
+        }
     }
 
     // The project is shown as "<type> <name>", the same way as everywhere else
@@ -129,11 +168,11 @@ internal sealed partial class AgentEntityCache
 
     private sealed class UserEntities
     {
-        private readonly Dictionary<string, string> values = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, AgentEntity> values = new(StringComparer.OrdinalIgnoreCase);
 
         private readonly Queue<string> order = new();
 
-        internal void Set(string id, string display)
+        internal void Set(string id, AgentEntity entity)
         {
             lock (values)
             {
@@ -146,15 +185,15 @@ internal sealed partial class AgentEntityCache
                     }
                 }
 
-                values[id] = display;
+                values[id] = entity;
             }
         }
 
-        internal string? Find(string id)
+        internal AgentEntity? Find(string id)
         {
             lock (values)
             {
-                return Guid.TryParse(id, out var guid) && values.TryGetValue(guid.ToString("D"), out var display) ? display : null;
+                return Guid.TryParse(id, out var guid) && values.TryGetValue(guid.ToString("D"), out var entity) ? entity : null;
             }
         }
     }
