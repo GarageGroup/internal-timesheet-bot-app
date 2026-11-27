@@ -30,13 +30,13 @@
     <PackageReference Include="GarageGroup.Infra.Http.Api" Version="1.1.0" />
     <PackageReference Include="GarageGroup.Infra.Http.Header" Version="0.0.1" />
     <PackageReference Include="GarageGroup.Infra.Http.Polly" Version="2.1.0" />
-    <PackageReference Include="GarageGroup.Infra.Telegram.Bot.Api" Version="0.4.0-build.1" />
-    <PackageReference Include="GarageGroup.Infra.Telegram.Bot.Authorization.Api.Dataverse" Version="0.2.0" />
-    <PackageReference Include="GarageGroup.Infra.Telegram.Bot.Engine" Version="0.5.0-build.1" />
+    <PackageReference Include="GarageGroup.Infra.Telegram.Bot.Api" Version="0.4.0" />
+    <PackageReference Include="GarageGroup.Infra.Telegram.Bot.Authorization.Api.Dataverse" Version="0.2.1" />
+    <PackageReference Include="GarageGroup.Infra.Telegram.Bot.Engine" Version="0.5.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.52.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.3.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.1.0" OutputItemType="Analyzer" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="11.0.0" />
     <PackageReference Include="PrimeFuncPack.DependencyRegistry" Version="2.2.0" />
   </ItemGroup>
 
