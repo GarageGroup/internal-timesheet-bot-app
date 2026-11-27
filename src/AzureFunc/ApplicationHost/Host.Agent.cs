@@ -15,8 +15,53 @@ partial class ApplicationHost
         =>
         services
         .AddSingleton(static serviceProvider => AgentOptionReader.Read(serviceProvider.GetRequiredService<IConfiguration>()))
-        .AddSingleton<IAgentUserTokenProvider, MissingAgentUserTokenProvider>()
+        .AddSingleton(ResolveAgentSignInRuntime)
+        .AddSingleton<IAgentUserTokenProvider>(
+            static serviceProvider => serviceProvider.GetRequiredService<AgentSignInRuntime>().Service is AgentSignInService service
+                ? service
+                : new MissingAgentUserTokenProvider())
         .AddSingleton(ResolveAgentChatFeature);
+
+    private static AgentSignInRuntime ResolveAgentSignInRuntime(IServiceProvider serviceProvider)
+    {
+        var option = serviceProvider.GetRequiredService<AgentOption>();
+        var signInAudience = Array.Find(option.Tools, static tool => string.IsNullOrEmpty(tool.Audience) is false)?.Audience;
+
+        if (option.Enabled is false || option.SignIn is not AgentSignInOption signIn || signInAudience is null)
+        {
+            return new(Service: null);
+        }
+
+        if (string.IsNullOrEmpty(signIn.ManagedIdentityClientId))
+        {
+            throw new InvalidOperationException("Agent:SignIn:ManagedIdentityClientId or AgentApi:ManagedIdentityClientId must be specified.");
+        }
+
+        var credential = new ManagedIdentityCredential(ManagedIdentityId.FromUserAssignedClientId(signIn.ManagedIdentityClientId));
+
+        var tokenClient = new EntraTokenClient(
+            httpClient: new(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) })
+            {
+                Timeout = TimeSpan.FromSeconds(30)
+            },
+            option: signIn,
+            clientAssertionProvider: async cancellationToken =>
+            {
+                var assertion = await credential.GetTokenAsync(new([EntraTokenClient.ClientAssertionScope]), cancellationToken).ConfigureAwait(false);
+                return assertion.Token;
+            });
+
+        var service = new AgentSignInService(
+            option: signIn,
+            signInAudience: signInAudience,
+            store: new TableAgentSignInStore(new TableClient(option.Storage.ConnectionString, signIn.TableName)),
+            tokenClient: tokenClient,
+            protector: new AesGcmAgentTokenProtector(signIn.TokenEncryptionKey),
+            timeProvider: TimeProvider.System,
+            logger: serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<AgentSignInService>());
+
+        return new(service);
+    }
 
     private static AgentChatFeature ResolveAgentChatFeature(IServiceProvider serviceProvider)
     {
@@ -51,7 +96,10 @@ partial class ApplicationHost
             promptProvider: AgentPromptProvider.FromFile(option.Message.TimeZone, timeProvider),
             option: option.Message);
 
-        return new(Enabled: true, Service: chatService);
+        return new(Enabled: true, Service: chatService)
+        {
+            SignIn = serviceProvider.GetRequiredService<AgentSignInRuntime>().Service
+        };
     }
 
     private static TokenCredential CreateFoundryCredential(AgentFoundryOption option)

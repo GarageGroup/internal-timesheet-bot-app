@@ -28,6 +28,12 @@ internal static class AgentMessageResource
 
     public const string MessageTooLong = "MessageTooLong";
 
+    public const string SignInRequired = "SignInRequired";
+
+    public const string SignInButton = "SignInButton";
+
+    public const string SignedOut = "SignedOut";
+
     public const string VoiceTooLarge = "VoiceTooLarge";
 
     public const string VoiceDownloadError = "VoiceDownloadError";

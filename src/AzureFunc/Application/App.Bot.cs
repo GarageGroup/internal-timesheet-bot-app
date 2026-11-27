@@ -33,6 +33,8 @@ partial class Application
         .With(
             "info", BotCommand.UseBotInfoCommand())
         .With(
+            "logout", UseAgentSignOutCommand())
+        .With(
             UseAgentActionCommand())
         .With(
             UseAgentMessageCommand())
@@ -69,6 +71,11 @@ partial class Application
         .With(
             ServiceProviderServiceExtensions.GetRequiredService<AgentChatFeature>)
         .UseAgentMessageCommand();
+
+    private static Dependency<IChatCommand<AgentSignOutCommandIn, Unit>> UseAgentSignOutCommand()
+        =>
+        Dependency.From<IChatCommand<AgentSignOutCommandIn, Unit>>(
+            static serviceProvider => new AgentSignOutCommand(serviceProvider.GetRequiredService<AgentChatFeature>()));
 
     private static Dependency<IChatCommand<AgentActionCommandIn, Unit>> UseAgentActionCommand()
         =>

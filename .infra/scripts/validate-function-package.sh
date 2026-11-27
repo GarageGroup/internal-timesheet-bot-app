@@ -33,7 +33,7 @@ read_file worker.config.json | jq -e '.description.language == "dotnet-isolated"
   exit 1
 }
 
-for name in HealthCheck HandleBotHttp HandleBotEntity; do
+for name in HealthCheck HandleBotHttp HandleBotEntity AgentSignInCallback; do
   read_file functions.metadata | jq -e --arg name "$name" 'any(.[]; .name == $name)' > /dev/null || {
     echo "Function metadata is missing $name" >&2
     exit 1

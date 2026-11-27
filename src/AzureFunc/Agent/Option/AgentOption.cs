@@ -13,6 +13,9 @@ internal sealed record class AgentOption
     public required AgentStorageOption Storage { get; init; }
 
     public AgentToolOption[] Tools { get; init; } = [];
+
+    // Null when user sign-in is not configured
+    public AgentSignInOption? SignIn { get; init; }
 }
 
 internal sealed record class AgentFoundryOption(Uri ProjectEndpoint, string ModelId, string TokenScope)

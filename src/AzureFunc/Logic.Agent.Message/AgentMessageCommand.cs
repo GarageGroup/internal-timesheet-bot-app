@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -108,10 +109,7 @@ internal sealed class AgentMessageCommand(
         }
         catch (AgentUserNotSignedInException)
         {
-            _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
-                localizer[ProfileNotFound],
-                cancellationToken).ConfigureAwait(false);
-
+            await SendSignInLinkAsync(request, localizer, cancellationToken).ConfigureAwait(false);
             return request.Context.CreateCompleteResult<Unit>(default);
         }
         catch (AgentChatException exception) when (exception.FailureCode is AgentChatFailureCode.MessageTooLong)
@@ -204,6 +202,62 @@ internal sealed class AgentMessageCommand(
             cancellationToken).ConfigureAwait(false);
 
         return request.Context.CreateCompleteResult<Unit>(default);
+    }
+
+    private async ValueTask SendSignInLinkAsync(
+        ChatCommandRequest<AgentMessageCommandIn, Unit> request,
+        IStringLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        if (chatFeature.SignIn is null)
+        {
+            _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
+                localizer[ProfileNotFound],
+                cancellationToken).ConfigureAwait(false);
+
+            return;
+        }
+
+        var input = request.Value;
+        var user = request.Context.Update.Message?.From ?? request.Context.Update.User;
+
+        var signInUrl = await chatFeature.SignIn.CreateSignInUrlAsync(
+            new(
+                User: new(input.TelegramUserId, input.TelegramChatId),
+                UserDisplayName: GetDisplayName(user),
+                Locale: input.Locale.OrEmpty(),
+                SourceUpdateJson: JsonSerializer.Serialize(request.Context.Update)),
+            cancellationToken).ConfigureAwait(false);
+
+        _ = await request.Context.Api.SendMessageAsync(
+            new(localizer[SignInRequired])
+            {
+                ParseMode = BotParseMode.Html,
+                ReplyMarkup = new BotInlineKeyboardMarkup
+                {
+                    InlineKeyboard =
+                    [
+                        [
+                            new(localizer[SignInButton])
+                            {
+                                Url = signInUrl.AbsoluteUri
+                            }
+                        ]
+                    ]
+                }
+            },
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private static string GetDisplayName(BotUser user)
+    {
+        var name = string.Join(' ', new[] { user.FirstName, user.LastName }.Where(static part => string.IsNullOrWhiteSpace(part) is false));
+        if (string.IsNullOrWhiteSpace(user.Username))
+        {
+            return name;
+        }
+
+        return string.IsNullOrWhiteSpace(name) ? "@" + user.Username : $"{name} (@{user.Username})";
     }
 
     private ValueTask<AgentMessage> SendTextMessageAsync(

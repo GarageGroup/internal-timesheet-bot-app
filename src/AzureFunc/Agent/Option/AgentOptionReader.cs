@@ -16,6 +16,14 @@ internal static partial class AgentOptionReader
         var section = configuration.GetSection("Agent");
         var enabled = section.GetValue("Enabled", false);
 
+        var tools = ReadTools(section.GetSection("Tools"));
+        var signIn = ReadSignIn(section.GetSection("SignIn"), configuration);
+
+        if (enabled && signIn is null && Array.Exists(tools, static tool => string.IsNullOrEmpty(tool.Audience) is false))
+        {
+            throw new InvalidOperationException("Agent:SignIn must be configured because some agent tools require a user access token.");
+        }
+
         return new()
         {
             Enabled = enabled,
@@ -24,7 +32,48 @@ internal static partial class AgentOptionReader
             Storage = new(
                 ConnectionString: section["Storage:ConnectionString"].OrNullIfWhiteSpace() ?? configuration["AzureWebJobsStorage"].OrEmpty(),
                 ConversationTableName: section["Storage:ConversationTableName"].OrNullIfWhiteSpace() ?? DefaultConversationTableName),
-            Tools = ReadTools(section.GetSection("Tools"))
+            Tools = tools,
+            SignIn = signIn
+        };
+    }
+
+    private static AgentSignInOption? ReadSignIn(IConfigurationSection section, IConfiguration configuration)
+    {
+        var clientId = section["ClientId"].OrNullIfWhiteSpace();
+        if (clientId is null)
+        {
+            return null;
+        }
+
+        var tenantId = section["TenantId"].OrNullIfWhiteSpace()
+            ?? throw new InvalidOperationException("Agent:SignIn:TenantId must be specified.");
+
+        if (Uri.TryCreate(section["RedirectUri"], UriKind.Absolute, out var redirectUri) is false || redirectUri.Scheme != Uri.UriSchemeHttps)
+        {
+            throw new InvalidOperationException("Agent:SignIn:RedirectUri must be an absolute HTTPS URI.");
+        }
+
+        byte[] encryptionKey;
+        try
+        {
+            encryptionKey = Convert.FromBase64String(section["TokenEncryptionKey"].OrEmpty());
+        }
+        catch (FormatException exception)
+        {
+            throw new InvalidOperationException("Agent:SignIn:TokenEncryptionKey must be a Base64 string.", exception);
+        }
+
+        if (encryptionKey.Length is not AesGcmAgentTokenProtector.KeySize)
+        {
+            throw new InvalidOperationException(
+                $"Agent:SignIn:TokenEncryptionKey must contain {AesGcmAgentTokenProtector.KeySize} bytes encoded as Base64.");
+        }
+
+        return new(tenantId, clientId, redirectUri, encryptionKey)
+        {
+            // The agent identity of the Function App is used by default
+            ManagedIdentityClientId = section["ManagedIdentityClientId"].OrNullIfWhiteSpace()
+                ?? configuration["AgentApi:ManagedIdentityClientId"].OrNullIfWhiteSpace()
         };
     }
 

@@ -16,6 +16,9 @@
   <data name="ConversationConflict" xml:space="preserve"><value>Диалог уже обрабатывает другое сообщение. Попробуйте ещё раз.</value></data>
   <data name="UnexpectedError" xml:space="preserve"><value>Не удалось получить ответ агента. Попробуйте позже.</value></data>
   <data name="MessageTooLong" xml:space="preserve"><value>Сообщение слишком длинное. Сократите его и отправьте ещё раз.</value></data>
+  <data name="SignInRequired" xml:space="preserve"><value>Чтобы я мог работать с вашими данными, войдите под корпоративной учётной записью. Ссылка действует 10 минут и предназначена только вам — не пересылайте её.</value></data>
+  <data name="SignInButton" xml:space="preserve"><value>🔐 Войти</value></data>
+  <data name="SignedOut" xml:space="preserve"><value>Вы вышли. Сохранённый доступ удалён.</value></data>
   <data name="VoiceTooLarge" xml:space="preserve"><value>Голосовое сообщение слишком большое. Отправьте более короткое сообщение.</value></data>
   <data name="VoiceDownloadError" xml:space="preserve"><value>Не удалось скачать голосовое сообщение. Попробуйте ещё раз.</value></data>
   <data name="VoiceRecognitionError" xml:space="preserve"><value>Не удалось распознать голосовое сообщение. Попробуйте ещё раз или отправьте запрос текстом.</value></data>

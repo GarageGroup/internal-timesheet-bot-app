@@ -30,6 +30,10 @@ public static class AgentOptionReaderTest
                     ["Agent:Enabled"] = "true",
                     ["Agent:Foundry:ProjectEndpoint"] = "https://foundry.example/api/projects/test",
                     ["Agent:Foundry:ModelId"] = "gpt-test",
+                    ["Agent:SignIn:TenantId"] = "tenant",
+                    ["Agent:SignIn:ClientId"] = "client",
+                    ["Agent:SignIn:RedirectUri"] = "https://apim.example/oauth2/callback",
+                    ["Agent:SignIn:TokenEncryptionKey"] = Convert.ToBase64String(new byte[32]),
                     ["Agent:Tools:0:Name"] = "Timesheet",
                     ["Agent:Tools:0:Type"] = "OpenApi",
                     ["Agent:Tools:0:Url"] = "https://apim.example/swagger/swagger.json",
@@ -106,6 +110,65 @@ public static class AgentOptionReaderTest
         =>
         Assert.Throws<InvalidOperationException>(
             () => AgentOptionReader.Read(BuildConfiguration(new() { ["Agent:Enabled"] = "true" })));
+
+    [Fact]
+    public static void Read_SignInIsConfigured_ExpectParsedSignInWithAgentIdentityByDefault()
+    {
+        var actual = AgentOptionReader.Read(
+            BuildConfiguration(
+                new()
+                {
+                    ["AgentApi:ManagedIdentityClientId"] = "agent-identity",
+                    ["Agent:SignIn:TenantId"] = "tenant",
+                    ["Agent:SignIn:ClientId"] = "client",
+                    ["Agent:SignIn:RedirectUri"] = "https://apim.example/oauth2/callback",
+                    ["Agent:SignIn:TokenEncryptionKey"] = Convert.ToBase64String(new byte[32])
+                }));
+
+        Assert.NotNull(actual.SignIn);
+        Assert.Equal("tenant", actual.SignIn.TenantId);
+        Assert.Equal("client", actual.SignIn.ClientId);
+        Assert.Equal(new Uri("https://apim.example/oauth2/callback"), actual.SignIn.RedirectUri);
+        Assert.Equal(32, actual.SignIn.TokenEncryptionKey.Length);
+        Assert.Equal("agent-identity", actual.SignIn.ManagedIdentityClientId);
+    }
+
+    [Theory]
+    [InlineData("Agent:SignIn:TenantId", "")]
+    [InlineData("Agent:SignIn:RedirectUri", "http://apim.example/oauth2/callback")]
+    [InlineData("Agent:SignIn:TokenEncryptionKey", "not base64")]
+    [InlineData("Agent:SignIn:TokenEncryptionKey", "AAAA")]
+    public static void Read_SignInIsInvalid_ExpectInvalidOperationException(string key, string value)
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["Agent:SignIn:TenantId"] = "tenant",
+            ["Agent:SignIn:ClientId"] = "client",
+            ["Agent:SignIn:RedirectUri"] = "https://apim.example/oauth2/callback",
+            ["Agent:SignIn:TokenEncryptionKey"] = Convert.ToBase64String(new byte[32]),
+            [key] = value
+        };
+
+        _ = Assert.Throws<InvalidOperationException>(() => AgentOptionReader.Read(BuildConfiguration(settings)));
+    }
+
+    [Fact]
+    public static void Read_ToolRequiresUserTokenAndSignInIsNotConfigured_ExpectInvalidOperationException()
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["Agent:Enabled"] = "true",
+            ["Agent:Foundry:ProjectEndpoint"] = "https://foundry.example/api/projects/test",
+            ["Agent:Foundry:ModelId"] = "gpt-test",
+            ["Agent:Tools:0:Name"] = "Timesheet",
+            ["Agent:Tools:0:Type"] = "OpenApi",
+            ["Agent:Tools:0:Url"] = "https://apim.example/swagger/swagger.json",
+            ["Agent:Tools:0:BaseAddress"] = "https://apim.example/timesheet/",
+            ["Agent:Tools:0:Audience"] = "api://timesheet"
+        };
+
+        _ = Assert.Throws<InvalidOperationException>(() => AgentOptionReader.Read(BuildConfiguration(settings)));
+    }
 
     private static IConfiguration BuildConfiguration(Dictionary<string, string?> settings)
         =>
