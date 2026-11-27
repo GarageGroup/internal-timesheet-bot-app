@@ -96,6 +96,32 @@ public static class AgentToolLoaderTest
     }
 
     [Fact]
+    public static async Task LoadAsync_ExcludedOperationsAreSpecified_ExpectAllOtherFunctions()
+    {
+        var loader = CreateLoader(
+            CreateHandler(),
+            new FakeAgentUserTokenProvider("user-token"),
+            CreateTool() with { ExcludedOperations = ["CREATETIMESHEET"] });
+
+        await using var toolSet = await loader.LoadAsync(User, TestContext.Current.CancellationToken);
+
+        Assert.Equal(["GetTimesheets"], Assert.Single(toolSet.Plugins).Select(static function => function.Name));
+    }
+
+    [Fact]
+    public static async Task LoadAsync_OperationIsAllowedAndExcluded_ExpectExclusionWins()
+    {
+        var loader = CreateLoader(
+            CreateHandler(),
+            new FakeAgentUserTokenProvider("user-token"),
+            CreateTool() with { AllowedOperations = ["GetTimesheets", "CreateTimesheet"], ExcludedOperations = ["CreateTimesheet"] });
+
+        await using var toolSet = await loader.LoadAsync(User, TestContext.Current.CancellationToken);
+
+        Assert.Equal(["GetTimesheets"], Assert.Single(toolSet.Plugins).Select(static function => function.Name));
+    }
+
+    [Fact]
     public static async Task LoadAsync_UserHasNoToken_ExpectNotSignedInExceptionAndNoApiCalls()
     {
         var handler = CreateHandler();

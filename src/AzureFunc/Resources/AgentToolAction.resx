@@ -28,4 +28,12 @@
   <data name="Value_Lead" xml:space="preserve"><value>Lead</value></data>
   <data name="Value_Incident" xml:space="preserve"><value>Incident</value></data>
   <data name="LabelFrom_id" xml:space="preserve"><value>type</value></data>
+  <data name="Title_unsubscribe-from-notifications" xml:space="preserve"><value>Unsubscribe from notifications</value></data>
+  <data name="Title_update-profile" xml:space="preserve"><value>Change the profile</value></data>
+  <data name="Arg_notificationType" xml:space="preserve"><value>Notifications</value></data>
+  <data name="Arg_languageCode" xml:space="preserve"><value>Language</value></data>
+  <data name="Value_DailyNotification" xml:space="preserve"><value>Daily</value></data>
+  <data name="Value_WeeklyNotification" xml:space="preserve"><value>Weekly</value></data>
+  <data name="Value_ru" xml:space="preserve"><value>Russian</value></data>
+  <data name="Value_en" xml:space="preserve"><value>English</value></data>
 </root>

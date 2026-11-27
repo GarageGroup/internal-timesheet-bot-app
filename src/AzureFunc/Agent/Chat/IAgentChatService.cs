@@ -7,7 +7,11 @@ namespace GarageGroup.Internal.Timesheet;
 internal sealed record class AgentChatRequest(AgentUserContext User, string Text, string Locale);
 
 // Action is set when the model has prepared a tool call that waits for the user's confirmation. Text is empty in this case
-internal sealed record class AgentChatReply(string Text, AgentPendingAction? Action = null);
+internal sealed record class AgentChatReply(string Text, AgentPendingAction? Action = null)
+{
+    // True when the user settings were changed in this turn, so the cached settings must be read again
+    public bool UserSettingsChanged { get; init; }
+}
 
 internal enum AgentActionStatus
 {
@@ -22,7 +26,10 @@ internal enum AgentActionStatus
 }
 
 // Reply is the model answer about the executed action. It is null if the model could not answer
-internal sealed record class AgentActionOutcome(AgentActionStatus Status, AgentPendingAction? Action = null, AgentChatReply? Reply = null);
+internal sealed record class AgentActionOutcome(AgentActionStatus Status, AgentPendingAction? Action = null, AgentChatReply? Reply = null)
+{
+    public bool UserSettingsChanged { get; init; }
+}
 
 internal enum AgentChatFailureCode
 {

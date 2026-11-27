@@ -76,6 +76,14 @@ internal sealed record class AgentToolOption(string Name, AgentToolType Type, Ur
     // Operation ids (OpenAPI) or tool names (MCP) available to the model. All operations are available when empty
     public string[] AllowedOperations { get; init; } = [];
 
-    // Operation ids (OpenAPI) or tool names (MCP) that are executed only after the user confirms them with a button
-    public string[] ConfirmationOperations { get; init; } = [];
+    // Operations that are never available to the model, even if they are allowed
+    public string[] ExcludedOperations { get; init; } = [];
+
+    // Operations the model may execute right away. Every other operation is executed only after the user
+    // confirms it with a button, so an operation added to the API later is safe by default. '*' means all operations
+    public string[] NoConfirmationOperations { get; init; } = [];
+
+    // Operations that change the user settings the bot keeps in memory, for example the language.
+    // After such an operation the bot reads the user settings again
+    public string[] UserSettingsOperations { get; init; } = [];
 }

@@ -69,6 +69,11 @@ internal sealed class AgentMessageCommand(IAgentVoiceFileApi voiceFileApi, Agent
                 },
                 cancellationToken).ConfigureAwait(false);
 
+            if (reply.UserSettingsChanged)
+            {
+                CultureMiddleware.Invalidate(input.TelegramChatId);
+            }
+
             await AgentChatReplySender.SendAsync(context, reply, locale, cancellationToken).ConfigureAwait(false);
             return context.CreateCompleteResult<Unit>(default);
         }

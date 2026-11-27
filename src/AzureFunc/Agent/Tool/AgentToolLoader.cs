@@ -122,11 +122,10 @@ internal sealed class AgentToolLoader : IAgentToolLoader
 #pragma warning restore SKEXP0040
         }
 
-        if (tool.AllowedOperations.Length > 0)
+        if (tool.AllowedOperations.Length > 0 || tool.ExcludedOperations.Length > 0)
         {
-            var allowedOperations = tool.AllowedOperations.ToHashSet(StringComparer.OrdinalIgnoreCase);
 #pragma warning disable SKEXP0040
-            parameters.OperationSelectionPredicate = context => allowedOperations.Contains(context.Id.OrEmpty());
+            parameters.OperationSelectionPredicate = context => IsAvailable(tool, context.Id.OrEmpty());
 #pragma warning restore SKEXP0040
         }
 
@@ -163,16 +162,20 @@ internal sealed class AgentToolLoader : IAgentToolLoader
         resources.Add(client);
 
         var mcpTools = await client.ListToolsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-        var allowedOperations = tool.AllowedOperations.ToHashSet(StringComparer.OrdinalIgnoreCase);
-
 #pragma warning disable SKEXP0001
         var functions = mcpTools
-            .Where(mcpTool => allowedOperations.Count is 0 || allowedOperations.Contains(mcpTool.Name))
+            .Where(mcpTool => IsAvailable(tool, mcpTool.Name))
             .Select(static mcpTool => mcpTool.AsKernelFunction());
 #pragma warning restore SKEXP0001
 
         return KernelPluginFactory.CreateFromFunctions(tool.Name, functions);
     }
+
+    // An operation is available if it is not excluded and, when the allow list is not empty, is in the allow list
+    private static bool IsAvailable(AgentToolOption tool, string operation)
+        =>
+        tool.ExcludedOperations.Contains(operation, StringComparer.OrdinalIgnoreCase) is false &&
+        (tool.AllowedOperations.Length is 0 || tool.AllowedOperations.Contains(operation, StringComparer.OrdinalIgnoreCase));
 
     private async ValueTask<byte[]> GetSpecificationAsync(AgentToolOption tool, CancellationToken cancellationToken)
     {

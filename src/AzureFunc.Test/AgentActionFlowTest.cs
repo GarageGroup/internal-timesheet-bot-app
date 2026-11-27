@@ -32,6 +32,15 @@ public static class AgentActionFlowTest
                 "responses": { "200": { "description": "OK" } }
               }
             },
+            "/updateProfile": {
+              "post": {
+                "operationId": "update-profile",
+                "summary": "Update profile",
+                "requestBody": { "content": { "application/json": { "schema": {
+                  "type": "object", "properties": { "languageCode": { "type": "string", "enum": ["en", "ru"] } } } } } },
+                "responses": { "200": { "description": "OK" } }
+              }
+            },
             "/createTimesheet": {
               "post": {
                 "operationId": "create-timesheet",
@@ -179,6 +188,25 @@ public static class AgentActionFlowTest
         Assert.Contains("has cancelled the action", context.History.Turns[^1].UserText);
     }
 
+    [Theory]
+    [InlineData("Timesheet.create-timesheet", "Timesheet", "create-timesheet", false)]
+    [InlineData("timesheet.CREATE-timesheet", "Timesheet", "create-timesheet", false)]
+    [InlineData("Timesheet.*", "Timesheet", "create-timesheet", false)]
+    [InlineData("Timesheet.search-projects", "Timesheet", "create-timesheet", true)]
+    [InlineData("Docs.*", "Timesheet", "create-timesheet", true)]
+    [InlineData("", "Timesheet", "create-timesheet", true)]
+    public static void RequiresConfirmation_ExpectConfirmationUnlessFunctionOrWholeToolIsListed(
+        string listed, string toolName, string functionName, bool expected)
+    {
+        var noConfirmationFunctions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (listed.Length > 0)
+        {
+            _ = noConfirmationFunctions.Add(listed);
+        }
+
+        Assert.Equal(expected, AgentToolInvocationFilter.RequiresConfirmation(noConfirmationFunctions, toolName, functionName));
+    }
+
     [Fact]
     public static async Task SendAsync_OperationDoesNotRequireConfirmation_ExpectItIsExecutedImmediately()
     {
@@ -192,6 +220,35 @@ public static class AgentActionFlowTest
         Assert.Null(reply.Action);
         Assert.Equal(["/timesheet/searchProjects"], context.ApiPaths);
         Assert.Empty(context.Actions.Actions);
+    }
+
+    [Fact]
+    public static async Task SendAsync_ModelChangesUserLanguage_ExpectItIsExecutedImmediatelyAndSettingsChangeIsReported()
+    {
+        var context = new FlowContext(
+            ToolCall("Timesheet-update-profile", """{"languageCode":"ru"}"""),
+            Text("Язык общения изменён на русский."));
+
+        var reply = await context.Service.SendAsync(new(User, "поменяй на русский", "en"), TestContext.Current.CancellationToken);
+
+        Assert.Equal("Язык общения изменён на русский.", reply.Text);
+        Assert.Null(reply.Action);
+        Assert.True(reply.UserSettingsChanged);
+
+        Assert.Equal(["/timesheet/updateProfile"], context.ApiPaths);
+        Assert.Equal("""{"languageCode":"ru"}""", context.Api.Requests[^1].Body);
+    }
+
+    [Fact]
+    public static async Task SendAsync_ModelOnlyReadsData_ExpectSettingsChangeIsNotReported()
+    {
+        var context = new FlowContext(
+            ToolCall("Timesheet-search-projects", """{"searchText":"E2E"}"""),
+            Text("Найден проект."));
+
+        var reply = await context.Service.SendAsync(new(User, "найди проект", "ru"), TestContext.Current.CancellationToken);
+
+        Assert.False(reply.UserSettingsChanged);
     }
 
     private static string ToolCall(string name, string arguments)
@@ -254,7 +311,7 @@ public static class AgentActionFlowTest
             {
                 BaseAddress = new("https://apim.example/timesheet/"),
                 Audience = "api://timesheet",
-                ConfirmationOperations = ["create-timesheet"]
+                NoConfirmationOperations = ["search-projects", "update-profile"]
             };
 
             Service = new(
@@ -266,8 +323,11 @@ public static class AgentActionFlowTest
                 new("system prompt", TimeZoneInfo.Utc, Time),
                 new(
                     new(TimeZoneInfo.Utc, MaxTextLength: 2000, MaxHistoryMessageCount: 20),
-                    new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Timesheet.create-timesheet" },
-                    TimeSpan.FromMinutes(10)),
+                    new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Timesheet.search-projects", "Timesheet.update-profile" },
+                    TimeSpan.FromMinutes(10))
+                {
+                    UserSettingsFunctions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Timesheet.update-profile" }
+                },
                 Time,
                 NullLogger.Instance);
         }
