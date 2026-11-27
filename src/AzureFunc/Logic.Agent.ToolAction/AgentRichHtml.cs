@@ -87,6 +87,15 @@ internal static partial class AgentRichHtml
     {
         var text = richHtml;
 
+        // Items of a numbered list keep their numbers: the user may answer with a number
+        text = OrderedListRegex().Replace(
+            text,
+            static list =>
+            {
+                var number = 0;
+                return "\n\n" + ListItemOpenRegex().Replace(list.Groups[1].Value, _ => $"\n{++number}. ") + "\n\n";
+            });
+
         text = CellBoundaryRegex().Replace(text, " — ");
         text = HeadingOpenRegex().Replace(text, "\n\n<b>");
         text = HeadingCloseRegex().Replace(text, "</b>\n");
@@ -228,6 +237,9 @@ internal static partial class AgentRichHtml
 
     [GeneratedRegex(@"</(?:h[1-6]|summary|caption)>", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex HeadingCloseRegex();
+
+    [GeneratedRegex(@"<ol>(.*?)</ol>", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Singleline)]
+    private static partial Regex OrderedListRegex();
 
     [GeneratedRegex(@"<li>", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex ListItemOpenRegex();

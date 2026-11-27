@@ -81,6 +81,31 @@ public static class AgentRichHtmlTest
     }
 
     [Fact]
+    public static void Prepare_TimeEntriesAsTwoLineList_ExpectRichMessageAndNumberedFallback()
+    {
+        const string source =
+            "<h3>23.11.2026 – 29.11.2026 · 3.5 ч</h3>\n" +
+            "<p><b>27 ноября 2026, пятница · 3.5 ч</b></p>\n" +
+            "<ol>\n" +
+            "<li><b>2 ч</b> · <i>Проект</i> <b>E2E Role test</b><br>#Test</li>\n" +
+            "<li><b>1.5 ч</b> · <i>Сделка</i> <b>AMBY</b><br>Тестирую</li>\n" +
+            "</ol>";
+
+        var actual = AgentRichHtml.Prepare(source);
+
+        Assert.True(actual.IsRich);
+        Assert.Contains("<li><b>2 ч</b> &#183; <i>Проект</i> <b>E2E Role test</b><br>#Test</li>", actual.Html);
+        Assert.DoesNotContain("\n", actual.Html);
+
+        Assert.Equal(
+            "<b>23.11.2026 – 29.11.2026 &#183; 3.5 ч</b>\n\n" +
+            "<b>27 ноября 2026, пятница &#183; 3.5 ч</b>\n\n" +
+            "1. <b>2 ч</b> &#183; <i>Проект</i> <b>E2E Role test</b>\n#Test\n" +
+            "2. <b>1.5 ч</b> &#183; <i>Сделка</i> <b>AMBY</b>\nТестирую",
+            AgentRichHtml.ToFallback(actual.Html));
+    }
+
+    [Fact]
     public static void ToFallback_RichAnswer_ExpectRegularHtmlWithRowsAsLines()
     {
         const string rich =
@@ -91,6 +116,7 @@ public static class AgentRichHtmlTest
             "<tr><td>1</td><td>Проект <code>E2E</code></td><td align=\"right\">2</td></tr>" +
             "</table>" +
             "<ol><li>Первый</li><li>Второй</li></ol>" +
+            "<ul><li>Пункт</li></ul>" +
             "<p>Итого: 2 ч<br>Готово</p>";
 
         var actual = AgentRichHtml.ToFallback(rich);
@@ -100,8 +126,9 @@ public static class AgentRichHtmlTest
             "<b>27 ноября 2026, пятница</b>\n\n" +
             "№ — Проект — Часы\n" +
             "1 — Проект <code>E2E</code> — 2\n\n" +
-            "• Первый\n" +
-            "• Второй\n\n" +
+            "1. Первый\n" +
+            "2. Второй\n\n" +
+            "• Пункт\n\n" +
             "Итого: 2 ч\nГотово",
             actual);
 
