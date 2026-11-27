@@ -66,5 +66,6 @@ output functionAppHostName string = functionApp.properties.defaultHostName
 output functionPrincipalId string = functionApp.identity.principalId
 output dataverseIdentityClientId string = dataverseIdentity.properties.clientId
 output agentIdentityClientId string = agentIdentity.properties.clientId
+output agentIdentityPrincipalId string = agentIdentity.properties.principalId
 output storageAccountName string = storage.name
 output applicationInsightsConnectionString string = insights.properties.ConnectionString

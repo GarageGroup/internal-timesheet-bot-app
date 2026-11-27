@@ -14,11 +14,25 @@ internal static class AgentMessageResource
 
     public const string UpdatePreview = "UpdatePreview";
 
+    public const string CreatePreviewRich = "CreatePreviewRich";
+
+    public const string DeletePreviewRich = "DeletePreviewRich";
+
+    public const string UpdatePreviewRich = "UpdatePreviewRich";
+
     public const string ProfileNotFound = "ProfileNotFound";
 
     public const string ConversationConflict = "ConversationConflict";
 
     public const string UnexpectedError = "UnexpectedError";
+
+    public const string MessageTooLong = "MessageTooLong";
+
+    public const string SignInRequired = "SignInRequired";
+
+    public const string SignInButton = "SignInButton";
+
+    public const string SignedOut = "SignedOut";
 
     public const string VoiceTooLarge = "VoiceTooLarge";
 

@@ -85,6 +85,54 @@ resource botHealth 'Microsoft.ApiManagement/service/apis/operations@2024-05-01' 
   }
 }
 
+// Microsoft Entra ID posts the authorization code of a user sign-in to this route
+resource oauthApi 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
+  parent: apim
+  name: 'gtimesheet-oauth2-0-api'
+  properties: {
+    displayName: 'GTimesheet OAuth2.0 API'
+    path: 'oauth2'
+    protocols: [
+      'https'
+    ]
+    serviceUrl: 'https://${functionAppName}.azurewebsites.net/'
+    subscriptionRequired: false
+  }
+}
+
+resource oauthApiPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
+  parent: oauthApi
+  name: 'policy'
+  properties: {
+    format: 'rawxml'
+    value: '<policies><inbound><base /><set-query-parameter name="code" exists-action="override"><value>{{BotFunctionCode}}</value></set-query-parameter></inbound><backend><base /></backend><outbound><base /></outbound><on-error><base /></on-error></policies>'
+  }
+  dependsOn: [
+    botFunctionCode
+  ]
+}
+
+resource oauthCallback 'Microsoft.ApiManagement/service/apis/operations@2024-05-01' = {
+  parent: oauthApi
+  name: 'authorize-user'
+  properties: {
+    displayName: 'Authorize User'
+    method: 'POST'
+    urlTemplate: '/callback'
+    templateParameters: []
+    responses: []
+  }
+}
+
+resource oauthCallbackPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2024-05-01' = {
+  parent: oauthCallback
+  name: 'policy'
+  properties: {
+    format: 'rawxml'
+    value: '<policies><inbound><base /><rewrite-uri template="/oauth2/callback" /></inbound><backend><base /></backend><outbound><base /></outbound><on-error><base /></on-error></policies>'
+  }
+}
+
 resource telegramApi 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   parent: apim
   name: 'gtimesheet-telegram-api'

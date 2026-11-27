@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +18,8 @@ using static AgentMessageResource;
 internal sealed class AgentMessageCommand(
     IAgentMessageApi agentApi,
     IAgentVoiceFileApi voiceFileApi,
-    AgentVoiceOption voiceOption)
+    AgentVoiceOption voiceOption,
+    AgentChatFeature chatFeature)
     : IChatCommand<AgentMessageCommandIn, Unit>, IChatCommandParser<AgentMessageCommandIn>
 {
     private static readonly Regex TelegramHtmlTagRegex = new(
@@ -63,20 +65,57 @@ internal sealed class AgentMessageCommand(
         try
         {
             var input = request.Value;
+
+            // Voice messages are still handled by the Timesheet agent API until transcription is moved to the bot
+            if (chatFeature.Enabled && string.IsNullOrWhiteSpace(input.VoiceFileId))
+            {
+                return await SendChatReplyAsync(request, localizer, cancellationToken).ConfigureAwait(false);
+            }
+
             var response = string.IsNullOrWhiteSpace(input.VoiceFileId)
                 ? await SendTextMessageAsync(input, cancellationToken).ConfigureAwait(false)
                 : await SendVoiceMessageAsync(request.Context, input, cancellationToken).ConfigureAwait(false);
 
             var preparedAction = GetPreparedAction(response);
 
-            _ = await request.Context.Api.SendMessageAsync(
-                new(BuildMessageText(response, localizer))
-                {
-                    ParseMode = BotParseMode.Html,
-                    ReplyMarkup = preparedAction is null
-                        ? new BotReplyKeyboardRemove()
-                        : BuildActionKeyboard(preparedAction.Value.ActionId, preparedAction.Value.ActionType, localizer)
-                },
+            BotReplyMarkupBase replyMarkup = preparedAction is null
+                ? new BotReplyKeyboardRemove()
+                : BuildActionKeyboard(preparedAction.Value.ActionId, preparedAction.Value.ActionType, localizer);
+
+            var messageText = BuildMessageText(response, localizer);
+            var richMessageHtml = BuildRichMessageHtml(response, localizer);
+
+            if (richMessageHtml is null)
+            {
+                _ = await request.Context.Api.SendMessageAsync(
+                    new(messageText)
+                    {
+                        ParseMode = BotParseMode.Html,
+                        ReplyMarkup = replyMarkup
+                    },
+                    cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                _ = await request.Context.Api.SendRichHtmlOrFallbackAsync(
+                    richMessageHtml,
+                    messageText,
+                    replyMarkup,
+                    request.Context.GetLogger<AgentMessageCommand>(),
+                    cancellationToken).ConfigureAwait(false);
+            }
+
+            return request.Context.CreateCompleteResult<Unit>(default);
+        }
+        catch (AgentUserNotSignedInException)
+        {
+            await SendSignInLinkAsync(request, localizer, cancellationToken).ConfigureAwait(false);
+            return request.Context.CreateCompleteResult<Unit>(default);
+        }
+        catch (AgentChatException exception) when (exception.FailureCode is AgentChatFailureCode.MessageTooLong)
+        {
+            _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
+                localizer[MessageTooLong],
                 cancellationToken).ConfigureAwait(false);
 
             return request.Context.CreateCompleteResult<Unit>(default);
@@ -132,6 +171,93 @@ internal sealed class AgentMessageCommand(
 
             return request.Context.CreateCancelledResult<Unit>();
         }
+    }
+
+    private async ValueTask<ChatCommandResult<Unit>> SendChatReplyAsync(
+        ChatCommandRequest<AgentMessageCommandIn, Unit> request,
+        IStringLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        var input = request.Value;
+
+        try
+        {
+            await request.Context.Api.SendChatActionAsync(BotChatAction.Typing, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            request.Context.GetLogger<AgentMessageCommand>().LogWarning(exception, "Failed to send the typing chat action");
+        }
+
+        var reply = await chatFeature.Service.SendAsync(
+            new(new(input.TelegramUserId, input.TelegramChatId), input.Text, input.Locale.OrEmpty()),
+            cancellationToken).ConfigureAwait(false);
+
+        _ = await request.Context.Api.SendMessageAsync(
+            new(SanitizeAgentHtml(reply.Text))
+            {
+                ParseMode = BotParseMode.Html,
+                ReplyMarkup = new BotReplyKeyboardRemove()
+            },
+            cancellationToken).ConfigureAwait(false);
+
+        return request.Context.CreateCompleteResult<Unit>(default);
+    }
+
+    private async ValueTask SendSignInLinkAsync(
+        ChatCommandRequest<AgentMessageCommandIn, Unit> request,
+        IStringLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        if (chatFeature.SignIn is null)
+        {
+            _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
+                localizer[ProfileNotFound],
+                cancellationToken).ConfigureAwait(false);
+
+            return;
+        }
+
+        var input = request.Value;
+        var user = request.Context.Update.Message?.From ?? request.Context.Update.User;
+
+        var signInUrl = await chatFeature.SignIn.CreateSignInUrlAsync(
+            new(
+                User: new(input.TelegramUserId, input.TelegramChatId),
+                UserDisplayName: GetDisplayName(user),
+                Locale: input.Locale.OrEmpty(),
+                SourceUpdateJson: JsonSerializer.Serialize(request.Context.Update)),
+            cancellationToken).ConfigureAwait(false);
+
+        _ = await request.Context.Api.SendMessageAsync(
+            new(localizer[SignInRequired])
+            {
+                ParseMode = BotParseMode.Html,
+                ReplyMarkup = new BotInlineKeyboardMarkup
+                {
+                    InlineKeyboard =
+                    [
+                        [
+                            new(localizer[SignInButton])
+                            {
+                                Url = signInUrl.AbsoluteUri
+                            }
+                        ]
+                    ]
+                }
+            },
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private static string GetDisplayName(BotUser user)
+    {
+        var name = string.Join(' ', new[] { user.FirstName, user.LastName }.Where(static part => string.IsNullOrWhiteSpace(part) is false));
+        if (string.IsNullOrWhiteSpace(user.Username))
+        {
+            return name;
+        }
+
+        return string.IsNullOrWhiteSpace(name) ? "@" + user.Username : $"{name} (@{user.Username})";
     }
 
     private ValueTask<AgentMessage> SendTextMessageAsync(
@@ -233,42 +359,50 @@ internal sealed class AgentMessageCommand(
     }
 
     private static string BuildMessageText(AgentMessage message, IStringLocalizer localizer)
+        =>
+        BuildPreview(message, localizer, CreatePreview, DeletePreview, UpdatePreview) ?? SanitizeAgentHtml(message.Text);
+
+    private static string? BuildRichMessageHtml(AgentMessage message, IStringLocalizer localizer)
+        =>
+        BuildPreview(message, localizer, CreatePreviewRich, DeletePreviewRich, UpdatePreviewRich);
+
+    private static string? BuildPreview(
+        AgentMessage message,
+        IStringLocalizer localizer,
+        string createTemplate,
+        string deleteTemplate,
+        string updateTemplate)
     {
         if (message.PreparedCreateAction is AgentPreparedCreateAction createAction)
         {
-            return string.Format(
-                CultureInfo.CurrentCulture,
-                localizer[CreatePreview],
-                createAction.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                WebUtility.HtmlEncode(createAction.ProjectName),
-                createAction.Duration.ToString("0.##", CultureInfo.CurrentCulture),
-                WebUtility.HtmlEncode(createAction.Description));
+            return FormatPreview(
+                localizer[createTemplate], createAction.Date, createAction.ProjectName, createAction.Duration, createAction.Description);
         }
 
         if (message.PreparedDeleteAction is AgentPreparedDeleteAction deleteAction)
         {
-            return string.Format(
-                CultureInfo.CurrentCulture,
-                localizer[DeletePreview],
-                deleteAction.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                WebUtility.HtmlEncode(deleteAction.ProjectName),
-                deleteAction.Duration.ToString("0.##", CultureInfo.CurrentCulture),
-                WebUtility.HtmlEncode(deleteAction.Description));
+            return FormatPreview(
+                localizer[deleteTemplate], deleteAction.Date, deleteAction.ProjectName, deleteAction.Duration, deleteAction.Description);
         }
 
         if (message.PreparedUpdateAction is AgentPreparedUpdateAction updateAction)
         {
-            return string.Format(
-                CultureInfo.CurrentCulture,
-                localizer[UpdatePreview],
-                updateAction.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                WebUtility.HtmlEncode(updateAction.ProjectName),
-                updateAction.Duration.ToString("0.##", CultureInfo.CurrentCulture),
-                WebUtility.HtmlEncode(updateAction.Description));
+            return FormatPreview(
+                localizer[updateTemplate], updateAction.Date, updateAction.ProjectName, updateAction.Duration, updateAction.Description);
         }
 
-        return SanitizeAgentHtml(message.Text);
+        return null;
     }
+
+    private static string FormatPreview(string template, DateOnly date, string projectName, decimal duration, string description)
+        =>
+        string.Format(
+            CultureInfo.CurrentCulture,
+            template,
+            date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            WebUtility.HtmlEncode(projectName),
+            duration.ToString("0.##", CultureInfo.CurrentCulture),
+            WebUtility.HtmlEncode(description));
 
     private static string SanitizeAgentHtml(string text)
     {

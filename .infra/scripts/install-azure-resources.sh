@@ -75,6 +75,7 @@ if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
     "function_principal_id=" + .functionPrincipalId.value,
     "dataverse_identity_client_id=" + .dataverseIdentityClientId.value,
     "agent_identity_client_id=" + .agentIdentityClientId.value,
+    "agent_identity_principal_id=" + .agentIdentityPrincipalId.value,
     "application_insights_connection_string=" + .applicationInsightsConnectionString.value
   ' <<< "$outputs" >> "$GITHUB_OUTPUT"
 fi
