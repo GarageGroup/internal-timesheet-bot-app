@@ -10,9 +10,10 @@ using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace GarageGroup.Internal.Timesheet;
 
-// ConfirmationFunctions contains '<tool>.<function>' keys of the tool calls that are executed only after the user's confirmation
+// NoConfirmationFunctions contains '<tool>.<function>' keys of the tool calls the model may execute right away.
+// Every other call is executed only after the user's confirmation
 internal sealed record class AgentChatServiceOption(
-    AgentMessageOption Message, IReadOnlySet<string> ConfirmationFunctions, TimeSpan ActionTtl)
+    AgentMessageOption Message, IReadOnlySet<string> NoConfirmationFunctions, TimeSpan ActionTtl)
 {
     // '<tool>.<function>' keys of the tool calls that change the user settings kept by the bot
     public IReadOnlySet<string> UserSettingsFunctions { get; init; } = new HashSet<string>();
@@ -140,7 +141,7 @@ internal sealed class AgentChatService(
         kernel.Plugins.AddRange(toolSet.Plugins);
 
         var filter = new AgentToolInvocationFilter(
-            option.ConfirmationFunctions, option.UserSettingsFunctions, entityCache, user.TelegramUserId);
+            option.NoConfirmationFunctions, option.UserSettingsFunctions, entityCache, user.TelegramUserId);
         kernel.AutoFunctionInvocationFilters.Add(filter);
 
         var history = new ChatHistory(await promptProvider.BuildAsync(locale, cancellationToken).ConfigureAwait(false));

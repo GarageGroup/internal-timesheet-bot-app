@@ -77,22 +77,50 @@ agent_settings+=(
   "Agent__Prompt__BlobName=${AGENT_PROMPT_BLOB_NAME:-AgentSystem.md}"
 )
 
-read -r -a allowed_operations <<< "${TIMESHEET_ALLOWED_OPERATIONS:-get-periods get-tags get-timesheets get-last-projects search-projects create-timesheet update-timesheet delete-timesheet get-profile update-profile}"
-for index in "${!allowed_operations[@]}"; do
-  agent_settings+=("Agent__Tools__0__AllowedOperations__${index}=${allowed_operations[$index]}")
-done
+# All operations of the API are available to the model except the excluded ones. The defaults exclude operations
+# that make no sense in a chat (the Mini App sign-in and sign-out), return too much data or have no described request.
+add_operations() {
+  local setting="$1" operations index
+  read -r -a operations <<< "$2"
+  for index in "${!operations[@]}"; do
+    agent_settings+=("Agent__Tools__0__${setting}__${index}=${operations[$index]}")
+  done
+}
 
-# These operations change data, so the bot executes them only after the user presses the Confirm button.
-read -r -a confirmation_operations <<< "${TIMESHEET_CONFIRMATION_OPERATIONS:-create-timesheet update-timesheet delete-timesheet}"
-for index in "${!confirmation_operations[@]}"; do
-  agent_settings+=("Agent__Tools__0__ConfirmationOperations__${index}=${confirmation_operations[$index]}")
-done
+add_operations AllowedOperations "${TIMESHEET_ALLOWED_OPERATIONS:-}"
+add_operations ExcludedOperations "${TIMESHEET_EXCLUDED_OPERATIONS:-sign-in-user sign-out-user get-projects subscribe-to-notifications}"
+
+# Only these operations are executed right away. Every other operation, including one added to the API later,
+# is executed after the user presses the Confirm button.
+add_operations NoConfirmationOperations "${TIMESHEET_NO_CONFIRMATION_OPERATIONS:-get-periods get-tags get-timesheets get-last-projects search-projects get-profile get-subscriptions update-profile}"
 
 # After these operations the bot reads the user settings (the language) from Dataverse again.
-read -r -a user_settings_operations <<< "${TIMESHEET_USER_SETTINGS_OPERATIONS:-update-profile}"
-for index in "${!user_settings_operations[@]}"; do
-  agent_settings+=("Agent__Tools__0__UserSettingsOperations__${index}=${user_settings_operations[$index]}")
+add_operations UserSettingsOperations "${TIMESHEET_USER_SETTINGS_OPERATIONS:-update-profile}"
+
+# Operation lists are stored as indexed settings, so a shorter or removed list would leave stale entries behind.
+# Tool settings that are not part of the new configuration are deleted before the new ones are applied.
+existing_tool_settings="$(az functionapp config appsettings list \
+  --resource-group "$AZURE_RESOURCE_GROUP_NAME" \
+  --name "$FUNCTION_APP_NAME" \
+  --query "[?starts_with(name, 'Agent__Tools__')].name" \
+  --output tsv \
+  --only-show-errors)"
+stale_tool_settings=()
+for name in $existing_tool_settings; do
+  is_current=false
+  for setting in "${agent_settings[@]}"; do
+    [[ "${setting%%=*}" == "$name" ]] && { is_current=true; break; }
+  done
+  [[ "$is_current" == true ]] || stale_tool_settings+=("$name")
 done
+if [[ "${#stale_tool_settings[@]}" -gt 0 ]]; then
+  az functionapp config appsettings delete \
+    --resource-group "$AZURE_RESOURCE_GROUP_NAME" \
+    --name "$FUNCTION_APP_NAME" \
+    --setting-names "${stale_tool_settings[@]}" \
+    --output none \
+    --only-show-errors
+fi
 
 telegram_subscription_url="https://management.azure.com/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AZURE_RESOURCE_GROUP_NAME/providers/Microsoft.ApiManagement/service/$BOT_APIM_SERVICE_NAME/subscriptions/TelegramApiSubscription/listSecrets?api-version=2024-05-01"
 telegram_api_key="$(az rest --method POST --url "$telegram_subscription_url" --query primaryKey --output tsv --only-show-errors)"

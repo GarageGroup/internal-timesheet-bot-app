@@ -87,14 +87,14 @@ partial class ApplicationHost
             loggerFactory: serviceProvider.GetRequiredService<ILoggerFactory>(),
             timeProvider: timeProvider);
 
-        var confirmationFunctions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var noConfirmationFunctions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var userSettingsFunctions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var tool in option.Tools)
         {
-            foreach (var operation in tool.ConfirmationOperations)
+            foreach (var operation in tool.NoConfirmationOperations)
             {
-                _ = confirmationFunctions.Add(AgentToolInvocationFilter.GetKey(tool.Name, operation));
+                _ = noConfirmationFunctions.Add(AgentToolInvocationFilter.GetKey(tool.Name, operation));
             }
 
             foreach (var operation in tool.UserSettingsOperations)
@@ -114,7 +114,7 @@ partial class ApplicationHost
                 new TableClient(option.Storage.ConnectionString, option.Storage.ActionTableName)),
             entityCache: new AgentEntityCache(),
             promptProvider: new(CreatePromptSource(option, serviceProvider, timeProvider), option.Message.TimeZone, timeProvider),
-            option: new(option.Message, confirmationFunctions, option.Message.ActionTtl)
+            option: new(option.Message, noConfirmationFunctions, option.Message.ActionTtl)
             {
                 UserSettingsFunctions = userSettingsFunctions
             },

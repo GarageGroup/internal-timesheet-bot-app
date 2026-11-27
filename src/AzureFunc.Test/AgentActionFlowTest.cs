@@ -188,6 +188,25 @@ public static class AgentActionFlowTest
         Assert.Contains("has cancelled the action", context.History.Turns[^1].UserText);
     }
 
+    [Theory]
+    [InlineData("Timesheet.create-timesheet", "Timesheet", "create-timesheet", false)]
+    [InlineData("timesheet.CREATE-timesheet", "Timesheet", "create-timesheet", false)]
+    [InlineData("Timesheet.*", "Timesheet", "create-timesheet", false)]
+    [InlineData("Timesheet.search-projects", "Timesheet", "create-timesheet", true)]
+    [InlineData("Docs.*", "Timesheet", "create-timesheet", true)]
+    [InlineData("", "Timesheet", "create-timesheet", true)]
+    public static void RequiresConfirmation_ExpectConfirmationUnlessFunctionOrWholeToolIsListed(
+        string listed, string toolName, string functionName, bool expected)
+    {
+        var noConfirmationFunctions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (listed.Length > 0)
+        {
+            _ = noConfirmationFunctions.Add(listed);
+        }
+
+        Assert.Equal(expected, AgentToolInvocationFilter.RequiresConfirmation(noConfirmationFunctions, toolName, functionName));
+    }
+
     [Fact]
     public static async Task SendAsync_OperationDoesNotRequireConfirmation_ExpectItIsExecutedImmediately()
     {
@@ -292,7 +311,7 @@ public static class AgentActionFlowTest
             {
                 BaseAddress = new("https://apim.example/timesheet/"),
                 Audience = "api://timesheet",
-                ConfirmationOperations = ["create-timesheet"]
+                NoConfirmationOperations = ["search-projects", "update-profile"]
             };
 
             Service = new(
@@ -304,7 +323,7 @@ public static class AgentActionFlowTest
                 new("system prompt", TimeZoneInfo.Utc, Time),
                 new(
                     new(TimeZoneInfo.Utc, MaxTextLength: 2000, MaxHistoryMessageCount: 20),
-                    new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Timesheet.create-timesheet" },
+                    new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Timesheet.search-projects", "Timesheet.update-profile" },
                     TimeSpan.FromMinutes(10))
                 {
                     UserSettingsFunctions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Timesheet.update-profile" }
