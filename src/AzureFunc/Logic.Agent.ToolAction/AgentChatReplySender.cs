@@ -19,36 +19,25 @@ internal static class AgentChatReplySender
 
     internal static async Task SendAsync(IChatContext context, AgentChatReply reply, string locale, CancellationToken cancellationToken)
     {
+        var localizer = context.GetLocalizer(BaseName);
+
         if (reply.Action is null)
         {
-            var answer = AgentRichHtml.Prepare(reply.Text);
-            if (answer.IsRich)
+            var labels = new AgentTimesheetLabels(
+                Total: localizer[TimesheetTotal], PeriodTotal: localizer[TimesheetPeriodTotal], HoursUnit: localizer[HoursUnit]);
+
+            // A long report of time entries comes as several messages
+            foreach (var message in AgentTimesheetHtml.Expand(reply.Text, labels, locale))
             {
-                _ = await context.Api.SendRichHtmlOrFallbackAsync(
-                    answer.Html,
-                    AgentRichHtml.ToFallback(answer.Html),
-                    new BotReplyKeyboardRemove(),
-                    context.GetLogger<AgentChatReply>(),
-                    cancellationToken).ConfigureAwait(false);
-
-                return;
+                await SendTextAsync(context, message, cancellationToken).ConfigureAwait(false);
             }
-
-            _ = await context.Api.SendMessageAsync(
-                new(answer.Html)
-                {
-                    ParseMode = BotParseMode.Html,
-                    ReplyMarkup = new BotReplyKeyboardRemove()
-                },
-                cancellationToken).ConfigureAwait(false);
 
             return;
         }
 
-        var localizer = context.GetLocalizer(BaseName);
         var (richHtml, fallbackHtml) = AgentToolActionPreview.Build(reply.Action, localizer, locale);
 
-        _ = await context.Api.SendRichHtmlOrFallbackAsync(
+        await context.Api.SendRichHtmlOrFallbackAsync(
             richHtml,
             fallbackHtml,
             new BotInlineKeyboardMarkup
@@ -68,6 +57,30 @@ internal static class AgentChatReplySender
                 ]
             },
             context.GetLogger<AgentChatReply>(),
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task SendTextAsync(IChatContext context, string text, CancellationToken cancellationToken)
+    {
+        var answer = AgentRichHtml.Prepare(text);
+        if (answer.IsRich)
+        {
+            await context.Api.SendRichHtmlOrFallbackAsync(
+                answer.Html,
+                AgentRichHtml.ToFallback(answer.Html),
+                new BotReplyKeyboardRemove(),
+                context.GetLogger<AgentChatReply>(),
+                cancellationToken).ConfigureAwait(false);
+
+            return;
+        }
+
+        _ = await context.Api.SendMessageAsync(
+            new(answer.Html)
+            {
+                ParseMode = BotParseMode.Html,
+                ReplyMarkup = new BotReplyKeyboardRemove()
+            },
             cancellationToken).ConfigureAwait(false);
     }
 }

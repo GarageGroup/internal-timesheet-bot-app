@@ -8,8 +8,10 @@ namespace GarageGroup.Internal.Timesheet;
 
 internal static class AgentRichMessageExtensions
 {
-    // Sends a rich message (Bot API sendRichMessage) and falls back to a regular HTML message if Telegram rejects it
-    internal static async Task<BotMessage> SendRichHtmlOrFallbackAsync(
+    // Sends a rich message (Bot API sendRichMessage) and falls back to regular HTML messages if Telegram rejects it.
+    // The fallback is used only when Telegram has definitely refused the rich message. After a timeout or a network error
+    // the message may have been delivered, so the error is thrown and the user does not get the same answer twice
+    internal static async Task SendRichHtmlOrFallbackAsync(
         this IChatApi api,
         string richHtml,
         string fallbackHtml,
@@ -19,24 +21,30 @@ internal static class AgentRichMessageExtensions
     {
         try
         {
-            return await api.SendRichMessageAsync(
+            _ = await api.SendRichMessageAsync(
                 new(BotInputRichMessage.FromHtml(richHtml))
                 {
                     ReplyMarkup = replyMarkup
                 },
                 cancellationToken).ConfigureAwait(false);
+
+            return;
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+        catch (Failure<TelegramBotFailureCode>.Exception exception) when (exception.FailureCode is TelegramBotFailureCode.BadRequest)
         {
-            logger.LogWarning(exception, "Failed to send a rich message. A regular message will be sent instead");
+            logger.LogWarning(exception, "Telegram has rejected a rich message. A regular message will be sent instead");
         }
 
-        return await api.SendMessageAsync(
-            new(fallbackHtml)
-            {
-                ParseMode = BotParseMode.Html,
-                ReplyMarkup = replyMarkup
-            },
-            cancellationToken).ConfigureAwait(false);
+        var parts = AgentRichHtml.SplitFallback(fallbackHtml);
+        for (var index = 0; index < parts.Count; index++)
+        {
+            _ = await api.SendMessageAsync(
+                new(parts[index])
+                {
+                    ParseMode = BotParseMode.Html,
+                    ReplyMarkup = index == parts.Count - 1 ? replyMarkup : null
+                },
+                cancellationToken).ConfigureAwait(false);
+        }
     }
 }

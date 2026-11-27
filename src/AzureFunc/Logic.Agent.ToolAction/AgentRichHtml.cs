@@ -109,6 +109,52 @@ internal static partial class AgentRichHtml
         return text.Trim();
     }
 
+    // A regular message holds up to 4096 characters, so a long fallback is split at line breaks.
+    // Formatting tags of the fallback never span lines, so every part stays valid HTML
+    internal static IReadOnlyList<string> SplitFallback(string fallbackHtml, int maxLength = MaxRegularMessageLength)
+    {
+        var parts = new List<string>();
+        var current = new StringBuilder();
+
+        foreach (var line in fallbackHtml.Split('\n'))
+        {
+            if (current.Length > 0 && current.Length + 1 + line.Length > maxLength)
+            {
+                AddPart(parts, current);
+            }
+
+            // A single line longer than a message cannot be split without breaking tags, so it is shown without them
+            if (line.Length > maxLength)
+            {
+                var plain = WebUtility.HtmlDecode(AnyTagRegex().Replace(line, string.Empty));
+                for (var index = 0; index < plain.Length; index += maxLength / 2)
+                {
+                    parts.Add(WebUtility.HtmlEncode(plain.Substring(index, Math.Min(maxLength / 2, plain.Length - index))));
+                }
+
+                continue;
+            }
+
+            _ = current.Append(current.Length > 0 ? "\n" : string.Empty).Append(line);
+        }
+
+        AddPart(parts, current);
+        return parts;
+
+        static void AddPart(List<string> parts, StringBuilder current)
+        {
+            var part = current.ToString().Trim('\n', ' ');
+            _ = current.Clear();
+
+            if (part.Length > 0)
+            {
+                parts.Add(part);
+            }
+        }
+    }
+
+    private const int MaxRegularMessageLength = 4000;
+
     private static void FlushLooseText(StringBuilder builder, StringBuilder loose)
     {
         var text = loose.ToString().Trim('\n', ' ', '\r');
@@ -151,12 +197,17 @@ internal static partial class AgentRichHtml
         return tokens;
     }
 
+    // Telegram parses only a few named entities, so a non-breaking space is sent as the character itself
+    internal static string Encode(string text)
+        =>
+        WebUtility.HtmlEncode(text).Replace("&#160;", "\u00A0", StringComparison.Ordinal);
+
     private static void AddText(List<Token> tokens, string text)
     {
         if (text.Length > 0)
         {
             // The text is decoded first, so entities written by the model are not encoded twice
-            tokens.Add(new(WebUtility.HtmlEncode(WebUtility.HtmlDecode(text)), string.Empty, IsTag: false, IsClosing: false));
+            tokens.Add(new(Encode(WebUtility.HtmlDecode(text)), string.Empty, IsTag: false, IsClosing: false));
         }
     }
 
@@ -255,6 +306,9 @@ internal static partial class AgentRichHtml
 
     [GeneratedRegex(@"[ \t]+\n|\n[ \t]+", RegexOptions.CultureInvariant)]
     private static partial Regex SpaceBeforeLineBreakRegex();
+
+    [GeneratedRegex(@"</?[A-Za-z][^<>]*>", RegexOptions.CultureInvariant)]
+    private static partial Regex AnyTagRegex();
 
     [GeneratedRegex(@"\n{3,}", RegexOptions.CultureInvariant)]
     private static partial Regex ExtraLineBreakRegex();

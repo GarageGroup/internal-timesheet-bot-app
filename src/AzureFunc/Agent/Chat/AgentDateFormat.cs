@@ -8,6 +8,11 @@ internal static class AgentDateFormat
 {
     private const string Pattern = "d MMMM yyyy, dddd";
 
+    // A day inside a period report: the year is in the period heading
+    private const string DayPattern = "d MMMM, dddd";
+
+    private const string PeriodDatePattern = "dd.MM.yyyy";
+
     private static readonly CultureInfo Russian = CultureInfo.GetCultureInfo("ru-RU");
 
     private static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-GB");
@@ -19,4 +24,13 @@ internal static class AgentDateFormat
     internal static string Format(DateOnly date, string? locale)
         =>
         date.ToString(Pattern, GetCulture(locale));
+
+    internal static string FormatDay(DateOnly date, string? locale)
+        =>
+        date.ToString(DayPattern, GetCulture(locale));
+
+    // A period is shown the same way in every language: "23.11.2026 – 29.11.2026"
+    internal static string FormatPeriod(DateOnly from, DateOnly to)
+        =>
+        from.ToString(PeriodDatePattern, CultureInfo.InvariantCulture) + " – " + to.ToString(PeriodDatePattern, CultureInfo.InvariantCulture);
 }
