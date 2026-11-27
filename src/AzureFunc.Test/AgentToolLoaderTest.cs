@@ -72,7 +72,7 @@ public static class AgentToolLoaderTest
 
         var specificationRequest = handler.Requests[0];
         Assert.Equal("https://apim.example/swagger/swagger.json", specificationRequest.Uri.AbsoluteUri);
-        Assert.Equal("subscription-key", specificationRequest.SubscriptionKey);
+        Assert.Equal("specification-key", specificationRequest.SubscriptionKey);
         Assert.Null(specificationRequest.Authorization);
 
         var apiRequest = handler.Requests[1];
@@ -149,7 +149,8 @@ public static class AgentToolLoaderTest
         {
             BaseAddress = new("https://apim.example/timesheet/"),
             Audience = "api://timesheet",
-            SubscriptionKey = "subscription-key"
+            SubscriptionKey = "subscription-key",
+            SpecificationSubscriptionKey = "specification-key"
         };
 
     private static FakeHttpMessageHandler CreateHandler()

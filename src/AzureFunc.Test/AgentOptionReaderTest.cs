@@ -40,6 +40,7 @@ public static class AgentOptionReaderTest
                     ["Agent:Tools:0:BaseAddress"] = "https://apim.example/timesheet/",
                     ["Agent:Tools:0:Audience"] = "api://timesheet",
                     ["Agent:Tools:0:SubscriptionKey"] = "key",
+                    ["Agent:Tools:0:SpecificationSubscriptionKey"] = "specification-key",
                     ["Agent:Tools:0:AllowedOperations:0"] = "GetTimesheets",
                     ["Agent:Tools:1:Name"] = "Docs",
                     ["Agent:Tools:1:Type"] = "mcp",
@@ -59,6 +60,7 @@ public static class AgentOptionReaderTest
                 Assert.Equal(new Uri("https://apim.example/timesheet/"), tool.BaseAddress);
                 Assert.Equal("api://timesheet", tool.Audience);
                 Assert.Equal("key", tool.SubscriptionKey);
+                Assert.Equal("specification-key", tool.SpecificationSubscriptionKey);
                 Assert.Equal(["GetTimesheets"], tool.AllowedOperations);
             },
             tool =>

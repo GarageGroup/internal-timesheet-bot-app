@@ -213,7 +213,41 @@ shared dependencies. Для уже существующей Function App её ф
 `TelegramBot__BaseAddress` и `Bot__FileUrlTemplate` рассчитываются из `BOT_APIM_SERVICE_NAME`.
 `TelegramBot__ApiKey` берётся из подписки `TelegramApiSubscription` APIM; это не Telegram token.
 
+### Агент внутри бота
+
+Агент работает в самом боте, если `AGENT_ENABLED` равно `true`. Иначе бот обращается к Agent API
+сервиса, а остальные переменные этого раздела не используются.
+
+| Имя | Назначение |
+| --- | --- |
+| `AGENT_ENABLED` | `true` включает агента в боте; по умолчанию выключен |
+| `AGENT_SIGN_IN_CLIENT_ID` | Client ID App Registration `bot-internal-gtimesheet-signin-<среда>`, через которую пользователи входят в бота |
+| `TIMESHEET_API_AUDIENCE` | Application ID URI приложения, для которого Mini App получает токен, без имени scope: `api://func-garage-dataverse-claims-<среда>.azurewebsites.net/<client id>` |
+| `TIMESHEET_API_PATH` | URL suffix основного Timesheet API в общем APIM; Test использует `timesheet` |
+| `TIMESHEET_SWAGGER_NAME` | Сегмент Swagger route; по умолчанию `timesheet` |
+| `TIMESHEET_ALLOWED_OPERATIONS` | Operation ID через пробел, доступные модели; по умолчанию только чтение: `get-periods get-tags get-timesheets get-last-projects search-projects` |
+
+Проект Foundry и модель читаются из настроек API Web App: бот использует те же, что и сервис.
+`Agent__SignIn__RedirectUri` строится из `BOT_APIM_SERVICE_NAME` и ведёт на route `oauth2/callback`,
+который создаёт `.infra/apim/main.bicep`. Этот же адрес должен быть указан как Redirect URI в
+App Registration входа. Токен Managed Identity агента служит federated credential этой регистрации,
+поэтому Client Secret не нужен.
+
+Шаг `Grant agent access to Foundry` назначает агентской UAMI роль `Cognitive Services User` на
+Foundry account сервиса. Deployment App Registration для этого нужно право
+`Microsoft.Authorization/roleAssignments/write` на этом account.
+
+Политика основного Timesheet API в общем APIM должна разрешать Client ID из `AGENT_SIGN_IN_CLIENT_ID`:
+в проекте сервиса это переменная `APIM_BOT_SIGN_IN_CLIENT_ID`.
+
 ## GitHub Environment secrets
+
+| Имя | Назначение |
+| --- | --- |
+| `AGENT_TOKEN_ENCRYPTION_KEY` | Ключ шифрования refresh-токенов пользователей: 32 случайных байта в Base64 (`openssl rand -base64 32`). При смене ключа всем пользователям придётся войти заново |
+| `TIMESHEET_SWAGGER_SUBSCRIPTION_KEY` | Ключ подписки `TimesheetSwaggerSubscription` общего APIM; нужен боту, чтобы читать OpenAPI-описание Timesheet API |
+
+Оба secret обязательны только при `AGENT_ENABLED=true`.
 
 Telegram token бот получает из настроек API Web App, куда его записывает API `install.yml`.
 Отдельный secret с токеном в репозитории бота не нужен.

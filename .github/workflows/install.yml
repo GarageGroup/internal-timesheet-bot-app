@@ -79,8 +79,25 @@ jobs:
           BOT_WEB_APP_BASE_ADDRESS: ${{ vars.BOT_WEB_APP_BASE_ADDRESS }}
           WELCOME_IMAGE_URL: ${{ vars.WELCOME_IMAGE_URL }}
           TIMESHEET_LIMITATION_DAY_OF_MONTH: ${{ vars.TIMESHEET_LIMITATION_DAY_OF_MONTH }}
+          AGENT_ENABLED: ${{ vars.AGENT_ENABLED }}
+          AGENT_SIGN_IN_CLIENT_ID: ${{ vars.AGENT_SIGN_IN_CLIENT_ID }}
+          AGENT_TOKEN_ENCRYPTION_KEY: ${{ secrets.AGENT_TOKEN_ENCRYPTION_KEY }}
+          TIMESHEET_API_AUDIENCE: ${{ vars.TIMESHEET_API_AUDIENCE }}
+          TIMESHEET_API_PATH: ${{ vars.TIMESHEET_API_PATH }}
+          TIMESHEET_SWAGGER_NAME: ${{ vars.TIMESHEET_SWAGGER_NAME }}
+          TIMESHEET_SWAGGER_SUBSCRIPTION_KEY: ${{ secrets.TIMESHEET_SWAGGER_SUBSCRIPTION_KEY }}
+          TIMESHEET_ALLOWED_OPERATIONS: ${{ vars.TIMESHEET_ALLOWED_OPERATIONS }}
         with:
           inlineScript: bash .infra/scripts/set-function-app-settings.sh
+      - name: Grant agent access to Foundry
+        if: ${{ vars.AGENT_ENABLED == 'true' }}
+        uses: azure/cli@v3
+        env:
+          AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          API_WEB_APP_NAME: ${{ vars.API_WEB_APP_NAME }}
+          AGENT_MANAGED_IDENTITY_PRINCIPAL_ID: ${{ steps.install.outputs.agent_identity_principal_id }}
+        with:
+          inlineScript: bash .infra/scripts/grant-foundry-access.sh
       - name: Validate Azure deployment
         uses: azure/cli@v3
         env:

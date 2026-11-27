@@ -42,8 +42,12 @@ internal sealed record class AgentToolOption(string Name, AgentToolType Type, Ur
     // Entra audience of the API. The user access token is requested for '<Audience>/.default'
     public string? Audience { get; init; }
 
-    // API Management subscription key. Sent both when the specification is loaded and when the API is called
+    // API Management subscription key that is sent when the API or the MCP server is called
     public string? SubscriptionKey { get; init; }
+
+    // API Management subscription key that is sent when the OpenAPI specification is loaded.
+    // The specification is usually published by another API, so its key differs from the key of the API itself
+    public string? SpecificationSubscriptionKey { get; init; }
 
     // Operation ids (OpenAPI) or tool names (MCP) available to the model. All operations are available when empty
     public string[] AllowedOperations { get; init; } = [];

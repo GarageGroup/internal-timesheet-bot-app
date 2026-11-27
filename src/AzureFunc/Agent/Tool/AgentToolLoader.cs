@@ -183,7 +183,10 @@ internal sealed class AgentToolLoader : IAgentToolLoader
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, tool.Url);
-        Authorize(request.Headers, tool, accessToken: null);
+        if (string.IsNullOrEmpty(tool.SpecificationSubscriptionKey) is false)
+        {
+            request.Headers.Add(SubscriptionKeyHeaderName, tool.SpecificationSubscriptionKey);
+        }
 
         using var response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         _ = response.EnsureSuccessStatusCode();
