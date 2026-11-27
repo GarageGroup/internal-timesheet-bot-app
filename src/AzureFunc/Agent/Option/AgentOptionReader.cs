@@ -14,27 +14,42 @@ internal static partial class AgentOptionReader
     internal static AgentOption Read(IConfiguration configuration)
     {
         var section = configuration.GetSection("Agent");
-        var enabled = section.GetValue("Enabled", false);
 
         var tools = ReadTools(section.GetSection("Tools"));
         var signIn = ReadSignIn(section.GetSection("SignIn"), configuration);
 
-        if (enabled && signIn is null && Array.Exists(tools, static tool => string.IsNullOrEmpty(tool.Audience) is false))
+        if (signIn is null && Array.Exists(tools, static tool => string.IsNullOrEmpty(tool.Audience) is false))
         {
             throw new InvalidOperationException("Agent:SignIn must be configured because some agent tools require a user access token.");
         }
 
         return new()
         {
-            Enabled = enabled,
-            Foundry = ReadFoundry(section.GetSection("Foundry"), enabled),
+            Foundry = ReadFoundry(section.GetSection("Foundry")),
             Message = ReadMessage(section.GetSection("Message")),
             Storage = new(
                 ConnectionString: section["Storage:ConnectionString"].OrNullIfWhiteSpace() ?? configuration["AzureWebJobsStorage"].OrEmpty(),
                 ConversationTableName: section["Storage:ConversationTableName"].OrNullIfWhiteSpace() ?? DefaultConversationTableName),
             Tools = tools,
-            SignIn = signIn
+            SignIn = signIn,
+            Voice = ReadVoice(section.GetSection("Voice"))
         };
+    }
+
+    private static AgentVoiceTranscriptionOption? ReadVoice(IConfigurationSection section)
+    {
+        var deploymentName = section["DeploymentName"].OrNullIfWhiteSpace();
+        if (deploymentName is null)
+        {
+            return null;
+        }
+
+        if (Uri.TryCreate(section["Endpoint"], UriKind.Absolute, out var endpoint) is false)
+        {
+            throw new InvalidOperationException("Agent:Voice:Endpoint must be an absolute URI.");
+        }
+
+        return new(endpoint, deploymentName, section["ModelId"].OrNullIfWhiteSpace() ?? deploymentName);
     }
 
     private static AgentSignInOption? ReadSignIn(IConfigurationSection section, IConfiguration configuration)
@@ -71,27 +86,21 @@ internal static partial class AgentOptionReader
 
         return new(tenantId, clientId, redirectUri, encryptionKey)
         {
-            // The agent identity of the Function App is used by default
+            // The identity that calls the chat model is used by default
             ManagedIdentityClientId = section["ManagedIdentityClientId"].OrNullIfWhiteSpace()
-                ?? configuration["AgentApi:ManagedIdentityClientId"].OrNullIfWhiteSpace()
+                ?? configuration["Agent:Foundry:ManagedIdentityClientId"].OrNullIfWhiteSpace()
         };
     }
 
-    private static AgentFoundryOption ReadFoundry(IConfigurationSection section, bool enabled)
+    private static AgentFoundryOption ReadFoundry(IConfigurationSection section)
     {
-        var endpointText = section["ProjectEndpoint"];
-        if (Uri.TryCreate(endpointText, UriKind.Absolute, out var endpoint) is false)
+        if (Uri.TryCreate(section["ProjectEndpoint"], UriKind.Absolute, out var endpoint) is false)
         {
-            if (enabled)
-            {
-                throw new InvalidOperationException("Agent:Foundry:ProjectEndpoint must be an absolute URI.");
-            }
-
-            endpoint = new("https://localhost/");
+            throw new InvalidOperationException("Agent:Foundry:ProjectEndpoint must be an absolute URI.");
         }
 
         var modelId = section["ModelId"].OrEmpty();
-        if (enabled && string.IsNullOrWhiteSpace(modelId))
+        if (string.IsNullOrWhiteSpace(modelId))
         {
             throw new InvalidOperationException("Agent:Foundry:ModelId must be specified.");
         }

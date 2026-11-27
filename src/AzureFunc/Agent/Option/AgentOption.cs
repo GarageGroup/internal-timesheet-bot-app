@@ -4,8 +4,6 @@ namespace GarageGroup.Internal.Timesheet;
 
 internal sealed record class AgentOption
 {
-    public bool Enabled { get; init; }
-
     public required AgentFoundryOption Foundry { get; init; }
 
     public required AgentMessageOption Message { get; init; }
@@ -16,7 +14,13 @@ internal sealed record class AgentOption
 
     // Null when user sign-in is not configured
     public AgentSignInOption? SignIn { get; init; }
+
+    // Null when voice messages are not supported
+    public AgentVoiceTranscriptionOption? Voice { get; init; }
 }
+
+// An Azure OpenAI speech-to-text deployment. It is called with the same Managed Identity as the chat model
+internal sealed record class AgentVoiceTranscriptionOption(Uri Endpoint, string DeploymentName, string ModelId);
 
 internal sealed record class AgentFoundryOption(Uri ProjectEndpoint, string ModelId, string TokenScope)
 {

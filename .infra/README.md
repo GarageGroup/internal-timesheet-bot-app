@@ -7,8 +7,8 @@ CI/CD бота создаёт или обновляет:
 - Linux Function App с .NET 10 isolated;
 - System Assigned Managed Identity Function App;
 - привязку существующей User Assigned Managed Identity для доступа к Dataverse;
-- привязку отдельной User Assigned Managed Identity для вызова Agent API;
-- APIM бота в Resource Group приложения, маршруты `/bot/message` и `/telegram/api`, named values и подписки;
+- агентскую User Assigned Managed Identity, Foundry account, project и развёртывания моделей;
+- APIM бота в Resource Group приложения, маршруты `/bot/message`, `/oauth2/callback` и `/telegram/api`, named values и подписки;
 - Telegram webhook на `/bot/message` после публикации кода;
 - App Settings Function App;
 - сборку, публикацию ZIP в Blob Storage и развёртывание кода при первом `install`.
@@ -45,7 +45,7 @@ CI/CD бота не создаёт и не изменяет:
 
 1. Resource Group приложения либо право администратора создать её.
 2. Успешно выполненный API `install.yml`: он создаёт App Service Plan, Storage Account, Application Insights,
-   обе User Assigned MI, API Web App и настройки Agent API.
+   Dataverse User Assigned MI и API Web App.
 3. Azure deployment App Registration с Service Principal.
 4. Telegram-бот и его token в настройках API Web App; Mini App URL и welcome image URL.
 5. Общий artifact Storage Account; контейнер релизов создаст `install.yml`.
@@ -185,8 +185,7 @@ Resource Group и location. `GITHUB_ENVIRONMENT` сохраняет регист
 | `APPLICATION_INSIGHTS_NAME` | `appi-internal-gtimesheet-test` |
 | `DATAVERSE_MANAGED_IDENTITY_NAME` | `id-internal-gtimesheet-test` |
 | `API_WEB_APP_NAME` | `app-garage-timesheet-service-test`; Web App API в той же Resource Group |
-| `APIM_SERVICE_NAME` | `apim-integration-platform-test-01`; общий APIM для Agent API |
-| `APIM_AGENT_API_PATH` | Путь Agent API в APIM; совпадает с переменной API pipeline |
+| `APIM_SERVICE_NAME` | `apim-integration-platform-test-01`; общий APIM, через который бот вызывает Timesheet API |
 | `BOT_APIM_SERVICE_NAME` | `apim-garage-timesheet-test`; APIM бота в Resource Group приложения |
 | `BOT_APIM_LOCATION` | `northeurope` для нового Test; для существующего APIM регион сохраняется |
 | `BOT_APIM_PUBLISHER_EMAIL` | `pm@garage-group.io` для Test; адрес publisher нового APIM бота |
@@ -206,21 +205,22 @@ shared dependencies. Для уже существующей Function App её ф
 | `WELCOME_IMAGE_URL` | URL изображения приветствия |
 | `TIMESHEET_LIMITATION_DAY_OF_MONTH` | `10` |
 
-При запуске bot `install.yml` аудитория `AgentApi__Audience` читается из настроек API Web App,
-`AgentApi__BaseAddress` строится из APIM service и path, а `AgentApi__ManagedIdentityClientId`
-берётся из созданной API агентской UAMI. Бот использует её для токена Agent API;
-`AZURE_CLIENT_ID` остаётся привязанным к отдельной Dataverse UAMI.
+`AZURE_CLIENT_ID` привязан к Dataverse UAMI; к моделям Foundry бот обращается под отдельной агентской UAMI.
 `TelegramBot__BaseAddress` и `Bot__FileUrlTemplate` рассчитываются из `BOT_APIM_SERVICE_NAME`.
 `TelegramBot__ApiKey` берётся из подписки `TelegramApiSubscription` APIM; это не Telegram token.
 
-### Агент внутри бота
+### Агент
 
-Агент работает в самом боте, если `AGENT_ENABLED` равно `true`. Иначе бот обращается к Agent API
-сервиса, а остальные переменные этого раздела не используются.
+Агент работает внутри бота: модель в Azure AI Foundry сама решает, когда вызывать подключённые API.
+Бот не зависит от Agent API сервиса и ничего не читает из его настроек, кроме Telegram token.
 
 | Имя | Назначение |
 | --- | --- |
-| `AGENT_ENABLED` | `true` включает агента в боте; по умолчанию выключен |
+| `FOUNDRY_ACCOUNT_NAME` | Имя Foundry account; Test использует `ai-timesheet-test` |
+| `FOUNDRY_PROJECT_NAME` | Имя Foundry project; Test использует `ai-timesheet-test` |
+| `FOUNDRY_LOCATION` | Регион нового Foundry account; у существующего регион сохраняется |
+| `FOUNDRY_SUBSCRIPTION_ID`, `FOUNDRY_RESOURCE_GROUP` | Подписка и Resource Group Foundry, если он размещён не в Resource Group приложения; Deployment App Registration нужна там роль `Contributor` |
+| `FOUNDRY_CHAT_*`, `FOUNDRY_VOICE_*` | Необязательные параметры развёртываний моделей; по умолчанию `gpt-5-mini` и `whisper` |
 | `AGENT_SIGN_IN_CLIENT_ID` | Client ID App Registration `bot-internal-gtimesheet-signin-<среда>`, через которую пользователи входят в бота |
 | `TIMESHEET_API_AUDIENCE` | Application ID URI приложения, для которого Mini App получает токен, без имени scope: `api://func-garage-dataverse-claims-<среда>.azurewebsites.net/<client id>` |
 | `TIMESHEET_API_PATH` | URL suffix основного Timesheet API в общем APIM; Test использует `timesheet` |
@@ -228,15 +228,18 @@ shared dependencies. Для уже существующей Function App её ф
 | `TIMESHEET_ALLOWED_OPERATIONS` | Operation ID через пробел, доступные модели; по умолчанию чтение проектов, тегов, периодов и списаний, а также `create-timesheet update-timesheet delete-timesheet` |
 | `TIMESHEET_CONFIRMATION_OPERATIONS` | Operation ID через пробел, которые бот выполняет только после нажатия кнопки «Подтвердить»; по умолчанию `create-timesheet update-timesheet delete-timesheet`. Любая операция, меняющая данные, должна быть в этом списке, иначе модель выполнит её сразу |
 
-Проект Foundry и модель читаются из настроек API Web App: бот использует те же, что и сервис.
+`.infra/main.bicep` создаёт агентскую User Assigned Managed Identity `<Function App>-agent`, Foundry account,
+project и развёртывания моделей. Identity нельзя удалять и пересоздавать: её principal ID зарегистрирован
+как federated credential в App Registration входа и в назначении роли на Foundry.
+
 `Agent__SignIn__RedirectUri` строится из `BOT_APIM_SERVICE_NAME` и ведёт на route `oauth2/callback`,
 который создаёт `.infra/apim/main.bicep`. Этот же адрес должен быть указан как Redirect URI в
-App Registration входа. Токен Managed Identity агента служит federated credential этой регистрации,
-поэтому Client Secret не нужен.
+App Registration входа. Client Secret не нужен: приложение подтверждает себя токеном агентской identity.
 
-Шаг `Grant agent access to Foundry` назначает агентской UAMI роль `Cognitive Services User` на
-Foundry account сервиса. Deployment App Registration для этого нужно право
-`Microsoft.Authorization/roleAssignments/write` на этом account.
+Шаг `Grant agent access to Foundry` назначает агентской identity роль `Cognitive Services User` на
+Foundry account. Если роль уже назначена, шаг ничего не делает. Для первого назначения Deployment
+App Registration нужно право `Microsoft.Authorization/roleAssignments/write` на этом account; роль
+`Contributor` его не даёт, поэтому один раз роль можно назначить вручную.
 
 Политика основного Timesheet API в общем APIM должна разрешать Client ID из `AGENT_SIGN_IN_CLIENT_ID`:
 в проекте сервиса это переменная `APIM_BOT_SIGN_IN_CLIENT_ID`.
@@ -248,7 +251,7 @@ Foundry account сервиса. Deployment App Registration для этого н
 | `AGENT_TOKEN_ENCRYPTION_KEY` | Ключ шифрования refresh-токенов пользователей: 32 случайных байта в Base64 (`openssl rand -base64 32`). При смене ключа всем пользователям придётся войти заново |
 | `TIMESHEET_SWAGGER_SUBSCRIPTION_KEY` | Ключ подписки `TimesheetSwaggerSubscription` общего APIM; нужен боту, чтобы читать OpenAPI-описание Timesheet API |
 
-Оба secret обязательны только при `AGENT_ENABLED=true`.
+
 
 Telegram token бот получает из настроек API Web App, куда его записывает API `install.yml`.
 Отдельный secret с токеном в репозитории бота не нужен.

@@ -8,15 +8,41 @@ namespace GarageGroup.Internal.Timesheet.Test;
 public static class AgentOptionReaderTest
 {
     [Fact]
-    public static void Read_AgentIsNotConfigured_ExpectDisabledOptionWithDefaults()
+    public static void Read_OnlyFoundryIsConfigured_ExpectDefaults()
     {
         var actual = AgentOptionReader.Read(BuildConfiguration([]));
 
-        Assert.False(actual.Enabled);
         Assert.Empty(actual.Tools);
+        Assert.Null(actual.SignIn);
+        Assert.Null(actual.Voice);
         Assert.Equal(2000, actual.Message.MaxTextLength);
         Assert.Equal(20, actual.Message.MaxHistoryMessageCount);
         Assert.Equal("TimesheetBotAgentConversation", actual.Storage.ConversationTableName);
+        Assert.Equal("https://ai.azure.com/.default", actual.Foundry.TokenScope);
+    }
+
+    [Theory]
+    [InlineData("Agent:Foundry:ProjectEndpoint")]
+    [InlineData("Agent:Foundry:ModelId")]
+    public static void Read_FoundryIsNotConfigured_ExpectInvalidOperationException(string key)
+        =>
+        Assert.Throws<InvalidOperationException>(
+            () => AgentOptionReader.Read(BuildConfiguration(new() { [key] = string.Empty })));
+
+    [Fact]
+    public static void Read_VoiceIsConfigured_ExpectParsedVoiceWithDeploymentAsDefaultModel()
+    {
+        var actual = AgentOptionReader.Read(
+            BuildConfiguration(
+                new()
+                {
+                    ["Agent:Voice:Endpoint"] = "https://ai.example.openai.azure.com/",
+                    ["Agent:Voice:DeploymentName"] = "whisper"
+                }));
+
+        Assert.Equal(new("https://ai.example.openai.azure.com/"), actual.Voice?.Endpoint);
+        Assert.Equal("whisper", actual.Voice?.DeploymentName);
+        Assert.Equal("whisper", actual.Voice?.ModelId);
     }
 
     [Fact]
@@ -27,9 +53,6 @@ public static class AgentOptionReaderTest
                 new()
                 {
                     ["AzureWebJobsStorage"] = "UseDevelopmentStorage=true",
-                    ["Agent:Enabled"] = "true",
-                    ["Agent:Foundry:ProjectEndpoint"] = "https://foundry.example/api/projects/test",
-                    ["Agent:Foundry:ModelId"] = "gpt-test",
                     ["Agent:SignIn:TenantId"] = "tenant",
                     ["Agent:SignIn:ClientId"] = "client",
                     ["Agent:SignIn:RedirectUri"] = "https://apim.example/oauth2/callback",
@@ -48,7 +71,6 @@ public static class AgentOptionReaderTest
                     ["Agent:Tools:1:Url"] = "https://apim.example/docs/mcp"
                 }));
 
-        Assert.True(actual.Enabled);
         Assert.Equal("UseDevelopmentStorage=true", actual.Storage.ConnectionString);
         Assert.Equal("https://ai.azure.com/.default", actual.Foundry.TokenScope);
 
@@ -110,19 +132,13 @@ public static class AgentOptionReaderTest
     }
 
     [Fact]
-    public static void Read_AgentIsEnabledWithoutFoundry_ExpectInvalidOperationException()
-        =>
-        Assert.Throws<InvalidOperationException>(
-            () => AgentOptionReader.Read(BuildConfiguration(new() { ["Agent:Enabled"] = "true" })));
-
-    [Fact]
     public static void Read_SignInIsConfigured_ExpectParsedSignInWithAgentIdentityByDefault()
     {
         var actual = AgentOptionReader.Read(
             BuildConfiguration(
                 new()
                 {
-                    ["AgentApi:ManagedIdentityClientId"] = "agent-identity",
+                    ["Agent:Foundry:ManagedIdentityClientId"] = "agent-identity",
                     ["Agent:SignIn:TenantId"] = "tenant",
                     ["Agent:SignIn:ClientId"] = "client",
                     ["Agent:SignIn:RedirectUri"] = "https://apim.example/oauth2/callback",
@@ -161,9 +177,6 @@ public static class AgentOptionReaderTest
     {
         var settings = new Dictionary<string, string?>
         {
-            ["Agent:Enabled"] = "true",
-            ["Agent:Foundry:ProjectEndpoint"] = "https://foundry.example/api/projects/test",
-            ["Agent:Foundry:ModelId"] = "gpt-test",
             ["Agent:Tools:0:Name"] = "Timesheet",
             ["Agent:Tools:0:Type"] = "OpenApi",
             ["Agent:Tools:0:Url"] = "https://apim.example/swagger/swagger.json",
@@ -174,7 +187,20 @@ public static class AgentOptionReaderTest
         _ = Assert.Throws<InvalidOperationException>(() => AgentOptionReader.Read(BuildConfiguration(settings)));
     }
 
+    // The chat model settings are always required, so every configuration starts from them
     private static IConfiguration BuildConfiguration(Dictionary<string, string?> settings)
-        =>
-        new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+    {
+        var values = new Dictionary<string, string?>
+        {
+            ["Agent:Foundry:ProjectEndpoint"] = "https://foundry.example/api/projects/test",
+            ["Agent:Foundry:ModelId"] = "gpt-test"
+        };
+
+        foreach (var setting in settings)
+        {
+            values[setting.Key] = setting.Value;
+        }
+
+        return new ConfigurationBuilder().AddInMemoryCollection(values).Build();
+    }
 }
