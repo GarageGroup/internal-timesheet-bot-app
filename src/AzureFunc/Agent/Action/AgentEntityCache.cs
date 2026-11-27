@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace GarageGroup.Internal.Timesheet;
 
 // Remembers objects returned by the tools (projects, time entries) so that identifiers in a prepared action
 // can be shown to the user as names. The names come from the API, not from the model, so the preview can be trusted
-internal sealed class AgentEntityCache
+internal sealed partial class AgentEntityCache
 {
     private const int MaxEntitiesPerUser = 500;
 
@@ -17,6 +18,14 @@ internal sealed class AgentEntityCache
 
     // Fields that describe an object without a name, in the order they are shown
     private static readonly string[] SummaryFields = ["date", "projectName", "duration", "description"];
+
+    // A value that the preview replaces with a localized text, for example the project type
+    internal static string CreateValueToken(string value)
+        =>
+        $"\u27E6{value}\u27E7";
+
+    [GeneratedRegex("\u27E6([A-Za-z0-9_]+)\u27E7", RegexOptions.CultureInvariant)]
+    internal static partial Regex ValueTokenRegex();
 
     private readonly ConcurrentDictionary<long, UserEntities> users = new();
 
@@ -84,8 +93,23 @@ internal sealed class AgentEntityCache
             return name.GetString();
         }
 
-        var parts = SummaryFields.Select(field => GetText(element, field)).Where(static text => string.IsNullOrWhiteSpace(text) is false).ToArray();
+        var parts = SummaryFields.Select(field => GetSummaryText(element, field)).Where(static text => string.IsNullOrWhiteSpace(text) is false).ToArray();
         return parts.Length > 0 ? string.Join(" · ", parts) : null;
+    }
+
+    // The project is shown as "<type> <name>", the same way as everywhere else
+    private static string? GetSummaryText(JsonElement element, string field)
+    {
+        var text = GetText(element, field);
+        if (field is not "projectName" || string.IsNullOrWhiteSpace(text))
+        {
+            return text;
+        }
+
+        var projectType = GetText(element, "projectType");
+        return string.IsNullOrWhiteSpace(projectType) || ValueTokenRegex().IsMatch(CreateValueToken(projectType)) is false
+            ? text
+            : $"{CreateValueToken(projectType)} {text}";
     }
 
     private static string? GetText(JsonElement element, string field)

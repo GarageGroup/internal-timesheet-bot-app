@@ -27,4 +27,5 @@
   <data name="Value_Opportunity" xml:space="preserve"><value>Opportunity</value></data>
   <data name="Value_Lead" xml:space="preserve"><value>Lead</value></data>
   <data name="Value_Incident" xml:space="preserve"><value>Incident</value></data>
+  <data name="LabelFrom_id" xml:space="preserve"><value>type</value></data>
 </root>

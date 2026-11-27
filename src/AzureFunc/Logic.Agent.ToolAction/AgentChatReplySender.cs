@@ -1,8 +1,4 @@
 using System;
-using System.Globalization;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra.Telegram.Bot;
@@ -13,7 +9,7 @@ namespace GarageGroup.Internal.Timesheet;
 using static AgentToolActionResource;
 
 // Sends an answer of the in-bot agent: either the model text or the confirmation message of a prepared action
-internal static partial class AgentChatReplySender
+internal static class AgentChatReplySender
 {
     internal const string CallbackPrefix = "agent-tool:";
 
@@ -25,8 +21,21 @@ internal static partial class AgentChatReplySender
     {
         if (reply.Action is null)
         {
+            var answer = AgentRichHtml.Prepare(reply.Text);
+            if (answer.IsRich)
+            {
+                _ = await context.Api.SendRichHtmlOrFallbackAsync(
+                    answer.Html,
+                    AgentRichHtml.ToFallback(answer.Html),
+                    new BotReplyKeyboardRemove(),
+                    context.GetLogger<AgentChatReply>(),
+                    cancellationToken).ConfigureAwait(false);
+
+                return;
+            }
+
             _ = await context.Api.SendMessageAsync(
-                new(SanitizeHtml(reply.Text))
+                new(answer.Html)
                 {
                     ParseMode = BotParseMode.Html,
                     ReplyMarkup = new BotReplyKeyboardRemove()
@@ -61,26 +70,4 @@ internal static partial class AgentChatReplySender
             context.GetLogger<AgentChatReply>(),
             cancellationToken).ConfigureAwait(false);
     }
-
-    // Keeps the tags the agent is allowed to use and encodes everything else
-    internal static string SanitizeHtml(string text)
-    {
-        var builder = new StringBuilder(text.Length);
-        var currentIndex = 0;
-
-        foreach (Match match in AllowedTagRegex().Matches(text))
-        {
-            _ = builder
-                .Append(WebUtility.HtmlEncode(WebUtility.HtmlDecode(text[currentIndex..match.Index])))
-                .Append(match.Value);
-            currentIndex = match.Index + match.Length;
-        }
-
-        return builder
-            .Append(WebUtility.HtmlEncode(WebUtility.HtmlDecode(text[currentIndex..])))
-            .ToString();
-    }
-
-    [GeneratedRegex("</?(?:b|i|code)>", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
-    private static partial Regex AllowedTagRegex();
 }
