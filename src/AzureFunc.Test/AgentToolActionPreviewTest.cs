@@ -18,7 +18,9 @@ public static class AgentToolActionPreviewTest
             ["Arg_date"] = "Дата",
             ["Arg_id"] = "Проект",
             ["Arg_delete-timesheet_id"] = "Списание",
-            ["Value_Project"] = "Проект"
+            ["Value_Project"] = "Проект",
+            ["Value_Lead"] = "Лид",
+            ["LabelFrom_create-timesheet_id"] = "type"
         });
 
     [Fact]
@@ -38,14 +40,13 @@ public static class AgentToolActionPreviewTest
             "<p><b>Создать списание</b></p><table compact>" +
             "<tr><th align=\"left\">Дата</th><td>27 ноября 2026, пятница</td></tr>" +
             "<tr><th align=\"left\">Проект</th><td>R&amp;D &lt;test&gt;</td></tr>" +
-            "<tr><th align=\"left\">type</th><td>Проект</td></tr>" +
             "<tr><th align=\"left\">duration</th><td>2</td></tr>" +
             "<tr><th align=\"left\">description</th><td>&lt;b&gt;#Test&lt;/b&gt;</td></tr>" +
             "</table><p>Проверьте параметры.</p>",
             rich);
 
         Assert.Equal(
-            "<b>Создать списание</b>\n\n<b>Дата:</b> 27 ноября 2026, пятница\n<b>Проект:</b> R&amp;D &lt;test&gt;\n<b>type:</b> Проект\n" +
+            "<b>Создать списание</b>\n\n<b>Дата:</b> 27 ноября 2026, пятница\n<b>Проект:</b> R&amp;D &lt;test&gt;\n" +
             "<b>duration:</b> 2\n<b>description:</b> &lt;b&gt;#Test&lt;/b&gt;\n\nПроверьте параметры.",
             fallback);
     }
@@ -67,6 +68,44 @@ public static class AgentToolActionPreviewTest
         var (rich, _) = AgentToolActionPreview.Build(CreateAction("delete-timesheet", new AgentActionArgument("id", "x", "2026-11-24 E2E 2")), Localizer, "en");
 
         Assert.Contains("<th align=\"left\">Списание</th><td>24 November 2026, Tuesday E2E 2</td>", rich);
+    }
+
+    [Fact]
+    public static void Build_ProjectOfAnotherType_ExpectOneRowWithTypeAsLabelAndNameAsValue()
+    {
+        var action = CreateAction(
+            "create-timesheet",
+            new AgentActionArgument("id", "839bb7ea-6e1f-4ba0-a5fb-a63769a20e65", "Test"),
+            new AgentActionArgument("type", "Lead"));
+
+        var (rich, fallback) = AgentToolActionPreview.Build(action, Localizer, "ru");
+
+        Assert.Contains("<table compact><tr><th align=\"left\">Лид</th><td>Test</td></tr></table>", rich);
+        Assert.Contains("\n<b>Лид:</b> Test\n", fallback);
+    }
+
+    [Fact]
+    public static void Build_TypeArgumentWithoutProject_ExpectTypeIsShownAsOwnRow()
+    {
+        var (rich, _) = AgentToolActionPreview.Build(
+            CreateAction("update-timesheet", new AgentActionArgument("type", "Lead")), Localizer, "ru");
+
+        Assert.Contains("<tr><th align=\"left\">type</th><td>Лид</td></tr>", rich);
+    }
+
+    [Fact]
+    public static void Build_TimeEntrySummary_ExpectLocalizedProjectTypeBeforeProjectName()
+    {
+        var cache = new AgentEntityCache();
+        cache.Remember(
+            15,
+            """{"timesheets":[{"id":"27a82cb6-ee49-45a1-a623-75f9304ed000","projectType":"Lead","projectName":"Test","duration":2,"date":"2026-11-27"}]}""");
+
+        var display = cache.FindDisplay(15, "27a82cb6-ee49-45a1-a623-75f9304ed000");
+        var (rich, _) = AgentToolActionPreview.Build(
+            CreateAction("delete-timesheet", new AgentActionArgument("id", "27a82cb6-ee49-45a1-a623-75f9304ed000", display)), Localizer, "ru");
+
+        Assert.Contains("<td>27 ноября 2026, пятница · Лид Test · 2</td>".Replace("·", "&#183;"), rich);
     }
 
     [Fact]

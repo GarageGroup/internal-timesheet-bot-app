@@ -11,6 +11,9 @@ internal static class AgentToolActionResource
 
     public const string ValuePrefix = "Value_";
 
+    // '<prefix><argument>' names another argument whose value is used as the label of this one
+    public const string LabelFromPrefix = "LabelFrom_";
+
     public const string DefaultTitle = "DefaultTitle";
 
     public const string PreviewHint = "PreviewHint";
