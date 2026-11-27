@@ -292,8 +292,47 @@ public static class AgentSignInTest
             TestContext.Current.CancellationToken);
 
         Assert.Contains("Вход выполнен", actual.Html);
+        Assert.Contains("<meta http-equiv=\"refresh\" content=\"1;url=tg://resolve?domain=timesheet_test_bot\"/>", actual.Html);
+        Assert.Contains("href=\"https://t.me/timesheet_test_bot\"", actual.Html);
         Assert.Equal(User, Assert.Single(notifier.Notified).User);
         _ = Assert.Single(context.Store.RefreshTokens);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("bot\"/><script>")]
+    public static async Task CallbackHandler_BotUsernameIsUnknownOrInvalid_ExpectSuccessPageWithoutRedirect(string? botUsername)
+    {
+        var context = new SignInContext();
+        var state = await context.StartSignInAsync();
+        var handler = new AgentSignInCallbackHandler(
+            context.Service, new FakeNotifier { BotUsername = botUsername }, NullLogger.Instance);
+
+        var actual = await handler.HandleAsync(
+            new Dictionary<string, string> { ["state"] = state, ["code"] = "auth-code", ["confirm"] = "1" },
+            TestContext.Current.CancellationToken);
+
+        Assert.Contains("Вход выполнен", actual.Html);
+        Assert.DoesNotContain("refresh", actual.Html);
+        Assert.DoesNotContain("t.me", actual.Html);
+        Assert.DoesNotContain("<script>", actual.Html);
+    }
+
+    [Fact]
+    public static async Task SetSignInMessageAsync_PendingSignIn_ExpectMessageIdIsReturnedOnCompletion()
+    {
+        var context = new SignInContext();
+        var url = await context.Service.CreateSignInUrlAsync(new(User, "Ivan", "ru", "{}"), TestContext.Current.CancellationToken);
+        var state = HttpUtility.ParseQueryString(url.Query)["state"]!;
+
+        await context.Service.SetSignInMessageAsync(url, 345, TestContext.Current.CancellationToken);
+        await context.Service.SetSignInMessageAsync(new("https://login.example/?state=unknown"), 999, TestContext.Current.CancellationToken);
+
+        var completed = await context.Service.CompleteAsync(state, "auth-code", TestContext.Current.CancellationToken);
+
+        Assert.Equal(345, completed?.SignInMessageId);
+        Assert.Empty(context.Store.Pending);
     }
 
     [Theory]
@@ -376,6 +415,12 @@ public static class AgentSignInTest
         internal List<AgentPendingSignIn> Notified { get; } = [];
 
         internal Exception? Failure { get; init; }
+
+        internal string? BotUsername { get; init; } = "timesheet_test_bot";
+
+        public ValueTask<string?> GetBotUsernameAsync(CancellationToken cancellationToken)
+            =>
+            new(BotUsername);
 
         public ValueTask NotifySignedInAsync(AgentPendingSignIn pending, CancellationToken cancellationToken)
         {

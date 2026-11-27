@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using Microsoft.Extensions.Logging;
 
 namespace GarageGroup.Internal.Timesheet;
@@ -51,6 +52,21 @@ internal sealed class AgentSignInService(
             .Append("&code_challenge_method=S256&code_challenge=").Append(codeChallenge);
 
         return new(builder.ToString());
+    }
+
+    public async ValueTask SetSignInMessageAsync(Uri signInUrl, int messageId, CancellationToken cancellationToken)
+    {
+        var state = HttpUtility.ParseQueryString(signInUrl.Query)["state"];
+        if (string.IsNullOrEmpty(state))
+        {
+            return;
+        }
+
+        var pending = await store.GetPendingAsync(state, cancellationToken).ConfigureAwait(false);
+        if (pending is not null)
+        {
+            await store.SavePendingAsync(pending with { SignInMessageId = messageId }, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     public async ValueTask<AgentPendingSignIn?> FindPendingAsync(string state, CancellationToken cancellationToken)
