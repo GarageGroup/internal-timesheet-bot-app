@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="DefaultTitle" xml:space="preserve"><value>Prepared action: {0}</value></data>
+  <data name="PreviewHint" xml:space="preserve"><value>Nothing has been changed yet. Check the details and confirm the action.</value></data>
+  <data name="ConfirmButton" xml:space="preserve"><value>✅ Confirm</value></data>
+  <data name="CancelButton" xml:space="preserve"><value>❌ Cancel</value></data>
+  <data name="Cancelled" xml:space="preserve"><value>The action has been cancelled.</value></data>
+  <data name="NotFound" xml:space="preserve"><value>This action has already been processed or its confirmation time has expired.</value></data>
+  <data name="Succeeded" xml:space="preserve"><value>✅ The action has been completed.</value></data>
+  <data name="Failed" xml:space="preserve"><value>The action could not be completed. Check your time entries before trying again.</value></data>
+  <data name="SignInRequired" xml:space="preserve"><value>Your sign-in has expired. Send me any message, sign in again and press the button once more.</value></data>
+  <data name="UnexpectedError" xml:space="preserve"><value>The action could not be processed. Try again later.</value></data>
+  <data name="Title_create-timesheet" xml:space="preserve"><value>Create a time entry</value></data>
+  <data name="Title_update-timesheet" xml:space="preserve"><value>Change a time entry</value></data>
+  <data name="Title_delete-timesheet" xml:space="preserve"><value>Delete a time entry</value></data>
+  <data name="Arg_date" xml:space="preserve"><value>Date</value></data>
+  <data name="Arg_id" xml:space="preserve"><value>Project</value></data>
+  <data name="Arg_type" xml:space="preserve"><value>Type</value></data>
+  <data name="Arg_duration" xml:space="preserve"><value>Duration, h</value></data>
+  <data name="Arg_description" xml:space="preserve"><value>Comment</value></data>
+  <data name="Arg_timesheetId" xml:space="preserve"><value>Time entry</value></data>
+  <data name="Value_Project" xml:space="preserve"><value>Project</value></data>
+  <data name="Value_Opportunity" xml:space="preserve"><value>Opportunity</value></data>
+  <data name="Value_Lead" xml:space="preserve"><value>Lead</value></data>
+  <data name="Value_Incident" xml:space="preserve"><value>Incident</value></data>
+</root>

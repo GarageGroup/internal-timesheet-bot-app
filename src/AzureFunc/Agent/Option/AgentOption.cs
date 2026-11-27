@@ -23,9 +23,16 @@ internal sealed record class AgentFoundryOption(Uri ProjectEndpoint, string Mode
     public string? ManagedIdentityClientId { get; init; }
 }
 
-internal sealed record class AgentMessageOption(TimeZoneInfo TimeZone, int MaxTextLength, int MaxHistoryMessageCount);
+internal sealed record class AgentMessageOption(TimeZoneInfo TimeZone, int MaxTextLength, int MaxHistoryMessageCount)
+{
+    // How long a prepared action waits for the user's confirmation
+    public TimeSpan ActionTtl { get; init; } = TimeSpan.FromMinutes(10);
+}
 
-internal sealed record class AgentStorageOption(string ConnectionString, string ConversationTableName);
+internal sealed record class AgentStorageOption(string ConnectionString, string ConversationTableName)
+{
+    public string ActionTableName { get; init; } = "TimesheetBotAgentAction";
+}
 
 internal enum AgentToolType
 {
@@ -51,4 +58,7 @@ internal sealed record class AgentToolOption(string Name, AgentToolType Type, Ur
 
     // Operation ids (OpenAPI) or tool names (MCP) available to the model. All operations are available when empty
     public string[] AllowedOperations { get; init; } = [];
+
+    // Operation ids (OpenAPI) or tool names (MCP) that are executed only after the user confirms them with a button
+    public string[] ConfirmationOperations { get; init; } = [];
 }

@@ -12,6 +12,10 @@ internal sealed class AgentPromptProvider(string template, TimeZoneInfo timeZone
         =>
         new(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, RelativePath)), timeZone, timeProvider);
 
+    private static string GetLanguageName(string locale)
+        =>
+        locale.StartsWith("en", StringComparison.OrdinalIgnoreCase) ? "английский (English)" : "русский";
+
     public string Build(string locale)
     {
         var today = TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), timeZone);
@@ -20,6 +24,7 @@ internal sealed class AgentPromptProvider(string template, TimeZoneInfo timeZone
             .Replace("{{Today}}", today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), StringComparison.Ordinal)
             .Replace("{{DayOfWeek}}", today.DayOfWeek.ToString(), StringComparison.Ordinal)
             .Replace("{{TimeZone}}", timeZone.Id, StringComparison.Ordinal)
-            .Replace("{{Locale}}", string.IsNullOrWhiteSpace(locale) ? "ru" : locale, StringComparison.Ordinal);
+            .Replace("{{Locale}}", string.IsNullOrWhiteSpace(locale) ? "ru" : locale, StringComparison.Ordinal)
+            .Replace("{{Language}}", GetLanguageName(locale), StringComparison.Ordinal);
     }
 }

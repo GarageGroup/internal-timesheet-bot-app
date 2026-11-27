@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using Azure.Core;
 using Azure.Data.Tables;
@@ -88,13 +89,27 @@ partial class ApplicationHost
             loggerFactory: serviceProvider.GetRequiredService<ILoggerFactory>(),
             timeProvider: timeProvider);
 
+        var confirmationFunctions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var tool in option.Tools)
+        {
+            foreach (var operation in tool.ConfirmationOperations)
+            {
+                _ = confirmationFunctions.Add(AgentToolInvocationFilter.GetKey(tool.Name, operation));
+            }
+        }
+
         var chatService = new AgentChatService(
             kernelFactory: new FoundryAgentKernelFactory(option.Foundry, CreateFoundryCredential(option.Foundry)),
             toolLoader: toolLoader,
             historyStore: new TableAgentHistoryStore(
                 new TableClient(option.Storage.ConnectionString, option.Storage.ConversationTableName), timeProvider),
+            actionStore: new TableAgentActionStore(
+                new TableClient(option.Storage.ConnectionString, option.Storage.ActionTableName)),
+            entityCache: new AgentEntityCache(),
             promptProvider: AgentPromptProvider.FromFile(option.Message.TimeZone, timeProvider),
-            option: option.Message);
+            option: new(option.Message, confirmationFunctions, option.Message.ActionTtl),
+            timeProvider: timeProvider,
+            logger: serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<AgentChatService>());
 
         return new(Enabled: true, Service: chatService)
         {

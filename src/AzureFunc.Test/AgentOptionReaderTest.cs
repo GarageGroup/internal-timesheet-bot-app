@@ -42,6 +42,7 @@ public static class AgentOptionReaderTest
                     ["Agent:Tools:0:SubscriptionKey"] = "key",
                     ["Agent:Tools:0:SpecificationSubscriptionKey"] = "specification-key",
                     ["Agent:Tools:0:AllowedOperations:0"] = "GetTimesheets",
+                    ["Agent:Tools:0:ConfirmationOperations:0"] = "CreateTimesheet",
                     ["Agent:Tools:1:Name"] = "Docs",
                     ["Agent:Tools:1:Type"] = "mcp",
                     ["Agent:Tools:1:Url"] = "https://apim.example/docs/mcp"
@@ -62,6 +63,7 @@ public static class AgentOptionReaderTest
                 Assert.Equal("key", tool.SubscriptionKey);
                 Assert.Equal("specification-key", tool.SpecificationSubscriptionKey);
                 Assert.Equal(["GetTimesheets"], tool.AllowedOperations);
+                Assert.Equal(["CreateTimesheet"], tool.ConfirmationOperations);
             },
             tool =>
             {
