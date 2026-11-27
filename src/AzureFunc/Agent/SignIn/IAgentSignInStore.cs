@@ -11,7 +11,11 @@ internal sealed record class AgentPendingSignIn(
     string CodeVerifier,
     string Locale,
     string SourceUpdateJson,
-    DateTimeOffset ExpiresAt);
+    DateTimeOffset ExpiresAt)
+{
+    // The Telegram message that contains the sign-in link. It is removed after the sign-in
+    public int? SignInMessageId { get; init; }
+}
 
 internal interface IAgentSignInStore
 {

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 
 namespace GarageGroup.Internal.Timesheet;
@@ -34,11 +35,43 @@ internal static class AgentSignInPage
         return BuildPage(isEnglish ? "en" : "ru", title, body);
     }
 
-    internal static string BuildSuccess(string locale)
-        =>
-        GetLocale(locale) is "en"
-            ? BuildPage("en", "You are signed in", "<p>Return to Telegram: the bot will continue your request.</p>")
-            : BuildPage("ru", "Вход выполнен", "<p>Вернитесь в Telegram: бот продолжит ваш запрос.</p>");
+    // The page opens Telegram by itself and stays visible, so the result is clear even if the application does not open
+    internal static string BuildSuccess(string locale, string? botUsername)
+    {
+        var isEnglish = GetLocale(locale) is "en";
+        var title = isEnglish ? "You are signed in" : "Вход выполнен";
+        var text = isEnglish ? "Return to Telegram: the bot will continue your request." : "Вернитесь в Telegram: бот продолжит ваш запрос.";
+
+        if (IsValidBotUsername(botUsername) is false)
+        {
+            return BuildPage(isEnglish ? "en" : "ru", title, $"<p>{text}</p>");
+        }
+
+        var button = isEnglish ? "Open Telegram" : "Открыть Telegram";
+        var body = $"<p>{text}</p><p><a class=\"button\" href=\"https://t.me/{botUsername}\">{button}</a></p>";
+
+        return BuildPage(
+            isEnglish ? "en" : "ru", title, body, head: $"<meta http-equiv=\"refresh\" content=\"1;url=tg://resolve?domain={botUsername}\"/>");
+    }
+
+    // Telegram usernames consist of latin letters, digits and underscores
+    private static bool IsValidBotUsername([NotNullWhen(true)] string? botUsername)
+    {
+        if (string.IsNullOrEmpty(botUsername) || botUsername.Length > 64)
+        {
+            return false;
+        }
+
+        foreach (var symbol in botUsername)
+        {
+            if (char.IsAsciiLetterOrDigit(symbol) is false && symbol is not '_')
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     internal static string BuildFailure(string locale)
         =>
@@ -46,13 +79,14 @@ internal static class AgentSignInPage
             ? BuildPage("en", "Sign-in failed", "<p>The link is invalid or has expired. Send a message to the bot to get a new one.</p>")
             : BuildPage("ru", "Не удалось войти", "<p>Ссылка недействительна или устарела. Напишите боту, чтобы получить новую.</p>");
 
-    private static string BuildPage(string language, string title, string body)
+    private static string BuildPage(string language, string title, string body, string head = "")
         =>
         $"<!DOCTYPE html><html lang=\"{language}\"><head><meta charset=\"utf-8\"/>" +
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/>" +
         "<meta name=\"referrer\" content=\"no-referrer\"/>" +
-        $"<title>{title}</title>" +
+        $"{head}<title>{title}</title>" +
         "<style>body{font-family:system-ui,sans-serif;max-width:32rem;margin:3rem auto;padding:0 1rem;line-height:1.5}" +
-        "button{font-size:1rem;padding:.6rem 1.2rem;cursor:pointer}</style></head>" +
+        "button,a.button{font-size:1rem;padding:.6rem 1.2rem;cursor:pointer}" +
+        "a.button{display:inline-block;border:1px solid;border-radius:.3rem;text-decoration:none}</style></head>" +
         $"<body><h1>{title}</h1>{body}</body></html>";
 }

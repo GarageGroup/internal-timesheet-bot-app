@@ -11,6 +11,9 @@ internal interface IAgentSignInService
     // Creates a one-time sign-in link bound to the Telegram user
     ValueTask<Uri> CreateSignInUrlAsync(AgentSignInRequest request, CancellationToken cancellationToken);
 
+    // Remembers the Telegram message that shows the link, so that it can be removed after the sign-in
+    ValueTask SetSignInMessageAsync(Uri signInUrl, int messageId, CancellationToken cancellationToken);
+
     // Returns the sign-in started by the link or null if the state is unknown or expired
     ValueTask<AgentPendingSignIn?> FindPendingAsync(string state, CancellationToken cancellationToken);
 

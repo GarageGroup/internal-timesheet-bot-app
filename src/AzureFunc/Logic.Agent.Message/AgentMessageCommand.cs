@@ -229,7 +229,7 @@ internal sealed class AgentMessageCommand(
                 SourceUpdateJson: JsonSerializer.Serialize(request.Context.Update)),
             cancellationToken).ConfigureAwait(false);
 
-        _ = await request.Context.Api.SendMessageAsync(
+        var signInMessage = await request.Context.Api.SendMessageAsync(
             new(localizer[SignInRequired])
             {
                 ParseMode = BotParseMode.Html,
@@ -247,6 +247,8 @@ internal sealed class AgentMessageCommand(
                 }
             },
             cancellationToken).ConfigureAwait(false);
+
+        await chatFeature.SignIn.SetSignInMessageAsync(signInUrl, signInMessage.MessageId, cancellationToken).ConfigureAwait(false);
     }
 
     private static string GetDisplayName(BotUser user)

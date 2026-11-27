@@ -34,6 +34,11 @@ internal sealed class TableAgentSignInStore(TableClient tableClient) : IAgentSig
             ["ExpiresAt"] = pending.ExpiresAt
         };
 
+        if (pending.SignInMessageId is int signInMessageId)
+        {
+            entity["SignInMessageId"] = signInMessageId;
+        }
+
         _ = await tableClient.UpsertEntityAsync(entity, TableUpdateMode.Replace, cancellationToken).ConfigureAwait(false);
     }
 
@@ -61,7 +66,10 @@ internal sealed class TableAgentSignInStore(TableClient tableClient) : IAgentSig
             CodeVerifier: entity.GetString("CodeVerifier").OrEmpty(),
             Locale: entity.GetString("Locale").OrEmpty(),
             SourceUpdateJson: entity.GetString("SourceUpdateJson").OrEmpty(),
-            ExpiresAt: entity.GetDateTimeOffset("ExpiresAt") ?? default);
+            ExpiresAt: entity.GetDateTimeOffset("ExpiresAt") ?? default)
+        {
+            SignInMessageId = entity.GetInt32("SignInMessageId")
+        };
     }
 
     public async ValueTask DeletePendingAsync(string state, CancellationToken cancellationToken)

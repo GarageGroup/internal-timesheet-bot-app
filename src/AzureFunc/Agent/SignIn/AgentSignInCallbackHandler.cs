@@ -13,6 +13,9 @@ internal sealed record class AgentSignInCallbackResponse(HttpStatusCode StatusCo
 internal interface IAgentSignInNotifier
 {
     ValueTask NotifySignedInAsync(AgentPendingSignIn pending, CancellationToken cancellationToken);
+
+    // Returns the bot username without '@' or null if it is unknown. It is used to return the user to Telegram
+    ValueTask<string?> GetBotUsernameAsync(CancellationToken cancellationToken);
 }
 
 // Handles the form posted by Microsoft Entra ID. The first request shows a confirmation page that names the Telegram account,
@@ -66,7 +69,17 @@ internal sealed class AgentSignInCallbackHandler(IAgentSignInService signInServi
             logger.LogError(exception, "Failed to notify the Telegram user {userId} about the sign-in", completed.User.TelegramUserId);
         }
 
-        return new(HttpStatusCode.OK, AgentSignInPage.BuildSuccess(completed.Locale));
+        string? botUsername = null;
+        try
+        {
+            botUsername = await notifier.GetBotUsernameAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogWarning(exception, "Failed to get the bot username");
+        }
+
+        return new(HttpStatusCode.OK, AgentSignInPage.BuildSuccess(completed.Locale, botUsername));
     }
 
     private static AgentSignInCallbackResponse CreateFailure(string locale, HttpStatusCode statusCode = HttpStatusCode.OK)
