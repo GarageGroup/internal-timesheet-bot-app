@@ -10,8 +10,8 @@ on:
         default: Test
         options: [Test, Prod]
       version:
-        description: Existing release tag, for example v1.2.3
-        required: true
+        description: Release tag, for example v1.2.3. Empty means the latest release tag of the selected branch or the selected tag itself
+        required: false
         type: string
 
 permissions:
@@ -26,18 +26,40 @@ jobs:
     concurrency:
       group: timesheet-bot-deploy-${{ inputs.environment }}
       cancel-in-progress: false
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - name: Validate version
-        env:
-          VERSION: ${{ inputs.version }}
-        run: '[[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]'
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.version }}
-      - name: Download release artifact from Azure Blob Storage
+          # The whole history with tags is needed to find the latest release tag of the selected branch
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Resolve version
+        id: version
         env:
           VERSION: ${{ inputs.version }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [[ -z "$VERSION" ]]; then
+            if [[ "$REF_TYPE" == 'tag' ]]; then
+              VERSION="$REF_NAME"
+            else
+              VERSION="$(git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD)" || { echo "No release tag is reachable from '$REF_NAME'" >&2; exit 1; }
+              if [[ "$(git rev-parse "$VERSION^{commit}")" != "$(git rev-parse HEAD)" ]]; then
+                echo "::notice::'$REF_NAME' has commits after $VERSION. They are not released and will not be deployed."
+              fi
+            fi
+          fi
+          [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]] || { echo "Unexpected version: $VERSION" >&2; exit 1; }
+          echo "Deploying $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          # The scripts of the release are used, not the scripts of the selected branch
+          git checkout --detach "refs/tags/$VERSION"
+      - name: Download release artifact from Azure Blob Storage
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
           ARTIFACT_NAME: ${{ vars.AZURE_ARTIFACT_NAME }}
           ARTIFACT_CONTAINER: ${{ vars.AZURE_ARTIFACT_CONTAINER_NAME }}
           ARTIFACT_ACCOUNT: ${{ vars.AZURE_ARTIFACT_ACCOUNT_NAME }}
@@ -47,7 +69,7 @@ jobs:
           az storage blob download --name "${ARTIFACT_NAME}-${VERSION}.zip" --file "./publish/${ARTIFACT_NAME}-${VERSION}.zip" --account-name "$ARTIFACT_ACCOUNT" --container-name "$ARTIFACT_CONTAINER" --account-key "$ARTIFACT_ACCOUNT_KEY" --only-show-errors
       - name: Validate release artifact
         env:
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ steps.version.outputs.version }}
           ARTIFACT_NAME: ${{ vars.AZURE_ARTIFACT_NAME }}
         run: bash .infra/scripts/validate-function-package.sh "./publish/${ARTIFACT_NAME}-${VERSION}.zip"
       - name: Log in to Azure with OIDC
@@ -69,7 +91,7 @@ jobs:
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ vars.FUNCTION_APP_NAME }}
-          package: ./publish/${{ vars.AZURE_ARTIFACT_NAME }}-${{ inputs.version }}.zip
+          package: ./publish/${{ vars.AZURE_ARTIFACT_NAME }}-${{ steps.version.outputs.version }}.zip
       - name: Publish agent prompt
         uses: azure/cli@v3
         env:
@@ -77,7 +99,7 @@ jobs:
           STORAGE_ACCOUNT_NAME: ${{ vars.STORAGE_ACCOUNT_NAME }}
           AGENT_PROMPT_CONTAINER_NAME: ${{ vars.AGENT_PROMPT_CONTAINER_NAME }}
           AGENT_PROMPT_BLOB_NAME: ${{ vars.AGENT_PROMPT_BLOB_NAME }}
-          PACKAGE_PATH: ./publish/${{ vars.AZURE_ARTIFACT_NAME }}-${{ inputs.version }}.zip
+          PACKAGE_PATH: ./publish/${{ vars.AZURE_ARTIFACT_NAME }}-${{ steps.version.outputs.version }}.zip
         with:
           inlineScript: bash .infra/scripts/publish-agent-prompt.sh
       - name: Record deployment time
@@ -120,7 +142,7 @@ jobs:
         uses: GarageGroup/platform-ping-app@v0.1.0
         with:
           health_check_url: https://${{ vars.FUNCTION_APP_NAME }}.azurewebsites.net/health?code=${{ steps.health.outputs.key }}
-          contains: ${{ inputs.version }}
+          contains: ${{ needs.deploy.outputs.version }}
           is_end_of_line_match: true
           retry_delay_in_seconds: 15
           max_attempts: 30
