@@ -36,4 +36,7 @@
   <data name="Value_WeeklyNotification" xml:space="preserve"><value>Еженедельные</value></data>
   <data name="Value_ru" xml:space="preserve"><value>Русский</value></data>
   <data name="Value_en" xml:space="preserve"><value>Английский</value></data>
+  <data name="TimesheetTotal" xml:space="preserve"><value>Итого</value></data>
+  <data name="TimesheetPeriodTotal" xml:space="preserve"><value>Итого за период</value></data>
+  <data name="HoursUnit" xml:space="preserve"><value>ч</value></data>
 </root>

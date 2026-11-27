@@ -33,4 +33,10 @@ internal static class AgentToolActionResource
     public const string SignInRequired = "SignInRequired";
 
     public const string UnexpectedError = "UnexpectedError";
+
+    public const string TimesheetTotal = "TimesheetTotal";
+
+    public const string TimesheetPeriodTotal = "TimesheetPeriodTotal";
+
+    public const string HoursUnit = "HoursUnit";
 }
