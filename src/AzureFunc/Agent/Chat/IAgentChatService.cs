@@ -6,7 +6,7 @@ namespace GarageGroup.Internal.Timesheet;
 
 internal sealed record class AgentChatRequest(AgentUserContext User, string Text, string Locale);
 
-// Action is set when the model has prepared a tool call that waits for the user's confirmation. Text is empty in this case
+// Action is set when the model has prepared tool calls that wait for the user's confirmation. Text is empty in this case
 internal sealed record class AgentChatReply(string Text, AgentPendingAction? Action = null)
 {
     // True when the user settings were changed in this turn, so the cached settings must be read again
@@ -21,6 +21,9 @@ internal enum AgentActionStatus
     Cancelled,
 
     Succeeded,
+
+    // Some of the confirmed calls have been executed and some have failed
+    PartiallySucceeded,
 
     Failed
 }
@@ -51,7 +54,7 @@ internal interface IAgentChatService
     // Throws AgentUserNotSignedInException if the user must sign in and AgentChatException on other failures
     ValueTask<AgentChatReply> SendAsync(AgentChatRequest request, CancellationToken cancellationToken);
 
-    // Executes the prepared tool call. Throws AgentUserNotSignedInException if the user must sign in again
+    // Executes the prepared tool calls in parallel. Throws AgentUserNotSignedInException if the user must sign in again
     ValueTask<AgentActionOutcome> ConfirmActionAsync(AgentUserContext user, string actionId, string locale, CancellationToken cancellationToken);
 
     ValueTask<AgentActionOutcome> CancelActionAsync(AgentUserContext user, string actionId, CancellationToken cancellationToken);

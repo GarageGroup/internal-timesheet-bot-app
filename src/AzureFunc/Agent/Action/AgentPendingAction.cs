@@ -10,12 +10,13 @@ internal sealed record class AgentActionArgument(string Name, string Value, stri
     public AgentActionArgument[]? Details { get; init; }
 }
 
-// A tool call that the model has requested and that waits for the user's confirmation
+// A tool call that the model has requested: the function, its arguments as JSON and the same arguments for the preview
+internal sealed record class AgentActionCall(string ToolName, string FunctionName, string ArgumentsJson, AgentActionArgument[] Arguments);
+
+// Tool calls that the model has requested in one turn and that wait for the user's confirmation.
+// The user confirms or cancels all of them at once
 internal sealed record class AgentPendingAction(
     string Id,
     AgentUserContext User,
-    string ToolName,
-    string FunctionName,
-    string ArgumentsJson,
-    AgentActionArgument[] Arguments,
+    AgentActionCall[] Calls,
     DateTimeOffset ExpiresAt);

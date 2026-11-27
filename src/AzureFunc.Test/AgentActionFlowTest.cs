@@ -77,8 +77,9 @@ public static class AgentActionFlowTest
 
         Assert.Equal(string.Empty, reply.Text);
         Assert.NotNull(reply.Action);
-        Assert.Equal("Timesheet", reply.Action.ToolName);
-        Assert.Equal("create-timesheet", reply.Action.FunctionName);
+        var call = Assert.Single(reply.Action.Calls);
+        Assert.Equal("Timesheet", call.ToolName);
+        Assert.Equal("create-timesheet", call.FunctionName);
 
         // The project name comes from the API response of the previous tool call, not from the model
         Assert.Equal(
@@ -89,7 +90,7 @@ public static class AgentActionFlowTest
                 new("duration", "2"),
                 new("description", "#Test")
             ],
-            reply.Action.Arguments);
+            call.Arguments);
 
         // The model was not called again after the action had been captured
         Assert.Equal(2, context.Model.Requests.Count);
@@ -99,7 +100,7 @@ public static class AgentActionFlowTest
         Assert.Equal("""{"searchText":"E2E"}""", context.Api.Requests[^1].Body);
 
         Assert.Same(reply.Action, Assert.Single(context.Actions.Actions.Values));
-        Assert.Contains("has not been executed", Assert.Single(context.History.Turns).AssistantText);
+        Assert.Contains("have not been executed", Assert.Single(context.History.Turns).AssistantText);
     }
 
     [Fact]
@@ -129,7 +130,7 @@ public static class AgentActionFlowTest
         Assert.Equal("#Test", body.RootElement.GetProperty("description").GetString());
 
         // The model is told the result of the executed action
-        Assert.Contains("has confirmed the action", context.Model.Requests[^1].Body);
+        Assert.Contains("has confirmed the prepared actions", context.Model.Requests[^1].Body);
         Assert.Contains("isSuccess", context.Model.Requests[^1].Body);
 
         // The action cannot be executed twice
@@ -153,7 +154,83 @@ public static class AgentActionFlowTest
 
         Assert.Equal(AgentActionStatus.Failed, outcome.Status);
         Assert.Equal("Не удалось создать списание.", outcome.Reply?.Text);
-        Assert.Contains("It has NOT been executed", context.Model.Requests[^1].Body);
+        Assert.Contains("NOT executed. Error:", context.Model.Requests[^1].Body);
+    }
+
+    [Fact]
+    public static async Task SendAsync_ModelRequestsSeveralWriteToolsAtOnce_ExpectAllArePreparedAsOneAction()
+    {
+        var context = new FlowContext(
+            ToolCalls(
+                ("Timesheet-search-projects", """{"searchText":"E2E"}"""),
+                ("Timesheet-create-timesheet", CreateArgumentsFor("2026-11-23")),
+                ("Timesheet-create-timesheet", CreateArgumentsFor("2026-11-24")),
+                ("Timesheet-create-timesheet", CreateArgumentsFor("2026-11-25"))));
+
+        var reply = await context.Service.SendAsync(new(User, "спиши по 2 часа с пн по ср", "ru"), TestContext.Current.CancellationToken);
+
+        Assert.NotNull(reply.Action);
+        Assert.Equal(
+            ["2026-11-23", "2026-11-24", "2026-11-25"],
+            reply.Action.Calls.Select(static call => call.Arguments.Single(static argument => argument.Name is "date").Value));
+
+        // One model request, one stored action, and only the read operation reached the API
+        _ = Assert.Single(context.Model.Requests);
+        Assert.Same(reply.Action, Assert.Single(context.Actions.Actions.Values));
+        Assert.Equal(["/timesheet/searchProjects"], context.ApiPaths);
+    }
+
+    [Fact]
+    public static async Task ConfirmActionAsync_OneOfSeveralCallsFails_ExpectTheRestAreExecutedAndModelIsToldEachResult()
+    {
+        var context = new FlowContext(
+            ToolCalls(
+                ("Timesheet-create-timesheet", CreateArgumentsFor("2026-11-23")),
+                ("Timesheet-create-timesheet", CreateArgumentsFor("2026-11-24")),
+                ("Timesheet-create-timesheet", CreateArgumentsFor("2026-11-25"))),
+            Text("Выполнено 2 из 3."));
+
+        context.FailingBodyText = "2026-11-24";
+
+        var prepared = await context.Service.SendAsync(new(User, "спиши по 2 часа с пн по ср", "ru"), TestContext.Current.CancellationToken);
+        var outcome = await context.Service.ConfirmActionAsync(User, prepared.Action!.Id, "ru", TestContext.Current.CancellationToken);
+
+        Assert.Equal(AgentActionStatus.PartiallySucceeded, outcome.Status);
+        Assert.Equal("Выполнено 2 из 3.", outcome.Reply?.Text);
+
+        // Every call reached the API exactly once, the failed one included
+        Assert.Equal(3, context.ApiPaths.Length);
+        Assert.All(context.ApiPaths, static path => Assert.Equal("/timesheet/createTimesheet", path));
+
+        using var modelRequest = JsonDocument.Parse(context.Model.Requests[^1].Body);
+        var eventText = modelRequest.RootElement.GetProperty("messages").EnumerateArray().Last().GetProperty("content").ToString();
+
+        Assert.Equal(2, eventText.Split("— EXECUTED.").Length - 1);
+        Assert.Equal(1, eventText.Split("— NOT executed.").Length - 1);
+        Assert.Contains("2 of 3 actions have been executed", eventText);
+
+        // The whole action is processed: it cannot be confirmed again
+        var second = await context.Service.ConfirmActionAsync(User, prepared.Action.Id, "ru", TestContext.Current.CancellationToken);
+        Assert.Equal(AgentActionStatus.NotFound, second.Status);
+        Assert.Equal(3, context.ApiPaths.Length);
+    }
+
+    [Fact]
+    public static async Task SendAsync_ModelRequestsTooManyWriteTools_ExpectNothingIsPreparedAndModelExplains()
+    {
+        var calls = Enumerable.Range(0, AgentToolInvocationFilter.MaxCapturedCalls + 1)
+            .Select(static index => ("Timesheet-create-timesheet", CreateArgumentsFor(new DateOnly(2026, 10, 1).AddDays(index).ToString("yyyy-MM-dd"))))
+            .ToArray();
+
+        var context = new FlowContext(ToolCalls(calls), Text("Слишком много действий за раз."));
+
+        var reply = await context.Service.SendAsync(new(User, "спиши на весь месяц", "ru"), TestContext.Current.CancellationToken);
+
+        Assert.Null(reply.Action);
+        Assert.Equal("Слишком много действий за раз.", reply.Text);
+        Assert.Empty(context.Actions.Actions);
+        Assert.Empty(context.ApiPaths);
+        Assert.Contains("NONE of them has been prepared", context.Model.Requests[^1].Body);
     }
 
     [Fact]
@@ -185,7 +262,7 @@ public static class AgentActionFlowTest
         Assert.Equal(AgentActionStatus.Cancelled, outcome.Status);
         Assert.Equal(AgentActionStatus.NotFound, confirmed.Status);
         Assert.Empty(context.ApiPaths);
-        Assert.Contains("has cancelled the action", context.History.Turns[^1].UserText);
+        Assert.Contains("has cancelled the prepared actions", context.History.Turns[^1].UserText);
     }
 
     [Theory]
@@ -253,6 +330,15 @@ public static class AgentActionFlowTest
 
     private static string ToolCall(string name, string arguments)
         =>
+        ToolCalls((name, arguments));
+
+    private static string CreateArgumentsFor(string date)
+        =>
+        CreateArguments.Replace("2026-11-27", date, StringComparison.Ordinal);
+
+    // One model answer with several tool calls
+    private static string ToolCalls(params (string Name, string Arguments)[] calls)
+        =>
         JsonSerializer.Serialize(
             new
             {
@@ -270,10 +356,14 @@ public static class AgentActionFlowTest
                         {
                             role = "assistant",
                             content = (string?)null,
-                            tool_calls = new[]
-                            {
-                                new { id = "call_" + Guid.NewGuid().ToString("N"), type = "function", function = new { name, arguments } }
-                            }
+                            tool_calls = calls
+                                .Select(static call => new
+                                {
+                                    id = "call_" + Guid.NewGuid().ToString("N"),
+                                    type = "function",
+                                    function = new { name = call.Name, arguments = call.Arguments }
+                                })
+                                .ToArray()
                         }
                     }
                 },
@@ -305,7 +395,11 @@ public static class AgentActionFlowTest
                     ? FakeHttpMessageHandler.Json(Specification)
                     : request.RequestUri.AbsolutePath.EndsWith("searchProjects", StringComparison.Ordinal)
                         ? FakeHttpMessageHandler.Json($$"""{"isSuccess":true,"projects":[{"id":"{{ProjectId}}","name":"E2E Role test","type":"Project"}]}""")
-                        : FakeHttpMessageHandler.Json("""{"isSuccess":true}""", ApiStatusCode));
+                        : FakeHttpMessageHandler.Json(
+                            """{"isSuccess":true}""",
+                            FailingBodyText is not null && request.Content!.ReadAsStringAsync().Result.Contains(FailingBodyText, StringComparison.Ordinal)
+                                ? System.Net.HttpStatusCode.InternalServerError
+                                : ApiStatusCode));
 
             var tool = new AgentToolOption("Timesheet", AgentToolType.OpenApi, new("https://apim.example/swagger/timesheet/swagger.json"))
             {
@@ -337,6 +431,9 @@ public static class AgentActionFlowTest
         internal FakeHttpMessageHandler Api { get; }
 
         internal System.Net.HttpStatusCode ApiStatusCode { get; set; } = System.Net.HttpStatusCode.OK;
+
+        // A request whose body contains this text fails, the other requests succeed
+        internal string? FailingBodyText { get; set; }
 
         internal InMemoryAgentActionStore Actions { get; } = new();
 

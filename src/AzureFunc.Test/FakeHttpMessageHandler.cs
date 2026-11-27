@@ -16,13 +16,17 @@ internal sealed class FakeHttpMessageHandler(Func<HttpRequestMessage, HttpRespon
     {
         var body = request.Content is null ? string.Empty : await request.Content.ReadAsStringAsync(cancellationToken);
 
-        Requests.Add(
-            new(
-                Method: request.Method.Method,
-                Uri: request.RequestUri!,
-                Authorization: request.Headers.Authorization?.ToString(),
-                SubscriptionKey: request.Headers.TryGetValues("Ocp-Apim-Subscription-Key", out var values) ? string.Join(',', values) : null,
-                Body: body));
+        // Confirmed actions are executed in parallel, so requests may arrive at the same time
+        lock (Requests)
+        {
+            Requests.Add(
+                new(
+                    Method: request.Method.Method,
+                    Uri: request.RequestUri!,
+                    Authorization: request.Headers.Authorization?.ToString(),
+                    SubscriptionKey: request.Headers.TryGetValues("Ocp-Apim-Subscription-Key", out var values) ? string.Join(',', values) : null,
+                    Body: body));
+        }
 
         return respond(request);
     }

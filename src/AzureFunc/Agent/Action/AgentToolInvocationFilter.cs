@@ -8,10 +8,9 @@ using Microsoft.SemanticKernel;
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal sealed record class AgentCapturedCall(string ToolName, string FunctionName, string ArgumentsJson, AgentActionArgument[] Arguments);
-
 // Runs around every tool call requested by the model. A call is executed right away only if its function is listed
-// as not requiring confirmation. Any other call is captured instead, and the model turn ends.
+// as not requiring confirmation. Any other call is captured instead. The model may request several calls in one answer:
+// all of them are captured, and the model turn ends after the last one.
 // Results of the executed calls are scanned for names of objects
 internal sealed class AgentToolInvocationFilter(
     IReadOnlySet<string> noConfirmationFunctions,
@@ -23,7 +22,20 @@ internal sealed class AgentToolInvocationFilter(
     internal const string PreparedResult =
         "The action has been prepared and is shown to the user for confirmation. It has NOT been executed yet.";
 
-    public AgentCapturedCall? CapturedCall { get; private set; }
+    // The preview and the stored action have size limits, so the number of calls prepared at once is limited too
+    internal const int MaxCapturedCalls = 25;
+
+    internal const string TooManyCallsResult =
+        "Too many actions were requested at once. NONE of them has been prepared or executed. " +
+        "Do not call these functions again in this turn. Tell the user to split the request into smaller parts.";
+
+    private readonly List<AgentActionCall> capturedCalls = [];
+
+    private bool isLimitExceeded;
+
+    public IReadOnlyList<AgentActionCall> CapturedCalls
+        =>
+        capturedCalls;
 
     // True when a function that changes the user settings has been executed in this turn
     public bool UserSettingsChanged { get; private set; }
@@ -52,6 +64,18 @@ internal sealed class AgentToolInvocationFilter(
 
             UserSettingsChanged |= userSettingsFunctions.Contains(GetKey(function.PluginName, function.Name));
 
+            // The calls are processed one by one, so the turn ends only after the last call of the model answer
+            context.Terminate = capturedCalls.Count > 0 && IsLastCall(context);
+            return;
+        }
+
+        if (isLimitExceeded || capturedCalls.Count >= MaxCapturedCalls)
+        {
+            // The model gets the refusal for every call and explains it to the user in its answer
+            isLimitExceeded = true;
+            capturedCalls.Clear();
+
+            context.Result = new(function, TooManyCallsResult);
             return;
         }
 
@@ -59,17 +83,22 @@ internal sealed class AgentToolInvocationFilter(
             .Where(static argument => argument.Value is not null)
             .ToDictionary(static argument => argument.Key, static argument => ToJsonElement(argument.Value!), StringComparer.Ordinal);
 
-        CapturedCall = new(
-            ToolName: function.PluginName.OrEmpty(),
-            FunctionName: function.Name,
-            ArgumentsJson: JsonSerializer.Serialize(arguments),
-            Arguments: [.. arguments.Select(argument => CreateArgument(argument.Key, argument.Value))]);
+        capturedCalls.Add(
+            new(
+                ToolName: function.PluginName.OrEmpty(),
+                FunctionName: function.Name,
+                ArgumentsJson: JsonSerializer.Serialize(arguments),
+                Arguments: [.. arguments.Select(argument => CreateArgument(argument.Key, argument.Value))]));
 
         context.Result = new(function, PreparedResult);
 
         // The preview is built by the bot from the captured arguments, so another model request is not needed
-        context.Terminate = true;
+        context.Terminate = IsLastCall(context);
     }
+
+    private static bool IsLastCall(AutoFunctionInvocationContext context)
+        =>
+        context.FunctionSequenceIndex >= context.FunctionCount - 1;
 
     private AgentActionArgument CreateArgument(string name, JsonElement value)
     {

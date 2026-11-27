@@ -39,4 +39,7 @@
   <data name="TimesheetTotal" xml:space="preserve"><value>Итого</value></data>
   <data name="TimesheetPeriodTotal" xml:space="preserve"><value>Итого за период</value></data>
   <data name="HoursUnit" xml:space="preserve"><value>ч</value></data>
+  <data name="PreviewHintMany" xml:space="preserve"><value>Пока ничего не изменено. Проверьте действия и подтвердите их все одной кнопкой.</value></data>
+  <data name="PreviewTitleMany" xml:space="preserve"><value>Подготовлено действий: {0}</value></data>
+  <data name="PartiallySucceeded" xml:space="preserve"><value>⚠️ Выполнена только часть действий. Проверьте списания перед повторной попыткой.</value></data>
 </root>

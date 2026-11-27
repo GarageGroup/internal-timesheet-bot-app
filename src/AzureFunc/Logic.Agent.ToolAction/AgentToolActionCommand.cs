@@ -88,6 +88,7 @@ internal sealed class AgentToolActionCommand(AgentChatFeature chatFeature)
         {
             AgentActionStatus.Cancelled => localizer[Cancelled],
             AgentActionStatus.Succeeded => localizer[Succeeded],
+            AgentActionStatus.PartiallySucceeded => localizer[PartiallySucceeded],
             AgentActionStatus.Failed => localizer[Failed],
             _ => localizer[NotFound]
         };

@@ -16,18 +16,37 @@ internal static partial class AgentToolActionPreview
 {
     internal static (string RichHtml, string FallbackHtml) Build(AgentPendingAction action, IStringLocalizer localizer, string locale)
     {
-        var title = WebUtility.HtmlEncode(GetTitle(action, localizer));
-        var hint = WebUtility.HtmlEncode(localizer[PreviewHint]);
+        var hint = WebUtility.HtmlEncode(localizer[action.Calls.Length > 1 ? PreviewHintMany : PreviewHint]);
+        var rich = new StringBuilder();
+        var fallback = new StringBuilder();
 
-        var rich = new StringBuilder("<p><b>").Append(title).Append("</b></p>");
-        var fallback = new StringBuilder("<b>").Append(title).Append("</b>");
-
-        if (action.Arguments.Length > 0)
+        // Several actions get a common heading with their number, and every action is numbered
+        if (action.Calls.Length > 1)
         {
+            var heading = WebUtility.HtmlEncode(string.Format(CultureInfo.CurrentCulture, localizer[PreviewTitleMany], action.Calls.Length));
+
+            _ = rich.Append("<h3>").Append(heading).Append("</h3>");
+            _ = fallback.Append("<b>").Append(heading).Append("</b>\n\n");
+        }
+
+        for (var index = 0; index < action.Calls.Length; index++)
+        {
+            var call = action.Calls[index];
+            var number = action.Calls.Length > 1 ? $"{index + 1}. " : string.Empty;
+            var title = WebUtility.HtmlEncode(number + GetTitle(call, localizer));
+
+            _ = rich.Append("<p><b>").Append(title).Append("</b></p>");
+            _ = fallback.Append(index > 0 ? "\n\n" : string.Empty).Append("<b>").Append(title).Append("</b>");
+
+            if (call.Arguments.Length is 0)
+            {
+                continue;
+            }
+
             _ = rich.Append("<table compact>");
             _ = fallback.Append('\n');
 
-            foreach (var (labelText, valueText) in GetRows(action, localizer, locale))
+            foreach (var (labelText, valueText) in GetRows(call, localizer, locale))
             {
                 var label = WebUtility.HtmlEncode(labelText);
                 var value = WebUtility.HtmlEncode(valueText);
@@ -46,7 +65,7 @@ internal static partial class AgentToolActionPreview
 
     // An argument can take its label from the value of another argument, which is then not shown as a separate row.
     // This is how a project is shown as one row "<type> | <name>" instead of two rows "Project" and "Type"
-    private static IEnumerable<(string Label, string Value)> GetRows(AgentPendingAction action, IStringLocalizer localizer, string locale)
+    private static IEnumerable<(string Label, string Value)> GetRows(AgentActionCall action, IStringLocalizer localizer, string locale)
     {
         // An action with a single reference to an object, such as deleting a time entry, shows the fields of that object.
         // So the user sees the same table as when the object is created, not one line with everything in it
@@ -79,16 +98,16 @@ internal static partial class AgentToolActionPreview
         }
     }
 
-    internal static string GetTitle(AgentPendingAction action, IStringLocalizer localizer)
+    internal static string GetTitle(AgentActionCall action, IStringLocalizer localizer)
         =>
         Find(localizer, TitlePrefix + action.FunctionName) ?? string.Format(CultureInfo.CurrentCulture, localizer[DefaultTitle], action.FunctionName);
 
-    private static string GetLabel(AgentPendingAction action, AgentActionArgument argument, IStringLocalizer localizer)
+    private static string GetLabel(AgentActionCall action, AgentActionArgument argument, IStringLocalizer localizer)
         =>
         FindForArgument(localizer, ArgumentPrefix, action, argument) ?? argument.Name;
 
     // A resource for an argument of the operation wins over a resource for the argument name in general
-    private static string? FindForArgument(IStringLocalizer localizer, string prefix, AgentPendingAction action, AgentActionArgument argument)
+    private static string? FindForArgument(IStringLocalizer localizer, string prefix, AgentActionCall action, AgentActionArgument argument)
         =>
         Find(localizer, $"{prefix}{action.FunctionName}_{argument.Name}") ?? Find(localizer, prefix + argument.Name);
 
