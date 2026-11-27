@@ -130,7 +130,7 @@ internal static partial class AgentTimesheetHtml
 
     private const string TableClose = "</table>";
 
-    // The shared row of a time entry: the type, the name and the comment on separate lines, the hours on the right
+    // The shared row of a time entry: the type and the name on one line, the comment on the next one, the hours on the right
     internal static string CreateEntryRow(AgentTimesheetEntry entry, AgentTimesheetLabels labels, bool areHoursBold)
     {
         var builder = new StringBuilder("<tr><td>");
@@ -144,7 +144,7 @@ internal static partial class AgentTimesheetHtml
 
         if (entry.Project.Length > 0)
         {
-            _ = builder.Append(hasContent ? "<br>" : string.Empty).Append("<b>").Append(Encode(entry.Project)).Append("</b>");
+            _ = builder.Append(hasContent ? " " : string.Empty).Append("<b>").Append(Encode(entry.Project)).Append("</b>");
             hasContent = true;
         }
 

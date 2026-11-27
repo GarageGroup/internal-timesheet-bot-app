@@ -34,8 +34,8 @@ public static class AgentTimesheetHtmlTest
                 "<h3>✅ Списание создано</h3>\n" +
                 "<p>27 ноября 2026, пятница</p>" +
                 "<table bordered compact>" +
-                "<tr><td><i>Проект</i><br><b>E2E Role test</b><br>#Test</td><td align=\"right\"><b>2 ч</b></td></tr>" +
-                "<tr><td><i>Сделка</i><br><b>AMBY. CRM for Real Estate</b></td><td align=\"right\"><b>1.5 ч</b></td></tr>" +
+                "<tr><td><i>Проект</i> <b>E2E Role test</b><br>#Test</td><td align=\"right\"><b>2 ч</b></td></tr>" +
+                "<tr><td><i>Сделка</i> <b>AMBY. CRM for Real Estate</b></td><td align=\"right\"><b>1.5 ч</b></td></tr>" +
                 "<tr><td><b>Итого</b></td><td align=\"right\"><b>3.5 ч</b></td></tr>" +
                 "</table>"
             ],
@@ -64,10 +64,10 @@ public static class AgentTimesheetHtmlTest
                 "<p>23.11.2026 – 29.11.2026</p>" +
                 "<table bordered compact>" +
                 "<tr><th align=\"left\">23 ноября, понедельник</th><th align=\"right\">8.5 ч</th></tr>" +
-                "<tr><td><i>Проект</i><br><b>Internal IT</b><br>b</td><td align=\"right\">8 ч</td></tr>" +
-                "<tr><td><i>Проект</i><br><b>Internal IT</b></td><td align=\"right\">0.5 ч</td></tr>" +
+                "<tr><td><i>Проект</i> <b>Internal IT</b><br>b</td><td align=\"right\">8 ч</td></tr>" +
+                "<tr><td><i>Проект</i> <b>Internal IT</b></td><td align=\"right\">0.5 ч</td></tr>" +
                 "<tr><th align=\"left\">27 ноября, пятница</th><th align=\"right\">0.25 ч</th></tr>" +
-                "<tr><td><i>Лид</i><br><b>Test</b><br>a</td><td align=\"right\">0.25 ч</td></tr>" +
+                "<tr><td><i>Лид</i> <b>Test</b><br>a</td><td align=\"right\">0.25 ч</td></tr>" +
                 "<tr><td><b>Итого за период</b></td><td align=\"right\"><b>8.75 ч</b></td></tr>" +
                 "</table>"
             ],
@@ -98,7 +98,7 @@ public static class AgentTimesheetHtmlTest
         var actual = AgentTimesheetHtml.Expand(source, Labels, "ru");
 
         Assert.Contains(
-            "<td><i>Проект</i><br><b>R&amp;D bold &amp; &quot;Co&quot;</b><br>" +
+            "<td><i>Проект</i> <b>R&amp;D bold &amp; &quot;Co&quot;</b><br>" +
             "1 &lt; 2 &lt;script&gt;<br>#Task8137 https://example.com/a?b=1&amp;c=2</td>",
             actual[0],
             StringComparison.Ordinal);
