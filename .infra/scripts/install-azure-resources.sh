@@ -79,42 +79,68 @@ foundry_tags="$(jq -c \
   } end' <<< "${existing_foundry:-null}")"
 foundry_tags_base64="$(printf '%s' "$foundry_tags" | base64 --wrap=0)"
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-outputs="$(az deployment group create \
-  --resource-group "$AZURE_RESOURCE_GROUP_NAME" \
-  --name "timesheet-bot-${ENVIRONMENT_NAME}" \
-  --mode Incremental \
-  --template-file "$script_dir/../main.bicep" \
-  --parameters \
-    "location=$AZURE_LOCATION" \
-    "functionLocation=$function_location" \
-    "functionAppName=$FUNCTION_APP_NAME" \
-    "appServicePlanName=$APP_SERVICE_PLAN_NAME" \
-    "storageAccountName=$STORAGE_ACCOUNT_NAME" \
-    "applicationInsightsName=$APPLICATION_INSIGHTS_NAME" \
-    "dataverseManagedIdentityName=$DATAVERSE_MANAGED_IDENTITY_NAME" \
-    "functionTagsBase64=$function_tags_base64" \
-    "agentIdentityLocation=$agent_identity_location" \
-    "environmentName=$ENVIRONMENT_NAME" \
-    "foundryAccountName=$FOUNDRY_ACCOUNT_NAME" \
-    "foundryProjectName=$FOUNDRY_PROJECT_NAME" \
-    "foundryLocation=$foundry_location" \
-    "foundrySubscriptionId=$FOUNDRY_SUBSCRIPTION_ID" \
-    "foundryResourceGroupName=$FOUNDRY_RESOURCE_GROUP" \
-    "foundryTagsBase64=$foundry_tags_base64" \
-    "chatDeploymentName=${FOUNDRY_CHAT_DEPLOYMENT_NAME:-gpt-5-mini}" \
-    "chatModelName=${FOUNDRY_CHAT_MODEL_NAME:-gpt-5-mini}" \
-    "chatModelVersion=${FOUNDRY_CHAT_MODEL_VERSION:-2025-08-07}" \
-    "chatDeploymentSkuName=${FOUNDRY_CHAT_SKU_NAME:-GlobalStandard}" \
-    "chatDeploymentCapacity=${FOUNDRY_CHAT_CAPACITY:-500}" \
-    "voiceDeploymentName=${FOUNDRY_VOICE_DEPLOYMENT_NAME:-whisper}" \
-    "voiceModelName=${FOUNDRY_VOICE_MODEL_NAME:-whisper}" \
-    "voiceModelVersion=${FOUNDRY_VOICE_MODEL_VERSION:-001}" \
-    "voiceDeploymentSkuName=${FOUNDRY_VOICE_SKU_NAME:-Standard}" \
-    "voiceDeploymentCapacity=${FOUNDRY_VOICE_CAPACITY:-3}" \
-  --query properties.outputs \
-  --output json \
-  --only-show-errors)"
+if [[ "${DEPLOY_INFRASTRUCTURE:-true}" == 'true' ]]; then
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  outputs="$(az deployment group create \
+    --resource-group "$AZURE_RESOURCE_GROUP_NAME" \
+    --name "timesheet-bot-${ENVIRONMENT_NAME}" \
+    --mode Incremental \
+    --template-file "$script_dir/../main.bicep" \
+    --parameters \
+      "location=$AZURE_LOCATION" \
+      "functionLocation=$function_location" \
+      "functionAppName=$FUNCTION_APP_NAME" \
+      "appServicePlanName=$APP_SERVICE_PLAN_NAME" \
+      "storageAccountName=$STORAGE_ACCOUNT_NAME" \
+      "applicationInsightsName=$APPLICATION_INSIGHTS_NAME" \
+      "dataverseManagedIdentityName=$DATAVERSE_MANAGED_IDENTITY_NAME" \
+      "functionTagsBase64=$function_tags_base64" \
+      "agentIdentityLocation=$agent_identity_location" \
+      "environmentName=$ENVIRONMENT_NAME" \
+      "foundryAccountName=$FOUNDRY_ACCOUNT_NAME" \
+      "foundryProjectName=$FOUNDRY_PROJECT_NAME" \
+      "foundryLocation=$foundry_location" \
+      "foundrySubscriptionId=$FOUNDRY_SUBSCRIPTION_ID" \
+      "foundryResourceGroupName=$FOUNDRY_RESOURCE_GROUP" \
+      "foundryTagsBase64=$foundry_tags_base64" \
+      "chatDeploymentName=${FOUNDRY_CHAT_DEPLOYMENT_NAME:-gpt-5-mini}" \
+      "chatModelName=${FOUNDRY_CHAT_MODEL_NAME:-gpt-5-mini}" \
+      "chatModelVersion=${FOUNDRY_CHAT_MODEL_VERSION:-2025-08-07}" \
+      "chatDeploymentSkuName=${FOUNDRY_CHAT_SKU_NAME:-GlobalStandard}" \
+      "chatDeploymentCapacity=${FOUNDRY_CHAT_CAPACITY:-500}" \
+      "voiceDeploymentName=${FOUNDRY_VOICE_DEPLOYMENT_NAME:-whisper}" \
+      "voiceModelName=${FOUNDRY_VOICE_MODEL_NAME:-whisper}" \
+      "voiceModelVersion=${FOUNDRY_VOICE_MODEL_VERSION:-001}" \
+      "voiceDeploymentSkuName=${FOUNDRY_VOICE_SKU_NAME:-Standard}" \
+      "voiceDeploymentCapacity=${FOUNDRY_VOICE_CAPACITY:-3}" \
+    --query properties.outputs \
+    --output json \
+    --only-show-errors)"
+
+else
+  # The deployment is skipped: the values the next steps need are read from the existing resources.
+  identity_value() {
+    az identity show --resource-group "$AZURE_RESOURCE_GROUP_NAME" --name "$1" --query "$2" --output tsv --only-show-errors
+  }
+
+  [[ -n "${existing_function:-}" ]] || { echo "Function App '$FUNCTION_APP_NAME' does not exist: run the installation with infrastructure" >&2; exit 1; }
+  [[ -n "${existing_foundry:-}" ]] || { echo "Foundry account '$FOUNDRY_ACCOUNT_NAME' does not exist: run the installation with infrastructure" >&2; exit 1; }
+
+  outputs="$(jq -n \
+    --arg functionAppName "$FUNCTION_APP_NAME" \
+    --arg functionAppHostName "$(jq -r '.defaultHostName' <<< "$existing_function")" \
+    --arg functionPrincipalId "$(jq -r '.identity.principalId // empty' <<< "$existing_function")" \
+    --arg dataverseIdentityClientId "$(identity_value "$DATAVERSE_MANAGED_IDENTITY_NAME" clientId)" \
+    --arg agentIdentityClientId "$(identity_value "${FUNCTION_APP_NAME}-agent" clientId)" \
+    --arg agentIdentityPrincipalId "$(identity_value "${FUNCTION_APP_NAME}-agent" principalId)" \
+    --arg foundryAccountId "$(jq -r '.id' <<< "$existing_foundry")" \
+    --arg foundryProjectEndpoint "https://${FOUNDRY_ACCOUNT_NAME}.services.ai.azure.com/api/projects/${FOUNDRY_PROJECT_NAME}" \
+    --arg foundryOpenAiEndpoint "https://${FOUNDRY_ACCOUNT_NAME}.openai.azure.com/" \
+    --arg chatDeploymentName "${FOUNDRY_CHAT_DEPLOYMENT_NAME:-gpt-5-mini}" \
+    --arg voiceDeploymentName "${FOUNDRY_VOICE_DEPLOYMENT_NAME:-whisper}" \
+    --arg voiceModelName "${FOUNDRY_VOICE_MODEL_NAME:-whisper}" \
+    '$ARGS.named | with_entries(.value = {value: .value}) + {applicationInsightsConnectionString: {value: ""}}')"
+fi
 
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
   jq -r '
@@ -134,4 +160,8 @@ if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
   ' <<< "$outputs" >> "$GITHUB_OUTPUT"
 fi
 
-echo "Infrastructure deployment timesheet-bot-${ENVIRONMENT_NAME} completed."
+if [[ "${DEPLOY_INFRASTRUCTURE:-true}" == 'true' ]]; then
+  echo "Infrastructure deployment timesheet-bot-${ENVIRONMENT_NAME} completed."
+else
+  echo 'Infrastructure deployment skipped: existing resources resolved.'
+fi
