@@ -64,6 +64,10 @@ jobs:
     needs: publish
     runs-on: ubuntu-latest
     environment: Test
+    # Deployments to one Function App must not overlap: Kudu rejects a package while another one is being deployed
+    concurrency:
+      group: timesheet-bot-deploy-Test
+      cancel-in-progress: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
