@@ -87,6 +87,7 @@ jobs:
           TIMESHEET_SWAGGER_NAME: ${{ vars.TIMESHEET_SWAGGER_NAME }}
           TIMESHEET_SWAGGER_SUBSCRIPTION_KEY: ${{ secrets.TIMESHEET_SWAGGER_SUBSCRIPTION_KEY }}
           TIMESHEET_ALLOWED_OPERATIONS: ${{ vars.TIMESHEET_ALLOWED_OPERATIONS }}
+          TIMESHEET_CONFIRMATION_OPERATIONS: ${{ vars.TIMESHEET_CONFIRMATION_OPERATIONS }}
         with:
           inlineScript: bash .infra/scripts/set-function-app-settings.sh
       - name: Grant agent access to Foundry

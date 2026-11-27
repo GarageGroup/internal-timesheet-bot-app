@@ -101,10 +101,15 @@ if [[ "$agent_enabled" == 'true' ]]; then
     "Agent__Tools__0__SpecificationSubscriptionKey=$TIMESHEET_SWAGGER_SUBSCRIPTION_KEY"
   )
 
-  # Only read operations are available to the model until confirmation of write operations is implemented.
-  read -r -a allowed_operations <<< "${TIMESHEET_ALLOWED_OPERATIONS:-get-periods get-tags get-timesheets get-last-projects search-projects}"
+  read -r -a allowed_operations <<< "${TIMESHEET_ALLOWED_OPERATIONS:-get-periods get-tags get-timesheets get-last-projects search-projects create-timesheet update-timesheet delete-timesheet}"
   for index in "${!allowed_operations[@]}"; do
     agent_settings+=("Agent__Tools__0__AllowedOperations__${index}=${allowed_operations[$index]}")
+  done
+
+  # These operations change data, so the bot executes them only after the user presses the Confirm button.
+  read -r -a confirmation_operations <<< "${TIMESHEET_CONFIRMATION_OPERATIONS:-create-timesheet update-timesheet delete-timesheet}"
+  for index in "${!confirmation_operations[@]}"; do
+    agent_settings+=("Agent__Tools__0__ConfirmationOperations__${index}=${confirmation_operations[$index]}")
   done
 fi
 

@@ -179,28 +179,15 @@ internal sealed class AgentMessageCommand(
         CancellationToken cancellationToken)
     {
         var input = request.Value;
+        var chatRequest = new AgentChatRequest(
+            User: new(input.TelegramUserId, input.TelegramChatId),
+            Text: input.Text,
+            Locale: request.Context.GetAgentLocale(input.Locale));
 
-        try
-        {
-            await request.Context.Api.SendChatActionAsync(BotChatAction.Typing, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            request.Context.GetLogger<AgentMessageCommand>().LogWarning(exception, "Failed to send the typing chat action");
-        }
+        var reply = await request.Context.WithTypingAsync(
+            token => chatFeature.Service.SendAsync(chatRequest, token).AsTask(), cancellationToken).ConfigureAwait(false);
 
-        var reply = await chatFeature.Service.SendAsync(
-            new(new(input.TelegramUserId, input.TelegramChatId), input.Text, input.Locale.OrEmpty()),
-            cancellationToken).ConfigureAwait(false);
-
-        _ = await request.Context.Api.SendMessageAsync(
-            new(SanitizeAgentHtml(reply.Text))
-            {
-                ParseMode = BotParseMode.Html,
-                ReplyMarkup = new BotReplyKeyboardRemove()
-            },
-            cancellationToken).ConfigureAwait(false);
-
+        await AgentChatReplySender.SendAsync(request.Context, reply, cancellationToken).ConfigureAwait(false);
         return request.Context.CreateCompleteResult<Unit>(default);
     }
 
@@ -225,7 +212,7 @@ internal sealed class AgentMessageCommand(
             new(
                 User: new(input.TelegramUserId, input.TelegramChatId),
                 UserDisplayName: GetDisplayName(user),
-                Locale: input.Locale.OrEmpty(),
+                Locale: request.Context.GetAgentLocale(input.Locale),
                 SourceUpdateJson: JsonSerializer.Serialize(request.Context.Update)),
             cancellationToken).ConfigureAwait(false);
 

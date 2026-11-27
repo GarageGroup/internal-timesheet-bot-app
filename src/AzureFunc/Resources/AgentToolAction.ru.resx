@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="DefaultTitle" xml:space="preserve"><value>Подготовлено действие: {0}</value></data>
+  <data name="PreviewHint" xml:space="preserve"><value>Пока ничего не изменено. Проверьте параметры и подтвердите действие.</value></data>
+  <data name="ConfirmButton" xml:space="preserve"><value>✅ Подтвердить</value></data>
+  <data name="CancelButton" xml:space="preserve"><value>❌ Отменить</value></data>
+  <data name="Cancelled" xml:space="preserve"><value>Действие отменено.</value></data>
+  <data name="NotFound" xml:space="preserve"><value>Это действие уже обработано или срок подтверждения истёк.</value></data>
+  <data name="Succeeded" xml:space="preserve"><value>✅ Действие выполнено.</value></data>
+  <data name="Failed" xml:space="preserve"><value>Не удалось выполнить действие. Проверьте списания перед повторной попыткой.</value></data>
+  <data name="SignInRequired" xml:space="preserve"><value>Вход устарел. Напишите мне любое сообщение, войдите заново и нажмите кнопку ещё раз.</value></data>
+  <data name="UnexpectedError" xml:space="preserve"><value>Не удалось обработать действие. Попробуйте позже.</value></data>
+  <data name="Title_create-timesheet" xml:space="preserve"><value>Создать списание</value></data>
+  <data name="Title_update-timesheet" xml:space="preserve"><value>Изменить списание</value></data>
+  <data name="Title_delete-timesheet" xml:space="preserve"><value>Удалить списание</value></data>
+  <data name="Arg_date" xml:space="preserve"><value>Дата</value></data>
+  <data name="Arg_id" xml:space="preserve"><value>Проект</value></data>
+  <data name="Arg_type" xml:space="preserve"><value>Тип</value></data>
+  <data name="Arg_duration" xml:space="preserve"><value>Длительность, ч</value></data>
+  <data name="Arg_description" xml:space="preserve"><value>Комментарий</value></data>
+  <data name="Arg_timesheetId" xml:space="preserve"><value>Списание</value></data>
+  <data name="Value_Project" xml:space="preserve"><value>Проект</value></data>
+  <data name="Value_Opportunity" xml:space="preserve"><value>Сделка</value></data>
+  <data name="Value_Lead" xml:space="preserve"><value>Лид</value></data>
+  <data name="Value_Incident" xml:space="preserve"><value>Инцидент</value></data>
+</root>

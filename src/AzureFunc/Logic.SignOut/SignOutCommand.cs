@@ -27,6 +27,8 @@ internal sealed class SignOutCommand(IUserUnauthorizeSupplier authorizationApi) 
         var @in = new UserUnauthorizeIn(botId: bot.Id, chatId: request.Context.Update.Chat.Id);
         var result = await authorizationApi.UnauthorizeAsync(@in, cancellationToken);
 
+        CultureMiddleware.Invalidate(request.Context.Update.Chat.Id);
+
         return result.Fold(OnSuccess, OnFailure);
 
         ChatCommandResult<Unit> OnSuccess(Unit _)

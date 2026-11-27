@@ -225,7 +225,8 @@ shared dependencies. Для уже существующей Function App её ф
 | `TIMESHEET_API_AUDIENCE` | Application ID URI приложения, для которого Mini App получает токен, без имени scope: `api://func-garage-dataverse-claims-<среда>.azurewebsites.net/<client id>` |
 | `TIMESHEET_API_PATH` | URL suffix основного Timesheet API в общем APIM; Test использует `timesheet` |
 | `TIMESHEET_SWAGGER_NAME` | Сегмент Swagger route; по умолчанию `timesheet` |
-| `TIMESHEET_ALLOWED_OPERATIONS` | Operation ID через пробел, доступные модели; по умолчанию только чтение: `get-periods get-tags get-timesheets get-last-projects search-projects` |
+| `TIMESHEET_ALLOWED_OPERATIONS` | Operation ID через пробел, доступные модели; по умолчанию чтение проектов, тегов, периодов и списаний, а также `create-timesheet update-timesheet delete-timesheet` |
+| `TIMESHEET_CONFIRMATION_OPERATIONS` | Operation ID через пробел, которые бот выполняет только после нажатия кнопки «Подтвердить»; по умолчанию `create-timesheet update-timesheet delete-timesheet`. Любая операция, меняющая данные, должна быть в этом списке, иначе модель выполнит её сразу |
 
 Проект Foundry и модель читаются из настроек API Web App: бот использует те же, что и сервис.
 `Agent__SignIn__RedirectUri` строится из `BOT_APIM_SERVICE_NAME` и ведёт на route `oauth2/callback`,

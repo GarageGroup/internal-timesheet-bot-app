@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Xunit;
@@ -30,7 +31,7 @@ public static class AgentChatServiceTest
         var history = Assert.Single(chatCompletion.Histories);
         Assert.Equal(
             [
-                (AuthorRole.System, "date=2026-11-27 day=Friday zone=UTC locale=ru"),
+                (AuthorRole.System, "date=2026-11-27 day=Friday zone=UTC locale=ru language=русский"),
                 (AuthorRole.User, "привет"),
                 (AuthorRole.Assistant, "здравствуйте"),
                 (AuthorRole.User, "сколько сегодня?")
@@ -84,12 +85,8 @@ public static class AgentChatServiceTest
     public static async Task SendAsync_UserIsNotSignedIn_ExpectNotSignedInExceptionAndModelIsNotCalled()
     {
         var chatCompletion = new FakeChatCompletionService("ok");
-        var service = new AgentChatService(
-            new FakeKernelFactory(chatCompletion),
-            new FakeToolLoader(new AgentUserNotSignedInException("api://timesheet")),
-            new FakeHistoryStore([]),
-            CreatePromptProvider(),
-            Option);
+        var service = CreateService(
+            chatCompletion, new FakeHistoryStore([]), new FakeToolLoader(new AgentUserNotSignedInException("api://timesheet")));
 
         _ = await Assert.ThrowsAsync<AgentUserNotSignedInException>(
             async () => await service.SendAsync(new(User, "привет", "ru"), TestContext.Current.CancellationToken));
@@ -97,14 +94,24 @@ public static class AgentChatServiceTest
         Assert.Empty(chatCompletion.Histories);
     }
 
-    private static AgentChatService CreateService(FakeChatCompletionService chatCompletion, FakeHistoryStore historyStore)
+    private static AgentChatService CreateService(
+        FakeChatCompletionService chatCompletion, FakeHistoryStore historyStore, FakeToolLoader? toolLoader = null)
         =>
-        new(new FakeKernelFactory(chatCompletion), new FakeToolLoader(null), historyStore, CreatePromptProvider(), Option);
+        new(
+            new FakeKernelFactory(chatCompletion),
+            toolLoader ?? new FakeToolLoader(null),
+            historyStore,
+            new InMemoryAgentActionStore(),
+            new AgentEntityCache(),
+            CreatePromptProvider(),
+            new(Option, new HashSet<string>(), TimeSpan.FromMinutes(10)),
+            TimeProvider.System,
+            NullLogger.Instance);
 
     private static AgentPromptProvider CreatePromptProvider()
         =>
         new(
-            "date={{Today}} day={{DayOfWeek}} zone={{TimeZone}} locale={{Locale}}",
+            "date={{Today}} day={{DayOfWeek}} zone={{TimeZone}} locale={{Locale}} language={{Language}}",
             TimeZoneInfo.Utc,
             new FixedTimeProvider(new(2026, 11, 27, 16, 30, 0, TimeSpan.Zero)));
 

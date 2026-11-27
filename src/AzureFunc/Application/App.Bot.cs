@@ -37,6 +37,8 @@ partial class Application
         .With(
             UseAgentActionCommand())
         .With(
+            UseAgentToolActionCommand())
+        .With(
             UseAgentMessageCommand())
         .With(
             UseWelcomeCommand())
@@ -71,6 +73,11 @@ partial class Application
         .With(
             ServiceProviderServiceExtensions.GetRequiredService<AgentChatFeature>)
         .UseAgentMessageCommand();
+
+    private static Dependency<IChatCommand<AgentToolActionCommandIn, Unit>> UseAgentToolActionCommand()
+        =>
+        Dependency.From<IChatCommand<AgentToolActionCommandIn, Unit>>(
+            static serviceProvider => new AgentToolActionCommand(serviceProvider.GetRequiredService<AgentChatFeature>()));
 
     private static Dependency<IChatCommand<AgentSignOutCommandIn, Unit>> UseAgentSignOutCommand()
         =>

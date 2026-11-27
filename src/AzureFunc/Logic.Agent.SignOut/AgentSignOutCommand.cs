@@ -21,6 +21,8 @@ internal sealed class AgentSignOutCommand(AgentChatFeature chatFeature) : IChatC
             await chatFeature.SignIn.SignOutAsync(userId, cancellationToken).ConfigureAwait(false);
         }
 
+        CultureMiddleware.Invalidate(request.Context.Update.Chat.Id);
+
         _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
             localizer[AgentMessageResource.SignedOut], cancellationToken).ConfigureAwait(false);
 
