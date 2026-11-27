@@ -77,7 +77,7 @@ agent_settings+=(
   "Agent__Prompt__BlobName=${AGENT_PROMPT_BLOB_NAME:-AgentSystem.md}"
 )
 
-read -r -a allowed_operations <<< "${TIMESHEET_ALLOWED_OPERATIONS:-get-periods get-tags get-timesheets get-last-projects search-projects create-timesheet update-timesheet delete-timesheet}"
+read -r -a allowed_operations <<< "${TIMESHEET_ALLOWED_OPERATIONS:-get-periods get-tags get-timesheets get-last-projects search-projects create-timesheet update-timesheet delete-timesheet get-profile update-profile}"
 for index in "${!allowed_operations[@]}"; do
   agent_settings+=("Agent__Tools__0__AllowedOperations__${index}=${allowed_operations[$index]}")
 done
@@ -86,6 +86,12 @@ done
 read -r -a confirmation_operations <<< "${TIMESHEET_CONFIRMATION_OPERATIONS:-create-timesheet update-timesheet delete-timesheet}"
 for index in "${!confirmation_operations[@]}"; do
   agent_settings+=("Agent__Tools__0__ConfirmationOperations__${index}=${confirmation_operations[$index]}")
+done
+
+# After these operations the bot reads the user settings (the language) from Dataverse again.
+read -r -a user_settings_operations <<< "${TIMESHEET_USER_SETTINGS_OPERATIONS:-update-profile}"
+for index in "${!user_settings_operations[@]}"; do
+  agent_settings+=("Agent__Tools__0__UserSettingsOperations__${index}=${user_settings_operations[$index]}")
 done
 
 telegram_subscription_url="https://management.azure.com/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AZURE_RESOURCE_GROUP_NAME/providers/Microsoft.ApiManagement/service/$BOT_APIM_SERVICE_NAME/subscriptions/TelegramApiSubscription/listSecrets?api-version=2024-05-01"

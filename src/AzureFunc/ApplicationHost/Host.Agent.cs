@@ -88,11 +88,18 @@ partial class ApplicationHost
             timeProvider: timeProvider);
 
         var confirmationFunctions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var userSettingsFunctions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var tool in option.Tools)
         {
             foreach (var operation in tool.ConfirmationOperations)
             {
                 _ = confirmationFunctions.Add(AgentToolInvocationFilter.GetKey(tool.Name, operation));
+            }
+
+            foreach (var operation in tool.UserSettingsOperations)
+            {
+                _ = userSettingsFunctions.Add(AgentToolInvocationFilter.GetKey(tool.Name, operation));
             }
         }
 
@@ -107,7 +114,10 @@ partial class ApplicationHost
                 new TableClient(option.Storage.ConnectionString, option.Storage.ActionTableName)),
             entityCache: new AgentEntityCache(),
             promptProvider: new(CreatePromptSource(option, serviceProvider, timeProvider), option.Message.TimeZone, timeProvider),
-            option: new(option.Message, confirmationFunctions, option.Message.ActionTtl),
+            option: new(option.Message, confirmationFunctions, option.Message.ActionTtl)
+            {
+                UserSettingsFunctions = userSettingsFunctions
+            },
             timeProvider: timeProvider,
             logger: serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<AgentChatService>());
 

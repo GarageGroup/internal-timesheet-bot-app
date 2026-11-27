@@ -73,6 +73,11 @@ internal sealed class AgentToolActionCommand(AgentChatFeature chatFeature)
 
         await TryRemoveKeyboardAsync(context, input.TelegramMessageId, cancellationToken).ConfigureAwait(false);
 
+        if (outcome.UserSettingsChanged)
+        {
+            CultureMiddleware.Invalidate(input.TelegramChatId);
+        }
+
         if (outcome.Reply is not null)
         {
             await AgentChatReplySender.SendAsync(context, outcome.Reply, locale, cancellationToken).ConfigureAwait(false);

@@ -12,7 +12,11 @@ namespace GarageGroup.Internal.Timesheet;
 
 // ConfirmationFunctions contains '<tool>.<function>' keys of the tool calls that are executed only after the user's confirmation
 internal sealed record class AgentChatServiceOption(
-    AgentMessageOption Message, IReadOnlySet<string> ConfirmationFunctions, TimeSpan ActionTtl);
+    AgentMessageOption Message, IReadOnlySet<string> ConfirmationFunctions, TimeSpan ActionTtl)
+{
+    // '<tool>.<function>' keys of the tool calls that change the user settings kept by the bot
+    public IReadOnlySet<string> UserSettingsFunctions { get; init; } = new HashSet<string>();
+}
 
 internal sealed class AgentChatService(
     IAgentKernelFactory kernelFactory,
@@ -89,16 +93,25 @@ internal sealed class AgentChatService(
             " Tell the user the outcome in one short sentence. " +
             "If the action changed the time entries of a day, get the entries of that day and show them with the total.";
 
+        var userSettingsChanged = status is AgentActionStatus.Succeeded &&
+            option.UserSettingsFunctions.Contains(AgentToolInvocationFilter.GetKey(action.ToolName, action.FunctionName));
+
         try
         {
             var reply = await RunTurnAsync(user, toolSet, eventText, locale, cancellationToken).ConfigureAwait(false);
-            return new(status, action, reply);
+            return new(status, action, reply)
+            {
+                UserSettingsChanged = userSettingsChanged || reply.UserSettingsChanged
+            };
         }
         catch (AgentChatException exception)
         {
             // The action has already been processed, so the user gets a predefined message instead of the model answer
             logger.LogWarning(exception, "Failed to get the model answer about the executed agent action");
-            return new(status, action);
+            return new(status, action)
+            {
+                UserSettingsChanged = userSettingsChanged
+            };
         }
     }
 
@@ -126,7 +139,8 @@ internal sealed class AgentChatService(
         var kernel = kernelFactory.Create();
         kernel.Plugins.AddRange(toolSet.Plugins);
 
-        var filter = new AgentToolInvocationFilter(option.ConfirmationFunctions, entityCache, user.TelegramUserId);
+        var filter = new AgentToolInvocationFilter(
+            option.ConfirmationFunctions, option.UserSettingsFunctions, entityCache, user.TelegramUserId);
         kernel.AutoFunctionInvocationFilters.Add(filter);
 
         var history = new ChatHistory(await promptProvider.BuildAsync(locale, cancellationToken).ConfigureAwait(false));
@@ -187,7 +201,10 @@ internal sealed class AgentChatService(
                 option.Message.MaxHistoryMessageCount,
                 cancellationToken).ConfigureAwait(false);
 
-            return new(string.Empty, action);
+            return new(string.Empty, action)
+            {
+                UserSettingsChanged = filter.UserSettingsChanged
+            };
         }
 
         if (string.IsNullOrEmpty(reply))
@@ -198,7 +215,10 @@ internal sealed class AgentChatService(
         await historyStore.AppendAsync(
             user, text, reply, option.Message.MaxHistoryMessageCount, cancellationToken).ConfigureAwait(false);
 
-        return new(reply);
+        return new(reply)
+        {
+            UserSettingsChanged = filter.UserSettingsChanged
+        };
     }
 
     private static KernelArguments ReadArguments(string argumentsJson)

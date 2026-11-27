@@ -242,7 +242,8 @@ shared dependencies. Для уже существующей Function App её ф
 | `TIMESHEET_API_AUDIENCE` | Application ID URI приложения, для которого Mini App получает токен, без имени scope: `api://func-garage-dataverse-claims-<среда>.azurewebsites.net/<client id>` |
 | `TIMESHEET_API_PATH` | URL suffix основного Timesheet API в общем APIM; Test использует `timesheet` |
 | `TIMESHEET_SWAGGER_NAME` | Сегмент Swagger route; по умолчанию `timesheet` |
-| `TIMESHEET_ALLOWED_OPERATIONS` | Operation ID через пробел, доступные модели; по умолчанию чтение проектов, тегов, периодов и списаний, а также `create-timesheet update-timesheet delete-timesheet` |
+| `TIMESHEET_ALLOWED_OPERATIONS` | Operation ID через пробел, доступные модели; по умолчанию чтение проектов, тегов, периодов и списаний, `create-timesheet update-timesheet delete-timesheet`, а также `get-profile update-profile` |
+| `TIMESHEET_USER_SETTINGS_OPERATIONS` | Operation ID через пробел, которые меняют настройки пользователя (язык); после них бот заново читает профиль из Dataverse. По умолчанию `update-profile` |
 | `TIMESHEET_CONFIRMATION_OPERATIONS` | Operation ID через пробел, которые бот выполняет только после нажатия кнопки «Подтвердить»; по умолчанию `create-timesheet update-timesheet delete-timesheet`. Любая операция, меняющая данные, должна быть в этом списке, иначе модель выполнит её сразу |
 
 #### Системный промпт

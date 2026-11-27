@@ -32,6 +32,15 @@ public static class AgentActionFlowTest
                 "responses": { "200": { "description": "OK" } }
               }
             },
+            "/updateProfile": {
+              "post": {
+                "operationId": "update-profile",
+                "summary": "Update profile",
+                "requestBody": { "content": { "application/json": { "schema": {
+                  "type": "object", "properties": { "languageCode": { "type": "string", "enum": ["en", "ru"] } } } } } },
+                "responses": { "200": { "description": "OK" } }
+              }
+            },
             "/createTimesheet": {
               "post": {
                 "operationId": "create-timesheet",
@@ -194,6 +203,35 @@ public static class AgentActionFlowTest
         Assert.Empty(context.Actions.Actions);
     }
 
+    [Fact]
+    public static async Task SendAsync_ModelChangesUserLanguage_ExpectItIsExecutedImmediatelyAndSettingsChangeIsReported()
+    {
+        var context = new FlowContext(
+            ToolCall("Timesheet-update-profile", """{"languageCode":"ru"}"""),
+            Text("Язык общения изменён на русский."));
+
+        var reply = await context.Service.SendAsync(new(User, "поменяй на русский", "en"), TestContext.Current.CancellationToken);
+
+        Assert.Equal("Язык общения изменён на русский.", reply.Text);
+        Assert.Null(reply.Action);
+        Assert.True(reply.UserSettingsChanged);
+
+        Assert.Equal(["/timesheet/updateProfile"], context.ApiPaths);
+        Assert.Equal("""{"languageCode":"ru"}""", context.Api.Requests[^1].Body);
+    }
+
+    [Fact]
+    public static async Task SendAsync_ModelOnlyReadsData_ExpectSettingsChangeIsNotReported()
+    {
+        var context = new FlowContext(
+            ToolCall("Timesheet-search-projects", """{"searchText":"E2E"}"""),
+            Text("Найден проект."));
+
+        var reply = await context.Service.SendAsync(new(User, "найди проект", "ru"), TestContext.Current.CancellationToken);
+
+        Assert.False(reply.UserSettingsChanged);
+    }
+
     private static string ToolCall(string name, string arguments)
         =>
         JsonSerializer.Serialize(
@@ -267,7 +305,10 @@ public static class AgentActionFlowTest
                 new(
                     new(TimeZoneInfo.Utc, MaxTextLength: 2000, MaxHistoryMessageCount: 20),
                     new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Timesheet.create-timesheet" },
-                    TimeSpan.FromMinutes(10)),
+                    TimeSpan.FromMinutes(10))
+                {
+                    UserSettingsFunctions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Timesheet.update-profile" }
+                },
                 Time,
                 NullLogger.Instance);
         }

@@ -78,4 +78,8 @@ internal sealed record class AgentToolOption(string Name, AgentToolType Type, Ur
 
     // Operation ids (OpenAPI) or tool names (MCP) that are executed only after the user confirms them with a button
     public string[] ConfirmationOperations { get; init; } = [];
+
+    // Operations that change the user settings the bot keeps in memory, for example the language.
+    // After such an operation the bot reads the user settings again
+    public string[] UserSettingsOperations { get; init; } = [];
 }

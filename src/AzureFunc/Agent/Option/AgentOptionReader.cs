@@ -199,7 +199,8 @@ internal static partial class AgentOptionReader
                     SubscriptionKey = toolSection["SubscriptionKey"].OrNullIfWhiteSpace(),
                     SpecificationSubscriptionKey = toolSection["SpecificationSubscriptionKey"].OrNullIfWhiteSpace(),
                     AllowedOperations = toolSection.GetSection("AllowedOperations").Get<string[]>() ?? [],
-                    ConfirmationOperations = toolSection.GetSection("ConfirmationOperations").Get<string[]>() ?? []
+                    ConfirmationOperations = toolSection.GetSection("ConfirmationOperations").Get<string[]>() ?? [],
+                    UserSettingsOperations = toolSection.GetSection("UserSettingsOperations").Get<string[]>() ?? []
                 });
         }
 

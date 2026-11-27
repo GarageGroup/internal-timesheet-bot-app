@@ -13,13 +13,19 @@ internal sealed record class AgentCapturedCall(string ToolName, string FunctionN
 // Runs around every tool call requested by the model. A call that requires confirmation is not executed:
 // it is captured, and the model turn ends. Results of the other calls are scanned for names of objects
 internal sealed class AgentToolInvocationFilter(
-    IReadOnlySet<string> confirmationFunctions, AgentEntityCache entityCache, long telegramUserId)
+    IReadOnlySet<string> confirmationFunctions,
+    IReadOnlySet<string> userSettingsFunctions,
+    AgentEntityCache entityCache,
+    long telegramUserId)
     : IAutoFunctionInvocationFilter
 {
     internal const string PreparedResult =
         "The action has been prepared and is shown to the user for confirmation. It has NOT been executed yet.";
 
     public AgentCapturedCall? CapturedCall { get; private set; }
+
+    // True when a function that changes the user settings has been executed in this turn
+    public bool UserSettingsChanged { get; private set; }
 
     internal static string GetKey(string? toolName, string functionName)
         =>
@@ -34,6 +40,8 @@ internal sealed class AgentToolInvocationFilter(
         {
             await next(context).ConfigureAwait(false);
             entityCache.Remember(telegramUserId, context.Result.ToString());
+
+            UserSettingsChanged |= userSettingsFunctions.Contains(GetKey(function.PluginName, function.Name));
 
             return;
         }
