@@ -22,9 +22,9 @@ on:
         type: boolean
         default: true
       code:
-        description: Build, test and deploy the bot code
+        description: Deploy a bootstrap build of this branch (first installation only, replaces the deployed release)
         type: boolean
-        default: true
+        default: false
       prompt:
         description: Publish the agent prompt to Blob Storage
         type: boolean
