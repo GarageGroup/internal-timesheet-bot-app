@@ -79,6 +79,20 @@ foundry_tags="$(jq -c \
   } end' <<< "${existing_foundry:-null}")"
 foundry_tags_base64="$(printf '%s' "$foundry_tags" | base64 --wrap=0)"
 
+# A Foundry account outside the Resource Group of the application is shared with other applications.
+# It is used as is: this installation does not deploy it and needs only the Reader role on it.
+deploy_foundry=true
+lower() { tr '[:upper:]' '[:lower:]' <<< "$1"; }
+if [[ "$(lower "$FOUNDRY_SUBSCRIPTION_ID")" != "$(lower "$AZURE_SUBSCRIPTION_ID")" ||
+      "$(lower "$FOUNDRY_RESOURCE_GROUP")" != "$(lower "$AZURE_RESOURCE_GROUP_NAME")" ]]; then
+  deploy_foundry=false
+  [[ -n "${existing_foundry:-}" ]] || {
+    echo "External Foundry account '$FOUNDRY_ACCOUNT_NAME' is not found in '$FOUNDRY_RESOURCE_GROUP' or cannot be read: create it there and give the deployment identity the Reader role on it" >&2
+    exit 1
+  }
+  echo "Foundry account '$FOUNDRY_ACCOUNT_NAME' is external: it is not deployed by this installation."
+fi
+
 if [[ "${DEPLOY_INFRASTRUCTURE:-true}" == 'true' ]]; then
   script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   outputs="$(az deployment group create \
@@ -102,6 +116,7 @@ if [[ "${DEPLOY_INFRASTRUCTURE:-true}" == 'true' ]]; then
       "foundryLocation=$foundry_location" \
       "foundrySubscriptionId=$FOUNDRY_SUBSCRIPTION_ID" \
       "foundryResourceGroupName=$FOUNDRY_RESOURCE_GROUP" \
+      "deployFoundry=$deploy_foundry" \
       "foundryTagsBase64=$foundry_tags_base64" \
       "chatDeploymentName=${FOUNDRY_CHAT_DEPLOYMENT_NAME:-gpt-5-mini}" \
       "chatModelName=${FOUNDRY_CHAT_MODEL_NAME:-gpt-5-mini}" \

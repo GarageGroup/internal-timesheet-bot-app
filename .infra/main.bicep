@@ -26,6 +26,9 @@ param foundryLocation string = location
 param foundrySubscriptionId string = subscription().subscriptionId
 param foundryResourceGroupName string = resourceGroup().name
 
+@description('False when the Foundry account belongs to another Resource Group: it is used as is and is not deployed here.')
+param deployFoundry bool = true
+
 @description('Base64-encoded JSON tags. Existing Foundry account tags are preserved by the installation script.')
 param foundryTagsBase64 string
 
@@ -64,7 +67,7 @@ resource agentIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01
   location: agentIdentityLocation
 }
 
-module foundryModule './foundry.bicep' = {
+module foundryModule './foundry.bicep' = if (deployFoundry) {
   name: 'timesheet-bot-foundry-${environmentName}'
   scope: resourceGroup(foundrySubscriptionId, foundryResourceGroupName)
   params: {
