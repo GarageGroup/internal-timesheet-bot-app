@@ -28,6 +28,7 @@ if [[ -n "$existing" ]]; then
 fi
 
 # Creating a role assignment requires Microsoft.Authorization/roleAssignments/write on the Foundry account.
+echo "Role '$role' is not assigned yet. If the next command fails, assign the role manually to the principal $AGENT_MANAGED_IDENTITY_PRINCIPAL_ID."
 az role assignment create \
   --assignee-object-id "$AGENT_MANAGED_IDENTITY_PRINCIPAL_ID" \
   --assignee-principal-type ServicePrincipal \
