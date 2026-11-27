@@ -80,6 +80,17 @@ if [[ "$agent_enabled" == 'true' ]]; then
   foundry_model="$(api_setting Agent__Foundry__ModelId)"
   [[ -n "$foundry_endpoint" && -n "$foundry_model" ]] || { echo 'Foundry settings were not found in API Web App settings' >&2; exit 1; }
 
+  # Voice messages are recognized by the speech-to-text deployment of the same Foundry account, if the API has one.
+  voice_endpoint="$(api_setting Agent__Voice__Endpoint)"
+  voice_deployment="$(api_setting Agent__Voice__DeploymentName)"
+  if [[ -n "$voice_endpoint" && -n "$voice_deployment" ]]; then
+    agent_settings+=(
+      "Agent__Voice__Endpoint=$voice_endpoint"
+      "Agent__Voice__DeploymentName=$voice_deployment"
+      "Agent__Voice__ModelId=$(api_setting Agent__Voice__ModelId)"
+    )
+  fi
+
   sign_in_tenant_id="$(az account show --query tenantId --output tsv --only-show-errors)"
   shared_apim_address="https://${APIM_SERVICE_NAME}.azure-api.net"
   timesheet_api_path="${TIMESHEET_API_PATH#/}"

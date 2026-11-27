@@ -5,4 +5,7 @@ internal sealed record class AgentChatFeature(bool Enabled, IAgentChatService Se
 {
     // Null when user sign-in is not configured
     public IAgentSignInService? SignIn { get; init; }
+
+    // Null when voice messages are not supported
+    public IAgentVoiceTranscriber? Voice { get; init; }
 }

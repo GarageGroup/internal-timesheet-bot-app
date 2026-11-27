@@ -33,8 +33,25 @@ internal static partial class AgentOptionReader
                 ConnectionString: section["Storage:ConnectionString"].OrNullIfWhiteSpace() ?? configuration["AzureWebJobsStorage"].OrEmpty(),
                 ConversationTableName: section["Storage:ConversationTableName"].OrNullIfWhiteSpace() ?? DefaultConversationTableName),
             Tools = tools,
-            SignIn = signIn
+            SignIn = signIn,
+            Voice = ReadVoice(section.GetSection("Voice"))
         };
+    }
+
+    private static AgentVoiceTranscriptionOption? ReadVoice(IConfigurationSection section)
+    {
+        var deploymentName = section["DeploymentName"].OrNullIfWhiteSpace();
+        if (deploymentName is null)
+        {
+            return null;
+        }
+
+        if (Uri.TryCreate(section["Endpoint"], UriKind.Absolute, out var endpoint) is false)
+        {
+            throw new InvalidOperationException("Agent:Voice:Endpoint must be an absolute URI.");
+        }
+
+        return new(endpoint, deploymentName, section["ModelId"].OrNullIfWhiteSpace() ?? deploymentName);
     }
 
     private static AgentSignInOption? ReadSignIn(IConfigurationSection section, IConfiguration configuration)

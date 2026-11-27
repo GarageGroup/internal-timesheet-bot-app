@@ -7,6 +7,7 @@ using Azure.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
 
 namespace GarageGroup.Internal.Timesheet;
 
@@ -98,8 +99,10 @@ partial class ApplicationHost
             }
         }
 
+        var foundryCredential = CreateFoundryCredential(option.Foundry);
+
         var chatService = new AgentChatService(
-            kernelFactory: new FoundryAgentKernelFactory(option.Foundry, CreateFoundryCredential(option.Foundry)),
+            kernelFactory: new FoundryAgentKernelFactory(option.Foundry, foundryCredential),
             toolLoader: toolLoader,
             historyStore: new TableAgentHistoryStore(
                 new TableClient(option.Storage.ConnectionString, option.Storage.ConversationTableName), timeProvider),
@@ -111,9 +114,18 @@ partial class ApplicationHost
             timeProvider: timeProvider,
             logger: serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<AgentChatService>());
 
+#pragma warning disable SKEXP0010
+        var voiceTranscriber = option.Voice is null
+            ? null
+            : new AgentVoiceTranscriber(
+                new AzureOpenAIAudioToTextService(
+                    option.Voice.DeploymentName, option.Voice.Endpoint.AbsoluteUri, foundryCredential, option.Voice.ModelId));
+#pragma warning restore SKEXP0010
+
         return new(Enabled: true, Service: chatService)
         {
-            SignIn = serviceProvider.GetRequiredService<AgentSignInRuntime>().Service
+            SignIn = serviceProvider.GetRequiredService<AgentSignInRuntime>().Service,
+            Voice = voiceTranscriber
         };
     }
 

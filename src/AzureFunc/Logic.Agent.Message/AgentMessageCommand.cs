@@ -66,8 +66,7 @@ internal sealed class AgentMessageCommand(
         {
             var input = request.Value;
 
-            // Voice messages are still handled by the Timesheet agent API until transcription is moved to the bot
-            if (chatFeature.Enabled && string.IsNullOrWhiteSpace(input.VoiceFileId))
+            if (chatFeature.Enabled)
             {
                 return await SendChatReplyAsync(request, localizer, cancellationToken).ConfigureAwait(false);
             }
@@ -144,6 +143,15 @@ internal sealed class AgentMessageCommand(
 
             return request.Context.CreateCompleteResult<Unit>(default);
         }
+        catch (AgentVoiceRecognitionException exception)
+        {
+            request.Context.GetLogger<AgentMessageCommand>().LogWarning(exception, "The voice message has not been recognized");
+            _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
+                localizer[VoiceRecognitionError],
+                cancellationToken).ConfigureAwait(false);
+
+            return request.Context.CreateCompleteResult<Unit>(default);
+        }
         catch (AgentVoiceFileException)
         {
             _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
@@ -179,13 +187,19 @@ internal sealed class AgentMessageCommand(
         CancellationToken cancellationToken)
     {
         var input = request.Value;
-        var chatRequest = new AgentChatRequest(
-            User: new(input.TelegramUserId, input.TelegramChatId),
-            Text: input.Text,
-            Locale: request.Context.GetAgentLocale(input.Locale));
+        var locale = request.Context.GetAgentLocale(input.Locale);
+        var user = new AgentUserContext(input.TelegramUserId, input.TelegramChatId);
 
         var reply = await request.Context.WithTypingAsync(
-            token => chatFeature.Service.SendAsync(chatRequest, token).AsTask(), cancellationToken).ConfigureAwait(false);
+            async token =>
+            {
+                var text = string.IsNullOrWhiteSpace(input.VoiceFileId)
+                    ? input.Text
+                    : await TranscribeVoiceAsync(request.Context, input, locale, token).ConfigureAwait(false);
+
+                return await chatFeature.Service.SendAsync(new(user, text, locale), token).ConfigureAwait(false);
+            },
+            cancellationToken).ConfigureAwait(false);
 
         await AgentChatReplySender.SendAsync(request.Context, reply, cancellationToken).ConfigureAwait(false);
         return request.Context.CreateCompleteResult<Unit>(default);
@@ -261,10 +275,23 @@ internal sealed class AgentMessageCommand(
             input.Locale.OrEmpty(),
             cancellationToken);
 
-    private async ValueTask<AgentMessage> SendVoiceMessageAsync(
-        IChatContext context,
-        AgentMessageCommandIn input,
-        CancellationToken cancellationToken)
+    // Recognizes a voice message with the speech-to-text model of the in-bot agent
+    private async Task<string> TranscribeVoiceAsync(
+        IChatContext context, AgentMessageCommandIn input, string locale, CancellationToken cancellationToken)
+    {
+        if (chatFeature.Voice is null)
+        {
+            throw new AgentVoiceRecognitionException("Voice messages are not configured for the in-bot agent.");
+        }
+
+        var (audio, fileName) = await DownloadVoiceAsync(context, input, cancellationToken).ConfigureAwait(false);
+
+        return await chatFeature.Voice.TranscribeAsync(
+            new(audio, GetMimeType(input.VoiceMimeType), fileName, locale), cancellationToken).ConfigureAwait(false);
+    }
+
+    private async ValueTask<(byte[] Audio, string FileName)> DownloadVoiceAsync(
+        IChatContext context, AgentMessageCommandIn input, CancellationToken cancellationToken)
     {
         ValidateVoiceSize(input.VoiceFileSize);
 
@@ -277,13 +304,23 @@ internal sealed class AgentMessageCommand(
             cancellationToken).ConfigureAwait(false);
         ValidateVoiceSize(audio.LongLength);
 
+        return (audio, GetFileName(fileLink.FilePath));
+    }
+
+    private async ValueTask<AgentMessage> SendVoiceMessageAsync(
+        IChatContext context,
+        AgentMessageCommandIn input,
+        CancellationToken cancellationToken)
+    {
+        var (audio, fileName) = await DownloadVoiceAsync(context, input, cancellationToken).ConfigureAwait(false);
+
         return await agentApi.SendVoiceMessageAsync(
             input.TelegramUpdateId,
             input.TelegramUserId,
             input.TelegramChatId,
             audio,
             GetMimeType(input.VoiceMimeType),
-            GetFileName(fileLink.FilePath),
+            fileName,
             GetLanguage(input.Locale.OrEmpty()),
             input.Locale.OrEmpty(),
             cancellationToken).ConfigureAwait(false);
