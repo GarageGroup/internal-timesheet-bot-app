@@ -17,6 +17,19 @@ internal sealed record class AgentOption
 
     // Null when voice messages are not supported
     public AgentVoiceTranscriptionOption? Voice { get; init; }
+
+    public AgentPromptOption Prompt { get; init; } = new();
+}
+
+// The blob that overrides the system prompt packaged with the application
+internal sealed record class AgentPromptOption
+{
+    public string ContainerName { get; init; } = "agent";
+
+    public string BlobName { get; init; } = "AgentSystem.md";
+
+    // How long the prompt is kept in memory before the blob is read again
+    public TimeSpan CacheDuration { get; init; } = TimeSpan.FromMinutes(5);
 }
 
 // An Azure OpenAI speech-to-text deployment. It is called with the same Managed Identity as the chat model

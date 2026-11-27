@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using Azure;
 using Azure.Core;
 using Azure.Data.Tables;
 using Azure.Identity;
+using Azure.Storage.Blobs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -104,7 +106,7 @@ partial class ApplicationHost
             actionStore: new TableAgentActionStore(
                 new TableClient(option.Storage.ConnectionString, option.Storage.ActionTableName)),
             entityCache: new AgentEntityCache(),
-            promptProvider: AgentPromptProvider.FromFile(option.Message.TimeZone, timeProvider),
+            promptProvider: new(CreatePromptSource(option, serviceProvider, timeProvider), option.Message.TimeZone, timeProvider),
             option: new(option.Message, confirmationFunctions, option.Message.ActionTtl),
             timeProvider: timeProvider,
             logger: serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<AgentChatService>());
@@ -122,6 +124,30 @@ partial class ApplicationHost
             SignIn = serviceProvider.GetRequiredService<AgentSignInRuntime>().Service,
             Voice = voiceTranscriber
         };
+    }
+
+    // The prompt blob overrides the packaged prompt. A missing blob or container means that the packaged prompt is used
+    private static BlobAgentPromptSource CreatePromptSource(AgentOption option, IServiceProvider serviceProvider, TimeProvider timeProvider)
+    {
+        var blobClient = new BlobClient(option.Storage.ConnectionString, option.Prompt.ContainerName, option.Prompt.BlobName);
+
+        return new(
+            download: async cancellationToken =>
+            {
+                try
+                {
+                    var response = await blobClient.DownloadContentAsync(cancellationToken).ConfigureAwait(false);
+                    return response.Value.Content.ToString();
+                }
+                catch (RequestFailedException exception) when (exception.Status is 404)
+                {
+                    return null;
+                }
+            },
+            packagedTemplate: AgentPromptProvider.ReadPackagedTemplate(),
+            cacheDuration: option.Prompt.CacheDuration,
+            timeProvider: timeProvider,
+            logger: serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<BlobAgentPromptSource>());
     }
 
     private static TokenCredential CreateFoundryCredential(AgentFoundryOption option)
