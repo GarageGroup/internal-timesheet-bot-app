@@ -129,7 +129,7 @@ internal sealed class AgentChatService(
         var filter = new AgentToolInvocationFilter(option.ConfirmationFunctions, entityCache, user.TelegramUserId);
         kernel.AutoFunctionInvocationFilters.Add(filter);
 
-        var history = new ChatHistory(promptProvider.Build(locale));
+        var history = new ChatHistory(await promptProvider.BuildAsync(locale, cancellationToken).ConfigureAwait(false));
         var storedMessages = await historyStore.GetAsync(
             user, option.Message.MaxHistoryMessageCount, cancellationToken).ConfigureAwait(false);
 

@@ -69,7 +69,7 @@ internal sealed class AgentMessageCommand(IAgentVoiceFileApi voiceFileApi, Agent
                 },
                 cancellationToken).ConfigureAwait(false);
 
-            await AgentChatReplySender.SendAsync(context, reply, cancellationToken).ConfigureAwait(false);
+            await AgentChatReplySender.SendAsync(context, reply, locale, cancellationToken).ConfigureAwait(false);
             return context.CreateCompleteResult<Unit>(default);
         }
         catch (AgentUserNotSignedInException)

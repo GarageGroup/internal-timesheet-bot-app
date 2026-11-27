@@ -32,7 +32,26 @@ internal static partial class AgentOptionReader
                 ConversationTableName: section["Storage:ConversationTableName"].OrNullIfWhiteSpace() ?? DefaultConversationTableName),
             Tools = tools,
             SignIn = signIn,
-            Voice = ReadVoice(section.GetSection("Voice"))
+            Voice = ReadVoice(section.GetSection("Voice")),
+            Prompt = ReadPrompt(section.GetSection("Prompt"))
+        };
+    }
+
+    private static AgentPromptOption ReadPrompt(IConfigurationSection section)
+    {
+        var defaults = new AgentPromptOption();
+        var cacheMinutes = section.GetValue("CacheMinutes", defaults.CacheDuration.TotalMinutes);
+
+        if (cacheMinutes < 0)
+        {
+            throw new InvalidOperationException("Agent:Prompt:CacheMinutes must not be negative.");
+        }
+
+        return new()
+        {
+            ContainerName = section["ContainerName"].OrNullIfWhiteSpace() ?? defaults.ContainerName,
+            BlobName = section["BlobName"].OrNullIfWhiteSpace() ?? defaults.BlobName,
+            CacheDuration = TimeSpan.FromMinutes(cacheMinutes)
         };
     }
 

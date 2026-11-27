@@ -21,7 +21,7 @@ internal static partial class AgentChatReplySender
         =>
         string.Concat(CallbackPrefix, isConfirmed ? "c:" : "x:", actionId);
 
-    internal static async Task SendAsync(IChatContext context, AgentChatReply reply, CancellationToken cancellationToken)
+    internal static async Task SendAsync(IChatContext context, AgentChatReply reply, string locale, CancellationToken cancellationToken)
     {
         if (reply.Action is null)
         {
@@ -37,7 +37,7 @@ internal static partial class AgentChatReplySender
         }
 
         var localizer = context.GetLocalizer(BaseName);
-        var (richHtml, fallbackHtml) = AgentToolActionPreview.Build(reply.Action, localizer);
+        var (richHtml, fallbackHtml) = AgentToolActionPreview.Build(reply.Action, localizer, locale);
 
         _ = await context.Api.SendRichHtmlOrFallbackAsync(
             richHtml,

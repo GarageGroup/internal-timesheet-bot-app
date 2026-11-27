@@ -228,6 +228,19 @@ shared dependencies. Для уже существующей Function App её ф
 | `TIMESHEET_ALLOWED_OPERATIONS` | Operation ID через пробел, доступные модели; по умолчанию чтение проектов, тегов, периодов и списаний, а также `create-timesheet update-timesheet delete-timesheet` |
 | `TIMESHEET_CONFIRMATION_OPERATIONS` | Operation ID через пробел, которые бот выполняет только после нажатия кнопки «Подтвердить»; по умолчанию `create-timesheet update-timesheet delete-timesheet`. Любая операция, меняющая данные, должна быть в этом списке, иначе модель выполнит её сразу |
 
+#### Системный промпт
+
+Промпт агента хранится в коде: `src/AzureFunc/Prompts/AgentSystem.md`. При каждой выкатке (`install.yml`,
+`publish.yml`, `deploy.yml`) шаг `Publish agent prompt` публикует его из пакета в Blob Storage Function App:
+контейнер `agent`, blob `AgentSystem.md` (имена можно изменить переменными `AGENT_PROMPT_CONTAINER_NAME` и
+`AGENT_PROMPT_BLOB_NAME`).
+
+Бот читает промпт из blob и кэширует его на 5 минут, поэтому текст можно править прямо в Storage Account
+без выкатки: изменение подхватится само. Если blob отсутствует, пуст или недоступен, используется промпт из пакета.
+
+Ручная правка живёт до следующей выкатки: она заменит blob текстом из кода. Изменение, которое должно
+остаться, нужно перенести в файл в репозитории.
+
 `.infra/main.bicep` создаёт агентскую User Assigned Managed Identity `<Function App>-agent`, Foundry account,
 project и развёртывания моделей. Identity нельзя удалять и пересоздавать: её principal ID зарегистрирован
 как federated credential в App Registration входа и в назначении роли на Foundry.

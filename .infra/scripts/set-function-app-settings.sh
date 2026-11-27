@@ -71,6 +71,12 @@ agent_settings=(
   "Agent__Tools__0__SpecificationSubscriptionKey=$TIMESHEET_SWAGGER_SUBSCRIPTION_KEY"
 )
 
+# The prompt blob lives in the storage account of the Function App. The names match publish-agent-prompt.sh.
+agent_settings+=(
+  "Agent__Prompt__ContainerName=${AGENT_PROMPT_CONTAINER_NAME:-agent}"
+  "Agent__Prompt__BlobName=${AGENT_PROMPT_BLOB_NAME:-AgentSystem.md}"
+)
+
 read -r -a allowed_operations <<< "${TIMESHEET_ALLOWED_OPERATIONS:-get-periods get-tags get-timesheets get-last-projects search-projects create-timesheet update-timesheet delete-timesheet}"
 for index in "${!allowed_operations[@]}"; do
   agent_settings+=("Agent__Tools__0__AllowedOperations__${index}=${allowed_operations[$index]}")

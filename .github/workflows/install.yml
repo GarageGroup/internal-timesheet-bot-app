@@ -105,6 +105,8 @@ jobs:
           TIMESHEET_SWAGGER_SUBSCRIPTION_KEY: ${{ secrets.TIMESHEET_SWAGGER_SUBSCRIPTION_KEY }}
           TIMESHEET_ALLOWED_OPERATIONS: ${{ vars.TIMESHEET_ALLOWED_OPERATIONS }}
           TIMESHEET_CONFIRMATION_OPERATIONS: ${{ vars.TIMESHEET_CONFIRMATION_OPERATIONS }}
+          AGENT_PROMPT_CONTAINER_NAME: ${{ vars.AGENT_PROMPT_CONTAINER_NAME }}
+          AGENT_PROMPT_BLOB_NAME: ${{ vars.AGENT_PROMPT_BLOB_NAME }}
         with:
           inlineScript: bash .infra/scripts/set-function-app-settings.sh
       - name: Grant agent access to Foundry
@@ -167,6 +169,16 @@ jobs:
         with:
           app-name: ${{ steps.install.outputs.function_app_name }}
           package: ./publish/${{ vars.AZURE_ARTIFACT_NAME }}-${{ steps.bootstrap.outputs.version }}.zip
+      - name: Publish agent prompt
+        uses: azure/cli@v3
+        env:
+          AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          STORAGE_ACCOUNT_NAME: ${{ vars.STORAGE_ACCOUNT_NAME }}
+          AGENT_PROMPT_CONTAINER_NAME: ${{ vars.AGENT_PROMPT_CONTAINER_NAME }}
+          AGENT_PROMPT_BLOB_NAME: ${{ vars.AGENT_PROMPT_BLOB_NAME }}
+          PACKAGE_PATH: ./publish/${{ vars.AZURE_ARTIFACT_NAME }}-${{ steps.bootstrap.outputs.version }}.zip
+        with:
+          inlineScript: bash .infra/scripts/publish-agent-prompt.sh
       - name: Record deployment time
         uses: azure/cli@v3
         env:

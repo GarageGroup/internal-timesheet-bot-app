@@ -102,6 +102,16 @@ jobs:
         with:
           app-name: ${{ vars.FUNCTION_APP_NAME }}
           package: ./publish/${{ vars.AZURE_ARTIFACT_NAME }}-${{ github.event.release.tag_name }}.zip
+      - name: Publish agent prompt
+        uses: azure/cli@v3
+        env:
+          AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          STORAGE_ACCOUNT_NAME: ${{ vars.STORAGE_ACCOUNT_NAME }}
+          AGENT_PROMPT_CONTAINER_NAME: ${{ vars.AGENT_PROMPT_CONTAINER_NAME }}
+          AGENT_PROMPT_BLOB_NAME: ${{ vars.AGENT_PROMPT_BLOB_NAME }}
+          PACKAGE_PATH: ./publish/${{ vars.AZURE_ARTIFACT_NAME }}-${{ github.event.release.tag_name }}.zip
+        with:
+          inlineScript: bash .infra/scripts/publish-agent-prompt.sh
       - name: Record deployment time
         uses: azure/cli@v3
         env:

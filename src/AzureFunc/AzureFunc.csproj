@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.13.0" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.30.2" />
     <PackageReference Include="GarageGroup.Infra.Azure.DurableTask" Version="1.1.0" />
     <PackageReference Include="GarageGroup.Infra.Azure.Hosting" Version="1.2.1" />
     <PackageReference Include="GarageGroup.Infra.Dataverse.Api" Version="3.21.0" />
