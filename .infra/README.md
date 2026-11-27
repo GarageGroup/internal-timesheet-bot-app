@@ -219,6 +219,7 @@ shared dependencies. Для уже существующей Function App её ф
 | `FOUNDRY_ACCOUNT_NAME` | Имя Foundry account; Test использует `ai-timesheet-test` |
 | `FOUNDRY_PROJECT_NAME` | Имя Foundry project; Test использует `ai-timesheet-test` |
 | `FOUNDRY_LOCATION` | Регион нового Foundry account; у существующего регион сохраняется |
+| `FOUNDRY_SUBSCRIPTION_ID`, `FOUNDRY_RESOURCE_GROUP` | Подписка и Resource Group Foundry, если он размещён не в Resource Group приложения; Deployment App Registration нужна там роль `Contributor` |
 | `FOUNDRY_CHAT_*`, `FOUNDRY_VOICE_*` | Необязательные параметры развёртываний моделей; по умолчанию `gpt-5-mini` и `whisper` |
 | `AGENT_SIGN_IN_CLIENT_ID` | Client ID App Registration `bot-internal-gtimesheet-signin-<среда>`, через которую пользователи входят в бота |
 | `TIMESHEET_API_AUDIENCE` | Application ID URI приложения, для которого Mini App получает токен, без имени scope: `api://func-garage-dataverse-claims-<среда>.azurewebsites.net/<client id>` |
