@@ -86,6 +86,25 @@ public static class BlobAgentPromptSourceTest
         Assert.Equal("today 2026-11-27, language английский (English)", await provider.BuildAsync("en", TestContext.Current.CancellationToken));
     }
 
+    [Fact]
+    public static async Task PromptProvider_CalendarPlaceholder_ExpectDatesAroundTodayWithWeekdays()
+    {
+        var time = new MutableTime();
+        var provider = new AgentPromptProvider("{{TodayText}}|{{Calendar}}", TimeZoneInfo.Utc, time);
+
+        var russian = await provider.BuildAsync("ru", TestContext.Current.CancellationToken);
+        var english = await provider.BuildAsync("en", TestContext.Current.CancellationToken);
+
+        Assert.StartsWith("27 ноября 2026, пятница|2026-10-13 = 13 октября 2026, вторник\n", russian);
+        Assert.Contains("\n2026-11-23 = 23 ноября 2026, понедельник\n", russian);
+        Assert.Contains("\n2026-11-27 = 27 ноября 2026, пятница\n", russian);
+        Assert.EndsWith("\n2026-12-11 = 11 декабря 2026, пятница", russian);
+        Assert.Equal(60, russian.Split('\n').Length);
+
+        Assert.StartsWith("27 November 2026, Friday|", english);
+        Assert.Contains("\n2026-11-23 = 23 November 2026, Monday\n", english);
+    }
+
     private static BlobAgentPromptSource CreateSource(FakeBlob blob, MutableTime time)
         =>
         new(blob.DownloadAsync, "packaged prompt", TimeSpan.FromMinutes(5), time, NullLogger.Instance);

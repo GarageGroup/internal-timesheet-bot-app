@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Localization;
 
 namespace GarageGroup.Internal.Timesheet;
@@ -9,9 +10,9 @@ namespace GarageGroup.Internal.Timesheet;
 using static AgentToolActionResource;
 
 // Builds the confirmation message of a prepared tool call from its captured arguments, not from the model text
-internal static class AgentToolActionPreview
+internal static partial class AgentToolActionPreview
 {
-    internal static (string RichHtml, string FallbackHtml) Build(AgentPendingAction action, IStringLocalizer localizer)
+    internal static (string RichHtml, string FallbackHtml) Build(AgentPendingAction action, IStringLocalizer localizer, string locale)
     {
         var title = WebUtility.HtmlEncode(GetTitle(action, localizer));
         var hint = WebUtility.HtmlEncode(localizer[PreviewHint]);
@@ -27,7 +28,7 @@ internal static class AgentToolActionPreview
             foreach (var argument in action.Arguments)
             {
                 var label = WebUtility.HtmlEncode(GetLabel(action, argument, localizer));
-                var value = WebUtility.HtmlEncode(GetValue(argument, localizer));
+                var value = WebUtility.HtmlEncode(GetValue(argument, localizer, locale));
 
                 _ = rich.Append("<tr><th align=\"left\">").Append(label).Append("</th><td>").Append(value).Append("</td></tr>");
                 _ = fallback.Append("\n<b>").Append(label).Append(":</b> ").Append(value);
@@ -51,20 +52,22 @@ internal static class AgentToolActionPreview
         ?? Find(localizer, ArgumentPrefix + argument.Name)
         ?? argument.Name;
 
-    private static string GetValue(AgentActionArgument argument, IStringLocalizer localizer)
+    private static string GetValue(AgentActionArgument argument, IStringLocalizer localizer, string locale)
     {
-        if (string.IsNullOrWhiteSpace(argument.Display) is false)
-        {
-            return argument.Display;
-        }
+        var value = string.IsNullOrWhiteSpace(argument.Display)
+            ? Find(localizer, ValuePrefix + argument.Value) ?? argument.Value
+            : argument.Display;
 
-        if (DateOnly.TryParseExact(argument.Value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
-        {
-            return date.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture);
-        }
-
-        return Find(localizer, ValuePrefix + argument.Value) ?? argument.Value;
+        // Dates arrive in the API format, both as argument values and inside the names resolved from tool results
+        return IsoDateRegex().Replace(
+            value,
+            match => DateOnly.TryParseExact(match.Value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+                ? AgentDateFormat.Format(date, locale)
+                : match.Value);
     }
+
+    [GeneratedRegex(@"(?<!\d)\d{4}-\d{2}-\d{2}(?!\d)", RegexOptions.CultureInvariant)]
+    private static partial Regex IsoDateRegex();
 
     private static string? Find(IStringLocalizer localizer, string name)
     {

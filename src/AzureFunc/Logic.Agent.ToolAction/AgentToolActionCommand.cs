@@ -46,12 +46,11 @@ internal sealed class AgentToolActionCommand(AgentChatFeature chatFeature)
         var input = request.Value;
         var localizer = context.GetLocalizer(BaseName);
         var user = new AgentUserContext(input.TelegramUserId, input.TelegramChatId);
+        var locale = context.GetAgentLocale(input.Locale);
 
         AgentActionOutcome outcome;
         try
         {
-            var locale = context.GetAgentLocale(input.Locale);
-
             outcome = input.IsConfirmed
                 ? await context.WithTypingAsync(
                     token => chatFeature.Service.ConfirmActionAsync(user, input.ActionId, locale, token).AsTask(),
@@ -76,7 +75,7 @@ internal sealed class AgentToolActionCommand(AgentChatFeature chatFeature)
 
         if (outcome.Reply is not null)
         {
-            await AgentChatReplySender.SendAsync(context, outcome.Reply, cancellationToken).ConfigureAwait(false);
+            await AgentChatReplySender.SendAsync(context, outcome.Reply, locale, cancellationToken).ConfigureAwait(false);
             return context.CreateCompleteResult<Unit>(default);
         }
 

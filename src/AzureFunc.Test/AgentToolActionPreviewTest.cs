@@ -32,11 +32,11 @@ public static class AgentToolActionPreviewTest
             new("duration", "2"),
             new("description", "<b>#Test</b>"));
 
-        var (rich, fallback) = AgentToolActionPreview.Build(action, Localizer);
+        var (rich, fallback) = AgentToolActionPreview.Build(action, Localizer, "ru");
 
         Assert.Equal(
             "<p><b>Создать списание</b></p><table compact>" +
-            "<tr><th align=\"left\">Дата</th><td>27.11.2026</td></tr>" +
+            "<tr><th align=\"left\">Дата</th><td>27 ноября 2026, пятница</td></tr>" +
             "<tr><th align=\"left\">Проект</th><td>R&amp;D &lt;test&gt;</td></tr>" +
             "<tr><th align=\"left\">type</th><td>Проект</td></tr>" +
             "<tr><th align=\"left\">duration</th><td>2</td></tr>" +
@@ -45,7 +45,7 @@ public static class AgentToolActionPreviewTest
             rich);
 
         Assert.Equal(
-            "<b>Создать списание</b>\n\n<b>Дата:</b> 27.11.2026\n<b>Проект:</b> R&amp;D &lt;test&gt;\n<b>type:</b> Проект\n" +
+            "<b>Создать списание</b>\n\n<b>Дата:</b> 27 ноября 2026, пятница\n<b>Проект:</b> R&amp;D &lt;test&gt;\n<b>type:</b> Проект\n" +
             "<b>duration:</b> 2\n<b>description:</b> &lt;b&gt;#Test&lt;/b&gt;\n\nПроверьте параметры.",
             fallback);
     }
@@ -55,7 +55,7 @@ public static class AgentToolActionPreviewTest
     {
         var action = CreateAction("archive-<project>", new AgentActionArgument("id", "839bb7ea-6e1f-4ba0-a5fb-a63769a20e65"));
 
-        var (rich, _) = AgentToolActionPreview.Build(action, Localizer);
+        var (rich, _) = AgentToolActionPreview.Build(action, Localizer, "ru");
 
         Assert.Contains("<b>Подготовлено действие: archive-&lt;project&gt;</b>", rich);
         Assert.Contains("<td>839bb7ea-6e1f-4ba0-a5fb-a63769a20e65</td>", rich);
@@ -64,9 +64,9 @@ public static class AgentToolActionPreviewTest
     [Fact]
     public static void Build_ArgumentLabelIsDefinedForOperation_ExpectOperationLabelWins()
     {
-        var (rich, _) = AgentToolActionPreview.Build(CreateAction("delete-timesheet", new AgentActionArgument("id", "x", "27.11 E2E 2")), Localizer);
+        var (rich, _) = AgentToolActionPreview.Build(CreateAction("delete-timesheet", new AgentActionArgument("id", "x", "2026-11-24 E2E 2")), Localizer, "en");
 
-        Assert.Contains("<th align=\"left\">Списание</th><td>27.11 E2E 2</td>", rich);
+        Assert.Contains("<th align=\"left\">Списание</th><td>24 November 2026, Tuesday E2E 2</td>", rich);
     }
 
     [Fact]
