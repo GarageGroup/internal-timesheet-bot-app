@@ -66,6 +66,8 @@ partial class Application
             ServiceProviderServiceExtensions.GetRequiredService<IAgentVoiceFileApi>)
         .With(
             ServiceProviderServiceExtensions.GetRequiredService<AgentVoiceOption>)
+        .With(
+            ServiceProviderServiceExtensions.GetRequiredService<AgentChatFeature>)
         .UseAgentMessageCommand();
 
     private static Dependency<IChatCommand<AgentActionCommandIn, Unit>> UseAgentActionCommand()

@@ -17,7 +17,8 @@ using static AgentMessageResource;
 internal sealed class AgentMessageCommand(
     IAgentMessageApi agentApi,
     IAgentVoiceFileApi voiceFileApi,
-    AgentVoiceOption voiceOption)
+    AgentVoiceOption voiceOption,
+    AgentChatFeature chatFeature)
     : IChatCommand<AgentMessageCommandIn, Unit>, IChatCommandParser<AgentMessageCommandIn>
 {
     private static readonly Regex TelegramHtmlTagRegex = new(
@@ -63,6 +64,13 @@ internal sealed class AgentMessageCommand(
         try
         {
             var input = request.Value;
+
+            // Voice messages are still handled by the Timesheet agent API until transcription is moved to the bot
+            if (chatFeature.Enabled && string.IsNullOrWhiteSpace(input.VoiceFileId))
+            {
+                return await SendChatReplyAsync(request, localizer, cancellationToken).ConfigureAwait(false);
+            }
+
             var response = string.IsNullOrWhiteSpace(input.VoiceFileId)
                 ? await SendTextMessageAsync(input, cancellationToken).ConfigureAwait(false)
                 : await SendVoiceMessageAsync(request.Context, input, cancellationToken).ConfigureAwait(false);
@@ -95,6 +103,22 @@ internal sealed class AgentMessageCommand(
                     request.Context.GetLogger<AgentMessageCommand>(),
                     cancellationToken).ConfigureAwait(false);
             }
+
+            return request.Context.CreateCompleteResult<Unit>(default);
+        }
+        catch (AgentUserNotSignedInException)
+        {
+            _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
+                localizer[ProfileNotFound],
+                cancellationToken).ConfigureAwait(false);
+
+            return request.Context.CreateCompleteResult<Unit>(default);
+        }
+        catch (AgentChatException exception) when (exception.FailureCode is AgentChatFailureCode.MessageTooLong)
+        {
+            _ = await request.Context.Api.SendHtmlModeTextAndRemoveReplyKeyboardAsync(
+                localizer[MessageTooLong],
+                cancellationToken).ConfigureAwait(false);
 
             return request.Context.CreateCompleteResult<Unit>(default);
         }
@@ -149,6 +173,37 @@ internal sealed class AgentMessageCommand(
 
             return request.Context.CreateCancelledResult<Unit>();
         }
+    }
+
+    private async ValueTask<ChatCommandResult<Unit>> SendChatReplyAsync(
+        ChatCommandRequest<AgentMessageCommandIn, Unit> request,
+        IStringLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        var input = request.Value;
+
+        try
+        {
+            await request.Context.Api.SendChatActionAsync(BotChatAction.Typing, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            request.Context.GetLogger<AgentMessageCommand>().LogWarning(exception, "Failed to send the typing chat action");
+        }
+
+        var reply = await chatFeature.Service.SendAsync(
+            new(new(input.TelegramUserId, input.TelegramChatId), input.Text, input.Locale.OrEmpty()),
+            cancellationToken).ConfigureAwait(false);
+
+        _ = await request.Context.Api.SendMessageAsync(
+            new(SanitizeAgentHtml(reply.Text))
+            {
+                ParseMode = BotParseMode.Html,
+                ReplyMarkup = new BotReplyKeyboardRemove()
+            },
+            cancellationToken).ConfigureAwait(false);
+
+        return request.Context.CreateCompleteResult<Unit>(default);
     }
 
     private ValueTask<AgentMessage> SendTextMessageAsync(

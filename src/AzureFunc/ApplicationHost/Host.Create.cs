@@ -26,6 +26,7 @@ partial class ApplicationHost
         .RegisterDataverseApi()
         .RegisterUserAuthorizationApi()
         .RegisterAgentApi()
+        .RegisterAgent()
         .RegisterWelcomeOption();
 
     private static IServiceCollection RegisterAgentApi(this IServiceCollection services)

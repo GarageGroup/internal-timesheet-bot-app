@@ -26,6 +26,8 @@ internal static class AgentMessageResource
 
     public const string UnexpectedError = "UnexpectedError";
 
+    public const string MessageTooLong = "MessageTooLong";
+
     public const string VoiceTooLarge = "VoiceTooLarge";
 
     public const string VoiceDownloadError = "VoiceDownloadError";
