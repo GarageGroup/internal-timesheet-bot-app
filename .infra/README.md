@@ -248,7 +248,7 @@ shared dependencies. Для уже существующей Function App её ф
 | `TIMESHEET_API_PATH` | URL suffix основного Timesheet API в общем APIM; Test использует `timesheet` |
 | `TIMESHEET_SWAGGER_NAME` | Сегмент Swagger route; по умолчанию `timesheet` |
 | `TIMESHEET_ALLOWED_OPERATIONS` | Operation ID через пробел, доступные модели. По умолчанию пусто: доступны все операции API |
-| `TIMESHEET_EXCLUDED_OPERATIONS` | Operation ID через пробел, которые модели недоступны. По умолчанию `sign-in-user sign-out-user get-projects subscribe-to-notifications` |
+| `TIMESHEET_EXCLUDED_OPERATIONS` | Operation ID через пробел, которые модели недоступны. По умолчанию `sign-in-user sign-out-user get-last-projects subscribe-to-notifications` |
 | `TIMESHEET_NO_CONFIRMATION_OPERATIONS` | Operation ID через пробел, которые модель выполняет сразу. Любая другая операция, в том числе добавленная в API позже, выполняется только после нажатия кнопки «Подтвердить». По умолчанию операции чтения и `update-profile` |
 | `TIMESHEET_USER_SETTINGS_OPERATIONS` | Operation ID через пробел, которые меняют настройки пользователя (язык); после них бот заново читает профиль из Dataverse. По умолчанию `update-profile` |
 

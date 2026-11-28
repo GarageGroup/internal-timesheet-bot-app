@@ -43,6 +43,14 @@ public static class AgentActionFlowTest
                 "responses": { "200": { "description": "OK" } }
               }
             },
+            "/getProjects": {
+              "post": {
+                "operationId": "get-projects",
+                "summary": "Get projects",
+                "parameters": [ { "name": "top", "in": "query", "required": false, "schema": { "type": "integer", "format": "int32" } } ],
+                "responses": { "200": { "description": "OK" } }
+              }
+            },
             "/updateProfile": {
               "post": {
                 "operationId": "update-profile",
@@ -374,6 +382,51 @@ public static class AgentActionFlowTest
         Assert.Equal(expected, Assert.Single(context.History.Turns).AssistantText);
     }
 
+    [Theory]
+    [InlineData("{}", "?top=20")]
+    [InlineData("""{"top":5}""", "?top=5")]
+    [InlineData("""{"top":500}""", "?top=50")]
+    [InlineData("""{"top":0}""", "?top=20")]
+    public static async Task SendAsync_ModelRequestsProjects_ExpectApiIsAlwaysCalledWithLimit(string arguments, string expectedQuery)
+    {
+        var context = new FlowContext(ToolCall("Timesheet-get-projects", arguments), Text("Ваши проекты."));
+
+        _ = await context.Service.SendAsync(new(User, "мои проекты", "ru"), TestContext.Current.CancellationToken);
+
+        var request = context.Api.Requests[^1];
+        Assert.Equal("/timesheet/getProjects", request.Uri.AbsolutePath);
+        Assert.Equal(expectedQuery, request.Uri.Query);
+    }
+
+    [Theory]
+    [InlineData(
+        """{"type":null,"title":"about:blank","status":400,"detail":"The period 26_10 (2026-10-01 - 2026-10-31) is closed: time entries of 2026-10-15 cannot be created or changed."}""",
+        "The service has rejected the request with the status 400. Reason: The period 26_10 (2026-10-01 - 2026-10-31) is closed: time entries of 2026-10-15 cannot be created or changed.")]
+    [InlineData(
+        """{"title":"about:blank","status":400,"detail":"Time cannot be logged for a future date: 2026-12-05."}""",
+        "The service has rejected the request with the status 400. Reason: Time cannot be logged for a future date: 2026-12-05.")]
+    [InlineData("Some plain text", "The service has rejected the request with the status 400. Reason: Some plain text")]
+    public static async Task ConfirmActionAsync_ApiRejectsTheRequest_ExpectModelIsToldTheReasonOfTheService(string responseBody, string expectedError)
+    {
+        var context = new FlowContext(
+            ToolCall("Timesheet-create-timesheet", CreateArguments), Text("Период закрыт, списание создать нельзя."));
+
+        var prepared = await context.Service.SendAsync(new(User, "спиши 2 часа", "ru"), TestContext.Current.CancellationToken);
+
+        context.ApiStatusCode = System.Net.HttpStatusCode.BadRequest;
+        context.ApiFailureBody = responseBody;
+
+        var outcome = await context.Service.ConfirmActionAsync(User, prepared.Action!.Id, "ru", TestContext.Current.CancellationToken);
+
+        Assert.Equal(AgentActionStatus.Failed, outcome.Status);
+        Assert.Equal("Период закрыт, списание создать нельзя.", outcome.Reply?.Text);
+
+        using var modelRequest = JsonDocument.Parse(context.Model.Requests[^1].Body);
+        var eventText = modelRequest.RootElement.GetProperty("messages").EnumerateArray().Last().GetProperty("content").GetString();
+
+        Assert.Contains("NOT executed. Error: " + expectedError, eventText);
+    }
+
     private static string ToolCall(string name, string arguments)
         =>
         ToolCalls((name, arguments));
@@ -444,7 +497,7 @@ public static class AgentActionFlowTest
                         : request.RequestUri.AbsolutePath.EndsWith("getTimesheets", StringComparison.Ordinal)
                         ? FakeHttpMessageHandler.Json(TimesheetsJson)
                         : FakeHttpMessageHandler.Json(
-                            """{"isSuccess":true}""",
+                            ApiFailureBody is not null && ApiStatusCode is not System.Net.HttpStatusCode.OK ? ApiFailureBody : """{"isSuccess":true}""",
                             FailingBodyText is not null && request.Content!.ReadAsStringAsync().Result.Contains(FailingBodyText, StringComparison.Ordinal)
                                 ? System.Net.HttpStatusCode.InternalServerError
                                 : ApiStatusCode));
@@ -453,7 +506,7 @@ public static class AgentActionFlowTest
             {
                 BaseAddress = new("https://apim.example/timesheet/"),
                 Audience = "api://timesheet",
-                NoConfirmationOperations = ["search-projects", "update-profile", "get-timesheets"]
+                NoConfirmationOperations = ["search-projects", "update-profile", "get-timesheets", "get-projects"]
             };
 
             Service = new(
@@ -465,7 +518,7 @@ public static class AgentActionFlowTest
                 new("system prompt", TimeZoneInfo.Utc, Time),
                 new(
                     new(TimeZoneInfo.Utc, MaxTextLength: 2000, MaxHistoryMessageCount: 20),
-                    new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Timesheet.search-projects", "Timesheet.update-profile", "Timesheet.get-timesheets" },
+                    new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Timesheet.search-projects", "Timesheet.update-profile", "Timesheet.get-timesheets", "Timesheet.get-projects" },
                     TimeSpan.FromMinutes(10))
                 {
                     UserSettingsFunctions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Timesheet.update-profile" }
@@ -479,6 +532,9 @@ public static class AgentActionFlowTest
         internal FakeHttpMessageHandler Api { get; }
 
         internal System.Net.HttpStatusCode ApiStatusCode { get; set; } = System.Net.HttpStatusCode.OK;
+
+        // The body of a failed response; the success body is used if it is not set
+        internal string? ApiFailureBody { get; set; }
 
         // A request whose body contains this text fails, the other requests succeed
         internal string? FailingBodyText { get; set; }
