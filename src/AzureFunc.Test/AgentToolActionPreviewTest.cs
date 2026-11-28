@@ -19,6 +19,10 @@ public static class AgentToolActionPreviewTest
             ["Title_create-timesheet"] = "Создать списание",
             ["Arg_date"] = "Дата",
             ["Arg_id"] = "Проект",
+            ["Arg_duration"] = "Длительность",
+            ["Arg_description"] = "Комментарий",
+            ["HoursUnit"] = "ч",
+            ["Value_Opportunity"] = "Сделка",
             ["Arg_delete-timesheet_id"] = "Списание",
             ["Value_Project"] = "Проект",
             ["Value_Lead"] = "Лид",
@@ -43,14 +47,14 @@ public static class AgentToolActionPreviewTest
             "<p><b>Создать списание</b></p><table compact>" +
             "<tr><th align=\"left\">Дата</th><td>27 ноября 2026, пятница</td></tr>" +
             "<tr><th align=\"left\">&#128193; Проект</th><td>R&amp;D &lt;test&gt;</td></tr>" +
-            "<tr><th align=\"left\">duration</th><td>2</td></tr>" +
-            "<tr><th align=\"left\">description</th><td>&lt;b&gt;#Test&lt;/b&gt;</td></tr>" +
+            "<tr><th align=\"left\">Длительность</th><td>2&#160;ч</td></tr>" +
+            "<tr><th align=\"left\">Комментарий</th><td>&lt;b&gt;#Test&lt;/b&gt;</td></tr>" +
             "</table><p>Проверьте параметры.</p>",
             rich);
 
         Assert.Equal(
             "<b>Создать списание</b>\n\n<b>Дата:</b> 27 ноября 2026, пятница\n<b>&#128193; Проект:</b> R&amp;D &lt;test&gt;\n" +
-            "<b>duration:</b> 2\n<b>description:</b> &lt;b&gt;#Test&lt;/b&gt;\n\nПроверьте параметры.",
+            "<b>Длительность:</b> 2&#160;ч\n<b>Комментарий:</b> &lt;b&gt;#Test&lt;/b&gt;\n\nПроверьте параметры.",
             fallback);
     }
 
@@ -133,8 +137,8 @@ public static class AgentToolActionPreviewTest
             "<table compact>" +
             "<tr><th align=\"left\">Дата</th><td>27 ноября 2026, пятница</td></tr>" +
             "<tr><th align=\"left\">&#127919; Лид</th><td>Test</td></tr>" +
-            "<tr><th align=\"left\">duration</th><td>1.5</td></tr>" +
-            "<tr><th align=\"left\">description</th><td>Созвон</td></tr>" +
+            "<tr><th align=\"left\">Длительность</th><td>1.5&#160;ч</td></tr>" +
+            "<tr><th align=\"left\">Комментарий</th><td>Созвон</td></tr>" +
             "</table>",
             rich);
 
@@ -142,19 +146,128 @@ public static class AgentToolActionPreviewTest
         Assert.DoesNotContain("timesheetId", rich);
     }
 
+    private static readonly AgentActionArgument[] EntryDetails =
+    [
+        new("date", "2026-11-27"),
+        new("id", "839bb7ea-6e1f-4ba0-a5fb-a63769a20e65", "Test"),
+        new("type", "Lead"),
+        new("duration", "1.5"),
+        new("description", "Созвон")
+    ];
+
+    private static AgentPendingAction CreateUpdateAction(params AgentActionArgument[] newValues)
+        =>
+        CreateAction(
+            "update-timesheet",
+            [new("timesheetId", "27a82cb6-ee49-45a1-a623-75f9304ed000", "2026-11-27 Test 1.5") { Details = EntryDetails }, .. newValues]);
+
     [Fact]
-    public static void Build_UpdateTimeEntryWithNewValues_ExpectEntryIsOneRowAndNewValuesAreRows()
+    public static void Build_UpdateTimeEntry_ExpectFieldsOfTheEntryAndOnlyChangedValuesAreStruckOutAboveNewOnes()
+    {
+        var action = CreateUpdateAction(
+            new("date", "2026-11-27"),
+            new("id", "839BB7EA-6E1F-4BA0-A5FB-A63769A20E65", "Test"),
+            new("type", "Lead"),
+            new("duration", "2"),
+            new("description", "Созвон с клиентом"));
+
+        var (rich, fallback) = AgentToolActionPreview.Build(action, Localizer, "ru");
+
+        Assert.Contains(
+            "<table compact>" +
+            "<tr><th align=\"left\">Дата</th><td>27 ноября 2026, пятница</td></tr>" +
+            "<tr><th align=\"left\">&#127919; Лид</th><td>Test</td></tr>" +
+            "<tr><th align=\"left\">Длительность</th><td><s>1.5&#160;ч</s><br>2&#160;ч</td></tr>" +
+            "<tr><th align=\"left\">Комментарий</th><td><s>Созвон</s><br>Созвон с клиентом</td></tr>" +
+            "</table>",
+            rich);
+
+        Assert.Contains(
+            "\n<b>Дата:</b> 27 ноября 2026, пятница\n<b>&#127919; Лид:</b> Test\n" +
+            "<b>Длительность:</b> <s>1.5&#160;ч</s> → 2&#160;ч\n<b>Комментарий:</b> <s>Созвон</s> → Созвон с клиентом",
+            fallback);
+
+        Assert.DoesNotContain("timesheetId", rich);
+        // The message sanitizer keeps the struck out values; it only writes the non-breaking space as a character
+        Assert.Equal(rich.Replace("&#160;", "\u00A0"), AgentRichHtml.Prepare(rich).Html);
+    }
+
+    [Fact]
+    public static void Build_UpdateTimeEntryWithProjectOfAnotherType_ExpectOldTypeAndOldNameAreStruckOut()
+    {
+        var action = CreateUpdateAction(
+            new("id", "11111111-6e1f-4ba0-a5fb-a63769a20e65", "X5 <new>"), new("type", "Project"), new("date", "2026-11-26"));
+
+        var (rich, fallback) = AgentToolActionPreview.Build(action, Localizer, "ru");
+
+        Assert.Contains("<tr><th align=\"left\">Дата</th><td><s>27 ноября 2026, пятница</s><br>26 ноября 2026, четверг</td></tr>", rich);
+
+        Assert.Contains(
+            "<tr><th align=\"left\"><s>&#127919; Лид</s><br>&#128193; Проект</th><td><s>Test</s><br>X5 &lt;new&gt;</td></tr>", rich);
+
+        Assert.Contains("\n<b><s>&#127919; Лид</s> &#128193; Проект:</b> <s>Test</s> → X5 &lt;new&gt;", fallback);
+
+        // The fields that the update does not mention are shown as they are
+        Assert.Contains("<tr><th align=\"left\">Длительность</th><td>1.5&#160;ч</td></tr>", rich);
+        Assert.Contains("<tr><th align=\"left\">Комментарий</th><td>Созвон</td></tr>", rich);
+    }
+
+    [Fact]
+    public static void Build_UpdateTimeEntryWithAnotherProjectOfTheSameType_ExpectOnlyNameIsStruckOut()
+    {
+        var action = CreateUpdateAction(new("id", "11111111-6e1f-4ba0-a5fb-a63769a20e65", "Another"), new("type", "Lead"));
+
+        var (rich, _) = AgentToolActionPreview.Build(action, Localizer, "ru");
+
+        Assert.Contains("<tr><th align=\"left\">&#127919; Лид</th><td><s>Test</s><br>Another</td></tr>", rich);
+    }
+
+    [Fact]
+    public static void Build_UpdateTimeEntryWithFieldTheEntryDoesNotHave_ExpectNewRowWithoutOldValue()
     {
         var details = new AgentActionArgument[] { new("date", "2026-11-27"), new("duration", "1.5") };
         var action = CreateAction(
             "update-timesheet",
             new AgentActionArgument("timesheetId", "27a82cb6-ee49-45a1-a623-75f9304ed000", "2026-11-27 Test 1.5") { Details = details },
+            new AgentActionArgument("duration", "1.50"),
+            new AgentActionArgument("description", "#Test"));
+
+        var (rich, _) = AgentToolActionPreview.Build(action, Localizer, "ru");
+
+        Assert.Contains(
+            "<table compact>" +
+            "<tr><th align=\"left\">Дата</th><td>27 ноября 2026, пятница</td></tr>" +
+            "<tr><th align=\"left\">Длительность</th><td>1.5&#160;ч</td></tr>" +
+            "<tr><th align=\"left\">Комментарий</th><td>#Test</td></tr>" +
+            "</table>",
+            rich);
+    }
+
+    [Fact]
+    public static void Build_UpdateWithUnknownEntry_ExpectIdentifierRowAndNewValues()
+    {
+        var action = CreateAction(
+            "update-timesheet",
+            new AgentActionArgument("timesheetId", "27a82cb6-ee49-45a1-a623-75f9304ed000"),
             new AgentActionArgument("duration", "2"));
 
         var (rich, _) = AgentToolActionPreview.Build(action, Localizer, "ru");
 
-        Assert.Contains("<th align=\"left\">timesheetId</th><td>27 ноября 2026, пятница Test 1.5</td>", rich);
-        Assert.Contains("<th align=\"left\">duration</th><td>2</td>", rich);
+        Assert.Contains("<th align=\"left\">timesheetId</th><td>27a82cb6-ee49-45a1-a623-75f9304ed000</td>", rich);
+        Assert.Contains("<th align=\"left\">Длительность</th><td>2&#160;ч</td>", rich);
+    }
+
+    [Theory]
+    [InlineData("2", "2&#160;ч")]
+    [InlineData("0.50", "0.5&#160;ч")]
+    [InlineData("полчаса", "полчаса")]
+    public static void Build_Duration_ExpectHoursUnitInTheValue(string duration, string expected)
+    {
+        var (rich, fallback) = AgentToolActionPreview.Build(
+            CreateAction("create-timesheet", new AgentActionArgument("duration", duration)), Localizer, "ru");
+
+        Assert.Contains($"<tr><th align=\"left\">Длительность</th><td>{expected}</td></tr>", rich);
+        Assert.Contains($"\n<b>Длительность:</b> {expected}\n", fallback);
     }
 
     [Fact]

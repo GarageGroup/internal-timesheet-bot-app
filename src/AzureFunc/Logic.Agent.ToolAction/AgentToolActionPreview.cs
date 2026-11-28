@@ -14,6 +14,8 @@ using static AgentToolActionResource;
 // Builds the confirmation message of a prepared tool call from its captured arguments, not from the model text
 internal static partial class AgentToolActionPreview
 {
+    private const string DurationArgumentName = "duration";
+
     internal static (string RichHtml, string FallbackHtml) Build(AgentPendingAction action, IStringLocalizer localizer, string locale)
     {
         var hint = WebUtility.HtmlEncode(localizer[action.Calls.Length > 1 ? PreviewHintMany : PreviewHint]);
@@ -46,13 +48,22 @@ internal static partial class AgentToolActionPreview
             _ = rich.Append("<table compact>");
             _ = fallback.Append('\n');
 
-            foreach (var (labelText, valueText) in GetRows(call, localizer, locale))
+            foreach (var row in GetRows(call, localizer, locale))
             {
-                var label = WebUtility.HtmlEncode(labelText);
-                var value = WebUtility.HtmlEncode(valueText);
+                var label = WebUtility.HtmlEncode(row.Label);
+                var value = WebUtility.HtmlEncode(row.Value);
 
-                _ = rich.Append("<tr><th align=\"left\">").Append(label).Append("</th><td>").Append(value).Append("</td></tr>");
-                _ = fallback.Append("\n<b>").Append(label).Append(":</b> ").Append(value);
+                // A changed value is shown as the struck out old one with the new one under it
+                var oldLabel = row.OldLabel is null ? null : "<s>" + WebUtility.HtmlEncode(row.OldLabel) + "</s>";
+                var oldValue = row.OldValue is null ? null : "<s>" + WebUtility.HtmlEncode(row.OldValue) + "</s>";
+
+                _ = rich
+                    .Append("<tr><th align=\"left\">").Append(oldLabel is null ? string.Empty : oldLabel + "<br>").Append(label)
+                    .Append("</th><td>").Append(oldValue is null ? string.Empty : oldValue + "<br>").Append(value).Append("</td></tr>");
+
+                _ = fallback
+                    .Append("\n<b>").Append(oldLabel is null ? string.Empty : oldLabel + " ").Append(label).Append(":</b> ")
+                    .Append(oldValue is null ? string.Empty : oldValue + " → ").Append(value);
             }
 
             _ = rich.Append("</table>");
@@ -63,13 +74,65 @@ internal static partial class AgentToolActionPreview
             fallback.Append("\n\n").Append(hint).ToString());
     }
 
-    // An argument can take its label from the value of another argument, which is then not shown as a separate row.
-    // This is how a project is shown as one row "<type> | <name>" instead of two rows "Project" and "Type"
-    private static IEnumerable<(string Label, string Value)> GetRows(AgentActionCall action, IStringLocalizer localizer, string locale)
+    // A row of the table. The old label and the old value are set only where an update changes them
+    private sealed record class PreviewRow(string Name, string Label, string Value, string RawValue)
+    {
+        public string? OldLabel { get; init; }
+
+        public string? OldValue { get; init; }
+    }
+
+    private static IReadOnlyList<PreviewRow> GetRows(AgentActionCall action, IStringLocalizer localizer, string locale)
     {
         // An action with a single reference to an object, such as deleting a time entry, shows the fields of that object.
         // So the user sees the same table as when the object is created, not one line with everything in it
-        var arguments = action.Arguments is [{ Details.Length: > 0 } reference] ? reference.Details : action.Arguments;
+        if (action.Arguments is [{ Details.Length: > 0 } single])
+        {
+            return BuildRows(action, single.Details, localizer, locale);
+        }
+
+        // An update refers to an object and has new values of its fields: the object is shown with the same table,
+        // and a field that gets another value shows both of them
+        var references = Array.FindAll(action.Arguments, static argument => argument.Details is { Length: > 0 });
+        if (references is not [var reference])
+        {
+            return BuildRows(action, action.Arguments, localizer, locale);
+        }
+
+        var newRows = BuildRows(action, [.. action.Arguments.Where(argument => argument != reference)], localizer, locale);
+        var rows = new List<PreviewRow>();
+
+        foreach (var oldRow in BuildRows(action, reference.Details!, localizer, locale))
+        {
+            var newRow = newRows.FirstOrDefault(row => string.Equals(row.Name, oldRow.Name, StringComparison.Ordinal));
+            if (newRow is null)
+            {
+                rows.Add(oldRow);
+                continue;
+            }
+
+            // The same object under another spelling of its identifier is not a change
+            var isValueChanged =
+                string.Equals(oldRow.RawValue, newRow.RawValue, StringComparison.OrdinalIgnoreCase) is false &&
+                string.Equals(oldRow.Value, newRow.Value, StringComparison.Ordinal) is false;
+
+            rows.Add(
+                (isValueChanged ? newRow : oldRow with { Label = newRow.Label }) with
+                {
+                    OldLabel = string.Equals(oldRow.Label, newRow.Label, StringComparison.Ordinal) ? null : oldRow.Label,
+                    OldValue = isValueChanged ? oldRow.Value : null
+                });
+        }
+
+        rows.AddRange(newRows.Where(newRow => rows.TrueForAll(row => string.Equals(row.Name, newRow.Name, StringComparison.Ordinal) is false)));
+        return rows;
+    }
+
+    // An argument can take its label from the value of another argument, which is then not shown as a separate row.
+    // This is how a project is shown as one row "<type> | <name>" instead of two rows "Project" and "Type"
+    private static List<PreviewRow> BuildRows(
+        AgentActionCall action, AgentActionArgument[] arguments, IStringLocalizer localizer, string locale)
+    {
         var labelSources = new Dictionary<string, AgentActionArgument>(StringComparer.Ordinal);
 
         foreach (var argument in arguments)
@@ -83,6 +146,7 @@ internal static partial class AgentToolActionPreview
             }
         }
 
+        var rows = new List<PreviewRow>();
         foreach (var argument in arguments)
         {
             if (labelSources.Values.Contains(argument))
@@ -94,8 +158,10 @@ internal static partial class AgentToolActionPreview
                 ? GetValue(labelSource, localizer, locale)
                 : GetLabel(action, argument, localizer);
 
-            yield return (label, GetValue(argument, localizer, locale));
+            rows.Add(new(argument.Name, label, GetValue(argument, localizer, locale), argument.Value));
         }
+
+        return rows;
     }
 
     internal static string GetTitle(AgentActionCall action, IStringLocalizer localizer)
@@ -113,6 +179,14 @@ internal static partial class AgentToolActionPreview
 
     private static string GetValue(AgentActionArgument argument, IStringLocalizer localizer, string locale)
     {
+        // The unit of a duration is a part of the value, not of the label: "2 h"
+        if (argument.Name is DurationArgumentName &&
+            decimal.TryParse(argument.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out var hours))
+        {
+            var unit = Find(localizer, HoursUnit);
+            return hours.ToString("0.##", CultureInfo.InvariantCulture) + (unit is null ? string.Empty : "\u00A0" + unit);
+        }
+
         // A project type is shown with its icon: next to the name of the type or, in front of a project name, instead of it
         var value = string.IsNullOrWhiteSpace(argument.Display)
             ? JoinIcon(AgentProjectTypeIcon.Find(argument.Value), Find(localizer, ValuePrefix + argument.Value) ?? argument.Value)

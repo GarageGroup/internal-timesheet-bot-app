@@ -20,7 +20,7 @@
   <data name="Arg_date" xml:space="preserve"><value>Дата</value></data>
   <data name="Arg_id" xml:space="preserve"><value>Проект</value></data>
   <data name="Arg_type" xml:space="preserve"><value>Тип</value></data>
-  <data name="Arg_duration" xml:space="preserve"><value>Длительность, ч</value></data>
+  <data name="Arg_duration" xml:space="preserve"><value>Длительность</value></data>
   <data name="Arg_description" xml:space="preserve"><value>Комментарий</value></data>
   <data name="Arg_timesheetId" xml:space="preserve"><value>Списание</value></data>
   <data name="Value_Project" xml:space="preserve"><value>Проект</value></data>

@@ -20,7 +20,7 @@
   <data name="Arg_date" xml:space="preserve"><value>Date</value></data>
   <data name="Arg_id" xml:space="preserve"><value>Project</value></data>
   <data name="Arg_type" xml:space="preserve"><value>Type</value></data>
-  <data name="Arg_duration" xml:space="preserve"><value>Duration, h</value></data>
+  <data name="Arg_duration" xml:space="preserve"><value>Duration</value></data>
   <data name="Arg_description" xml:space="preserve"><value>Comment</value></data>
   <data name="Arg_timesheetId" xml:space="preserve"><value>Time entry</value></data>
   <data name="Value_Project" xml:space="preserve"><value>Project</value></data>
