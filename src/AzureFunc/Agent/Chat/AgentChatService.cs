@@ -191,6 +191,9 @@ internal sealed class AgentChatService(
             throw new AgentChatException(AgentChatFailureCode.EmptyResponse, "The chat model has returned an empty response.");
         }
 
+        // The history keeps the restored answer too, so the next turns do not rely on a lossy copy
+        reply = AgentTimesheetHtml.Restore(reply, filter.Timesheets);
+
         await historyStore.AppendAsync(
             user, text, reply, option.Message.MaxHistoryMessageCount, cancellationToken).ConfigureAwait(false);
 

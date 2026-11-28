@@ -8,7 +8,12 @@ using System.Text.RegularExpressions;
 
 namespace GarageGroup.Internal.Timesheet;
 
-internal sealed record class AgentTimesheetLabels(string Total, string PeriodTotal, string HoursUnit);
+internal sealed record class AgentTimesheetLabels(string Total, string PeriodTotal, string HoursUnit)
+{
+    // Entries restored from a tool result have the type as the service names it, for example 'Lead'.
+    // Returns the name of such a type in the user language and any other text as it is
+    public Func<string, string>? LocalizeType { get; init; }
+}
 
 // The model describes time entries as data in a <timesheets> block, and this class turns the block into a table.
 // So the layout, the totals, the encoding and the splitting of a long report do not depend on the model:
@@ -66,7 +71,7 @@ internal static partial class AgentTimesheetHtml
 
     private static List<string> Render(Match block, AgentTimesheetLabels labels, string? locale)
     {
-        var days = ReadDays(block.Groups["body"].Value);
+        var days = ReadDays(block.Groups["body"].Value, labels);
         if (days.Count is 0)
         {
             return [];
@@ -185,7 +190,7 @@ internal static partial class AgentTimesheetHtml
         =>
         "<p>" + Encode(text) + "</p>";
 
-    private static List<AgentTimesheetDay> ReadDays(string body)
+    private static List<AgentTimesheetDay> ReadDays(string body, AgentTimesheetLabels labels)
     {
         var days = new List<AgentTimesheetDay>();
 
@@ -204,12 +209,13 @@ internal static partial class AgentTimesheetHtml
                 var content = entryMatch.Groups["body"].Value;
 
                 var hoursText = HoursRegex().Match(attributes).Groups["value"].Value.Trim();
+                var type = Decode(TypeRegex().Match(attributes).Groups["value"].Value);
                 var project = ProjectRegex().Match(content);
                 var comment = CommentRegex().Match(content);
 
                 entries.Add(
                     new(
-                        Type: Decode(TypeRegex().Match(attributes).Groups["value"].Value),
+                        Type: labels.LocalizeType?.Invoke(type) ?? type,
                         Project: Decode(project.Success ? project.Groups["value"].Value : string.Empty),
                         Comment: Decode(comment.Success ? comment.Groups["value"].Value : string.Empty),
                         HoursText: hoursText,

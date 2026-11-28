@@ -11,7 +11,7 @@ namespace GarageGroup.Internal.Timesheet;
 // Runs around every tool call requested by the model. A call is executed right away only if its function is listed
 // as not requiring confirmation. Any other call is captured instead. The model may request several calls in one answer:
 // all of them are captured, and the model turn ends after the last one.
-// Results of the executed calls are scanned for names of objects
+// Results of the executed calls are scanned for names of objects and for time entries
 internal sealed class AgentToolInvocationFilter(
     IReadOnlySet<string> noConfirmationFunctions,
     IReadOnlySet<string> userSettingsFunctions,
@@ -37,6 +37,9 @@ internal sealed class AgentToolInvocationFilter(
         =>
         capturedCalls;
 
+    // Time entries returned by the tools in this turn: the answer shows them instead of their copy made by the model
+    public AgentTimesheetSnapshot Timesheets { get; } = new();
+
     // True when a function that changes the user settings has been executed in this turn
     public bool UserSettingsChanged { get; private set; }
 
@@ -60,7 +63,10 @@ internal sealed class AgentToolInvocationFilter(
         if (RequiresConfirmation(noConfirmationFunctions, function.PluginName, function.Name) is false)
         {
             await next(context).ConfigureAwait(false);
-            entityCache.Remember(telegramUserId, context.Result.ToString());
+
+            var resultText = context.Result.ToString();
+            entityCache.Remember(telegramUserId, resultText);
+            Timesheets.Remember(context.Arguments, resultText);
 
             UserSettingsChanged |= userSettingsFunctions.Contains(GetKey(function.PluginName, function.Name));
 

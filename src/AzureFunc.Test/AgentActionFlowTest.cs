@@ -32,6 +32,17 @@ public static class AgentActionFlowTest
                 "responses": { "200": { "description": "OK" } }
               }
             },
+            "/getTimesheets": {
+              "post": {
+                "operationId": "get-timesheets",
+                "summary": "Get time entries of a period",
+                "requestBody": { "content": { "application/json": { "schema": {
+                  "type": "object", "properties": {
+                    "dateFrom": { "type": "string", "format": "date" },
+                    "dateTo": { "type": "string", "format": "date" } } } } } },
+                "responses": { "200": { "description": "OK" } }
+              }
+            },
             "/updateProfile": {
               "post": {
                 "operationId": "update-profile",
@@ -63,6 +74,14 @@ public static class AgentActionFlowTest
 
     private const string CreateArguments =
         $$"""{"date":"2026-11-27","id":"{{ProjectId}}","type":"Project","duration":2,"description":"#Test"}""";
+
+    private const string TimesheetsJson =
+        """
+        {"timesheets":[
+          {"id":"27a82cb6-ee49-45a1-a623-75f9304ed001","projectType":"Project","projectName":"Corp meetings","duration":0.5,"description":"#BoardWeekly","date":"2026-11-26"},
+          {"id":"27a82cb6-ee49-45a1-a623-75f9304ed002","projectType":"Lead","projectName":"R&D <new>","duration":0.5,"description":"#SyncYakovleva","date":"2026-11-26"},
+          {"id":"27a82cb6-ee49-45a1-a623-75f9304ed003","projectType":"Project","projectName":"X5","duration":6,"date":"2026-11-27"}]}
+        """;
 
     private static readonly AgentUserContext User = new(TelegramUserId: 15, TelegramChatId: 27);
 
@@ -328,6 +347,33 @@ public static class AgentActionFlowTest
         Assert.False(reply.UserSettingsChanged);
     }
 
+    [Fact]
+    public static async Task SendAsync_ModelLosesTimeEntriesInItsAnswer_ExpectAnswerAndHistoryHaveEntriesOfTheApi()
+    {
+        // The model has lost an entry of one day and the whole other day
+        var context = new FlowContext(
+            ToolCall("Timesheet-get-timesheets", """{"dateFrom":"2026-11-23","dateTo":"2026-11-29"}"""),
+            Text(
+                "<h3>Списания за период</h3>\n<timesheets from=\"2026-11-23\" to=\"2026-11-29\">\n<day date=\"2026-11-26\">\n" +
+                "<entry hours=\"0.5\" type=\"Проект\"><project>Corp meetings</project><comment>#BoardWeekly</comment></entry>\n" +
+                "</day>\n</timesheets>"));
+
+        var reply = await context.Service.SendAsync(new(User, "списания за неделю", "ru"), TestContext.Current.CancellationToken);
+
+        const string expected =
+            "<h3>Списания за период</h3>\n<timesheets from=\"2026-11-23\" to=\"2026-11-29\">\n" +
+            "<day date=\"2026-11-26\">\n" +
+            "<entry hours=\"0.5\" type=\"Project\"><project>Corp meetings</project><comment>#BoardWeekly</comment></entry>\n" +
+            "<entry hours=\"0.5\" type=\"Lead\"><project>R&amp;D &lt;new&gt;</project><comment>#SyncYakovleva</comment></entry>\n" +
+            "</day>\n" +
+            "<day date=\"2026-11-27\">\n" +
+            "<entry hours=\"6\" type=\"Project\"><project>X5</project></entry>\n" +
+            "</day>\n</timesheets>";
+
+        Assert.Equal(expected, reply.Text);
+        Assert.Equal(expected, Assert.Single(context.History.Turns).AssistantText);
+    }
+
     private static string ToolCall(string name, string arguments)
         =>
         ToolCalls((name, arguments));
@@ -395,6 +441,8 @@ public static class AgentActionFlowTest
                     ? FakeHttpMessageHandler.Json(Specification)
                     : request.RequestUri.AbsolutePath.EndsWith("searchProjects", StringComparison.Ordinal)
                         ? FakeHttpMessageHandler.Json($$"""{"isSuccess":true,"projects":[{"id":"{{ProjectId}}","name":"E2E Role test","type":"Project"}]}""")
+                        : request.RequestUri.AbsolutePath.EndsWith("getTimesheets", StringComparison.Ordinal)
+                        ? FakeHttpMessageHandler.Json(TimesheetsJson)
                         : FakeHttpMessageHandler.Json(
                             """{"isSuccess":true}""",
                             FailingBodyText is not null && request.Content!.ReadAsStringAsync().Result.Contains(FailingBodyText, StringComparison.Ordinal)
@@ -405,7 +453,7 @@ public static class AgentActionFlowTest
             {
                 BaseAddress = new("https://apim.example/timesheet/"),
                 Audience = "api://timesheet",
-                NoConfirmationOperations = ["search-projects", "update-profile"]
+                NoConfirmationOperations = ["search-projects", "update-profile", "get-timesheets"]
             };
 
             Service = new(
@@ -417,7 +465,7 @@ public static class AgentActionFlowTest
                 new("system prompt", TimeZoneInfo.Utc, Time),
                 new(
                     new(TimeZoneInfo.Utc, MaxTextLength: 2000, MaxHistoryMessageCount: 20),
-                    new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Timesheet.search-projects", "Timesheet.update-profile" },
+                    new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Timesheet.search-projects", "Timesheet.update-profile", "Timesheet.get-timesheets" },
                     TimeSpan.FromMinutes(10))
                 {
                     UserSettingsFunctions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Timesheet.update-profile" }
