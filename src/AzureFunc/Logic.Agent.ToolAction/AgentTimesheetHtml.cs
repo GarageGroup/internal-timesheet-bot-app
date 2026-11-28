@@ -38,6 +38,8 @@ internal static partial class AgentTimesheetHtml
     // Returns the answer with every block replaced by a table. A long report is returned as several messages
     internal static IReadOnlyList<string> Expand(string text, AgentTimesheetLabels labels, string? locale)
     {
+        text = ExpandSummaries(text, labels, locale);
+
         var messages = new List<string>();
         var current = new StringBuilder();
         var currentIndex = 0;

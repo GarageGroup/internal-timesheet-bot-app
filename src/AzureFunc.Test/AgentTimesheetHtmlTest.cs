@@ -280,4 +280,113 @@ public static class AgentTimesheetHtmlTest
         Assert.Contains("<i>Лид</i> <b>A</b>", Assert.Single(actual));
         Assert.Contains("<i>Сделка</i> <b>B</b>", actual[0]);
     }
+
+    private const string MonthJson =
+        """
+        {"timesheets":[
+          {"date":"2026-11-02","duration":4,"projectType":"Project","projectName":"X5","description":"#Work"},
+          {"date":"2026-11-02","duration":1.5,"projectType":"Lead","projectName":"R&D <test>","description":"Call"},
+          {"date":"2026-11-03","duration":8,"projectType":"Project","projectName":"X5","description":"#Work"},
+          {"date":"2026-11-05","duration":0.25,"projectType":"Lead","projectName":"R&D <test>"}
+        ]}
+        """;
+
+    [Fact]
+    public static void Restore_SummaryByProject_ExpectHoursAreSummedFromToolResultInDescendingOrder()
+    {
+        var actual = AgentTimesheetHtml.Restore(
+            "<h3>Часы</h3><summary by=\"project\" from=\"2026-11-01\" to=\"2026-11-30\"></summary>",
+            CreateSnapshot("2026-11-01", "2026-11-30", MonthJson));
+
+        Assert.Equal(
+            "<h3>Часы</h3><summary by=\"project\" from=\"2026-11-01\" to=\"2026-11-30\">" +
+            "\n<row hours=\"12\" type=\"Project\">X5</row>" +
+            "\n<row hours=\"1.75\" type=\"Lead\">R&amp;D &lt;test&gt;</row>" +
+            "\n</summary>",
+            actual);
+    }
+
+    [Fact]
+    public static void Restore_SummaryByDay_ExpectOneRowForEveryDayWithEntriesAndModelRowsAreDropped()
+    {
+        var actual = AgentTimesheetHtml.Restore(
+            "<summary by=\"day\" from=\"2026-11-01\" to=\"2026-11-04\"><row hours=\"100\" date=\"2026-11-02\"></row></summary>",
+            CreateSnapshot("2026-11-01", "2026-11-30", MonthJson));
+
+        Assert.Equal(
+            "<summary by=\"day\" from=\"2026-11-01\" to=\"2026-11-04\">" +
+            "\n<row hours=\"5.5\" date=\"2026-11-02\"></row>" +
+            "\n<row hours=\"8\" date=\"2026-11-03\"></row>" +
+            "\n</summary>",
+            actual);
+    }
+
+    [Fact]
+    public static void Restore_SummaryByTypeAsSelfClosedTag_ExpectRowsByType()
+    {
+        var actual = AgentTimesheetHtml.Restore(
+            "<summary by=\"type\" from=\"2026-11-01\" to=\"2026-11-30\"/>", CreateSnapshot("2026-11-01", "2026-11-30", MonthJson));
+
+        Assert.Equal(
+            "<summary by=\"type\" from=\"2026-11-01\" to=\"2026-11-30\">" +
+            "\n<row hours=\"12\" type=\"Project\"></row>\n<row hours=\"1.75\" type=\"Lead\"></row>\n</summary>",
+            actual);
+    }
+
+    [Theory]
+    [InlineData("<summary by=\"project\" from=\"2026-10-01\" to=\"2026-10-31\"><row hours=\"7\" type=\"Project\">X5</row></summary>")]
+    [InlineData("<summary by=\"week\" from=\"2026-11-01\" to=\"2026-11-30\"><row hours=\"7\">X5</row></summary>")]
+    [InlineData("<summary by=\"project\"><row hours=\"7\">X5</row></summary>")]
+    public static void Restore_SummaryCannotBeCalculated_ExpectModelRowsAreDroppedAndBlockIsNotShown(string source)
+    {
+        var restored = AgentTimesheetHtml.Restore("Текст " + source, CreateSnapshot("2026-11-01", "2026-11-30", MonthJson));
+
+        Assert.DoesNotContain("<row", restored);
+        Assert.Equal(["Текст "], AgentTimesheetHtml.Expand(restored, Labels, "ru"));
+    }
+
+    [Fact]
+    public static void Restore_SummaryWithoutToolResult_ExpectModelRowsAreDropped()
+    {
+        var restored = AgentTimesheetHtml.Restore(
+            "<summary by=\"day\" from=\"2026-11-01\" to=\"2026-11-30\"><row hours=\"7\" date=\"2026-11-02\"></row></summary>",
+            new AgentTimesheetSnapshot());
+
+        Assert.Equal("<summary by=\"day\" from=\"2026-11-01\" to=\"2026-11-30\">\n</summary>", restored);
+    }
+
+    [Fact]
+    public static void Expand_SummaryByProject_ExpectPeriodTableWithLocalizedTypesEncodedNamesAndTotal()
+    {
+        var labels = Labels with { LocalizeType = static type => type is "Lead" ? "Лид" : type is "Project" ? "Проект" : type };
+
+        var restored = AgentTimesheetHtml.Restore(
+            "<h3>Часы по проектам</h3><summary by=\"project\" from=\"2026-11-01\" to=\"2026-11-30\"></summary>",
+            CreateSnapshot("2026-11-01", "2026-11-30", MonthJson));
+
+        var actual = AgentTimesheetHtml.Expand(restored, labels, "ru");
+
+        Assert.Equal(
+            [
+                "<h3>Часы по проектам</h3><p>01.11.2026 – 30.11.2026</p><table bordered compact>" +
+                "<tr><td><i>Проект</i> <b>X5</b></td><td align=\"right\">12\u00A0ч</td></tr>" +
+                "<tr><td><i>Лид</i> <b>R&amp;D &lt;test&gt;</b></td><td align=\"right\">1.75\u00A0ч</td></tr>" +
+                "<tr><td><b>Итого за период</b></td><td align=\"right\"><b>13.75\u00A0ч</b></td></tr>" +
+                "</table>"
+            ],
+            actual);
+    }
+
+    [Fact]
+    public static void Expand_SummaryByDay_ExpectDaysWithDayOfWeekAndTotal()
+    {
+        var restored = AgentTimesheetHtml.Restore(
+            "<summary by=\"day\" from=\"2026-11-01\" to=\"2026-11-30\"></summary>", CreateSnapshot("2026-11-01", "2026-11-30", MonthJson));
+
+        var actual = Assert.Single(AgentTimesheetHtml.Expand(restored, Labels, "ru"));
+
+        Assert.Contains($"<tr><td>{AgentDateFormat.FormatDay(new(2026, 11, 2), "ru")}</td><td align=\"right\">5.5\u00A0ч</td></tr>", actual);
+        Assert.Contains($"<tr><td>{AgentDateFormat.FormatDay(new(2026, 11, 5), "ru")}</td><td align=\"right\">0.25\u00A0ч</td></tr>", actual);
+        Assert.EndsWith("<tr><td><b>Итого за период</b></td><td align=\"right\"><b>13.75\u00A0ч</b></td></tr></table>", actual);
+    }
 }
