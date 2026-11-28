@@ -68,4 +68,20 @@ for subscription in 'TelegramApiSubscription:gtimesheet-telegram-api' 'TelegramB
   az rest --method PUT --url "$url" --headers 'Content-Type=application/json' --body "$body" --output none --only-show-errors
 done
 
+# APIM sends a request to Telegram with the bot token in the path, and the diagnostics of the service write the path
+# of every backend request to Application Insights. So the diagnostics are turned off for the APIs that call Telegram:
+# the token must not get into the logs. The bot itself still logs these calls, without the token.
+service_diagnostic_url="https://management.azure.com${apim_scope}/diagnostics/applicationinsights?api-version=2024-05-01"
+logger_id="$(az rest --method GET --url "$service_diagnostic_url" --query properties.loggerId --output tsv --only-show-errors 2>/dev/null || true)"
+if [[ -n "$logger_id" ]]; then
+  diagnostic_body="$(jq -n --arg logger "$logger_id" '{properties: {loggerId: $logger, sampling: {samplingType: "fixed", percentage: 0}}}')"
+  for api_name in gtimesheet-telegram-api gtimesheet-message-api; do
+    api_url="https://management.azure.com${apim_scope}/apis/${api_name}"
+    existing_api="$(az rest --method GET --url "${api_url}?api-version=2024-05-01" --query name --output tsv --only-show-errors 2>/dev/null || true)"
+    [[ -n "$existing_api" ]] || continue
+    az rest --method PUT --url "${api_url}/diagnostics/applicationinsights?api-version=2024-05-01" \
+      --headers 'Content-Type=application/json' --body "$diagnostic_body" --output none --only-show-errors
+  done
+fi
+
 echo "Timesheet Bot APIM '$BOT_APIM_SERVICE_NAME' configured."
