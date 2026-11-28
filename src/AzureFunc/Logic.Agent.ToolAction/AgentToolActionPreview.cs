@@ -113,10 +113,14 @@ internal static partial class AgentToolActionPreview
 
     private static string GetValue(AgentActionArgument argument, IStringLocalizer localizer, string locale)
     {
+        // A project type is shown with its icon: next to the name of the type or, in front of a project name, instead of it
         var value = string.IsNullOrWhiteSpace(argument.Display)
-            ? Find(localizer, ValuePrefix + argument.Value) ?? argument.Value
+            ? JoinIcon(AgentProjectTypeIcon.Find(argument.Value), Find(localizer, ValuePrefix + argument.Value) ?? argument.Value)
             : AgentEntityCache.ValueTokenRegex().Replace(
-                argument.Display, match => Find(localizer, ValuePrefix + match.Groups[1].Value) ?? match.Groups[1].Value);
+                argument.Display,
+                match => AgentProjectTypeIcon.Find(match.Groups[1].Value)
+                    ?? Find(localizer, ValuePrefix + match.Groups[1].Value)
+                    ?? match.Groups[1].Value);
 
         // Dates arrive in the API format, both as argument values and inside the names resolved from tool results
         return IsoDateRegex().Replace(
@@ -125,6 +129,10 @@ internal static partial class AgentToolActionPreview
                 ? AgentDateFormat.Format(date, locale)
                 : match.Value);
     }
+
+    private static string JoinIcon(string? icon, string text)
+        =>
+        icon is null ? text : icon + " " + text;
 
     [GeneratedRegex(@"(?<!\d)\d{4}-\d{2}-\d{2}(?!\d)", RegexOptions.CultureInvariant)]
     private static partial Regex IsoDateRegex();

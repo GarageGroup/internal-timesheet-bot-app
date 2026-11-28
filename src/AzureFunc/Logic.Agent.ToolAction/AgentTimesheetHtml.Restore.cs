@@ -14,8 +14,10 @@ partial class AgentTimesheetHtml
     // the model only chooses which days to show. A block with the 'partial' attribute is a selection made
     // on the user's request (one project, one tag), so it is left as the model has written it
     internal static string Restore(string text, AgentTimesheetSnapshot snapshot)
-        =>
-        snapshot.IsEmpty ? text : BlockRegex().Replace(text, match => RestoreBlock(match, snapshot));
+    {
+        var restored = snapshot.IsEmpty ? text : BlockRegex().Replace(text, match => RestoreBlock(match, snapshot));
+        return RestoreSummaries(restored, snapshot);
+    }
 
     private static string RestoreBlock(Match block, AgentTimesheetSnapshot snapshot)
     {
