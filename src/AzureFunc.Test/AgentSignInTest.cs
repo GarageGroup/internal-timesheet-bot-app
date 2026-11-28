@@ -29,18 +29,21 @@ public static class AgentSignInTest
     public static void Protector_ProtectedValue_ExpectRoundTripAndRejectionOfChangedOrForeignValues()
     {
         var protector = new AesGcmAgentTokenProtector(Option.TokenEncryptionKey);
-        var protectedValue = protector.Protect("refresh-token");
+        var protectedValue = protector.Protect("refresh-token", 15);
 
         Assert.DoesNotContain("refresh-token", protectedValue);
-        Assert.NotEqual(protectedValue, protector.Protect("refresh-token"));
-        Assert.Equal("refresh-token", protector.Unprotect(protectedValue));
+        Assert.NotEqual(protectedValue, protector.Protect("refresh-token", 15));
+        Assert.Equal("refresh-token", protector.Unprotect(protectedValue, 15));
 
         var changed = Convert.FromBase64String(protectedValue);
         changed[^1] ^= 1;
 
-        Assert.Null(protector.Unprotect(Convert.ToBase64String(changed)));
-        Assert.Null(protector.Unprotect("not base64"));
-        Assert.Null(new AesGcmAgentTokenProtector(new byte[32]).Unprotect(protectedValue));
+        Assert.Null(protector.Unprotect(Convert.ToBase64String(changed), 15));
+        Assert.Null(protector.Unprotect("not base64", 15));
+        Assert.Null(new AesGcmAgentTokenProtector(new byte[32]).Unprotect(protectedValue, 15));
+
+        // A value of one user is not accepted as a value of another one
+        Assert.Null(protector.Unprotect(protectedValue, 16));
         _ = Assert.Throws<ArgumentException>(() => new AesGcmAgentTokenProtector(new byte[16]));
     }
 
@@ -134,7 +137,7 @@ public static class AgentSignInTest
 
         var storedToken = context.Store.RefreshTokens[User.TelegramUserId];
         Assert.NotEqual("refresh-1", storedToken);
-        Assert.Equal("refresh-1", context.Protector.Unprotect(storedToken));
+        Assert.Equal("refresh-1", context.Protector.Unprotect(storedToken, User.TelegramUserId));
 
         Assert.Null(await context.Service.CompleteAsync(state, "auth-code", TestContext.Current.CancellationToken));
         _ = Assert.Single(context.TokenClient.Calls);
@@ -184,7 +187,7 @@ public static class AgentSignInTest
     public static async Task GetAccessTokenAsync_StoredRefreshToken_ExpectRefreshRotationAndCacheUntilExpiration()
     {
         var context = new SignInContext();
-        context.Store.RefreshTokens[User.TelegramUserId] = context.Protector.Protect("refresh-0");
+        context.Store.RefreshTokens[User.TelegramUserId] = context.Protector.Protect("refresh-0", User.TelegramUserId);
 
         var first = await context.Service.GetAccessTokenAsync(User, Audience, TestContext.Current.CancellationToken);
         var second = await context.Service.GetAccessTokenAsync(User, Audience, TestContext.Current.CancellationToken);
@@ -192,7 +195,7 @@ public static class AgentSignInTest
         Assert.Equal("access-1", first);
         Assert.Equal("access-1", second);
         Assert.Equal([("refresh", "refresh-0", string.Empty, "api://timesheet/.default offline_access")], context.TokenClient.Calls);
-        Assert.Equal("refresh-1", context.Protector.Unprotect(context.Store.RefreshTokens[User.TelegramUserId]));
+        Assert.Equal("refresh-1", context.Protector.Unprotect(context.Store.RefreshTokens[User.TelegramUserId], User.TelegramUserId));
 
         // The cached token is not used during the last five minutes of its lifetime
         context.Time.Now = context.Time.Now.AddMinutes(55);
@@ -212,7 +215,7 @@ public static class AgentSignInTest
     public static async Task GetAccessTokenAsync_RefreshTokenIsRevoked_ExpectNullAndStoredTokenIsRemoved()
     {
         var context = new SignInContext();
-        context.Store.RefreshTokens[User.TelegramUserId] = context.Protector.Protect("refresh-0");
+        context.Store.RefreshTokens[User.TelegramUserId] = context.Protector.Protect("refresh-0", User.TelegramUserId);
         context.TokenClient.Failure = new EntraTokenException("revoked", isGrantInvalid: true);
 
         Assert.Null(await context.Service.GetAccessTokenAsync(User, Audience, TestContext.Current.CancellationToken));
@@ -223,7 +226,7 @@ public static class AgentSignInTest
     public static async Task GetAccessTokenAsync_TokenEndpointIsUnavailable_ExpectExceptionAndStoredTokenIsKept()
     {
         var context = new SignInContext();
-        context.Store.RefreshTokens[User.TelegramUserId] = context.Protector.Protect("refresh-0");
+        context.Store.RefreshTokens[User.TelegramUserId] = context.Protector.Protect("refresh-0", User.TelegramUserId);
         context.TokenClient.Failure = new EntraTokenException("unavailable", isGrantInvalid: false);
 
         _ = await Assert.ThrowsAsync<EntraTokenException>(
@@ -236,7 +239,18 @@ public static class AgentSignInTest
     public static async Task GetAccessTokenAsync_StoredTokenWasEncryptedWithAnotherKey_ExpectNullAndStoredTokenIsRemoved()
     {
         var context = new SignInContext();
-        context.Store.RefreshTokens[User.TelegramUserId] = new AesGcmAgentTokenProtector(new byte[32]).Protect("refresh-0");
+        context.Store.RefreshTokens[User.TelegramUserId] = new AesGcmAgentTokenProtector(new byte[32]).Protect("refresh-0", User.TelegramUserId);
+
+        Assert.Null(await context.Service.GetAccessTokenAsync(User, Audience, TestContext.Current.CancellationToken));
+        Assert.Empty(context.Store.RefreshTokens);
+        Assert.Empty(context.TokenClient.Calls);
+    }
+
+    [Fact]
+    public static async Task GetAccessTokenAsync_StoredTokenWasCopiedFromAnotherUser_ExpectNullAndStoredTokenIsRemoved()
+    {
+        var context = new SignInContext();
+        context.Store.RefreshTokens[User.TelegramUserId] = context.Protector.Protect("refresh-0", User.TelegramUserId + 1);
 
         Assert.Null(await context.Service.GetAccessTokenAsync(User, Audience, TestContext.Current.CancellationToken));
         Assert.Empty(context.Store.RefreshTokens);

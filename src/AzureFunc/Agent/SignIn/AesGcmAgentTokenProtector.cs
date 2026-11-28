@@ -1,10 +1,12 @@
 using System;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace GarageGroup.Internal.Timesheet;
 
-// The protected value layout: base64(nonce | tag | ciphertext)
+// The protected value layout: base64(nonce | tag | ciphertext).
+// The user identifier is the associated data: it is not stored, but the value is decrypted only with the same identifier
 internal sealed class AesGcmAgentTokenProtector : IAgentTokenProtector
 {
     internal const int KeySize = 32;
@@ -25,7 +27,7 @@ internal sealed class AesGcmAgentTokenProtector : IAgentTokenProtector
         this.key = key;
     }
 
-    public string Protect(string value)
+    public string Protect(string value, long telegramUserId)
     {
         var plain = Encoding.UTF8.GetBytes(value);
         var result = new byte[NonceSize + TagSize + plain.Length];
@@ -34,12 +36,12 @@ internal sealed class AesGcmAgentTokenProtector : IAgentTokenProtector
         RandomNumberGenerator.Fill(nonce);
 
         using var aes = new AesGcm(key, TagSize);
-        aes.Encrypt(nonce, plain, result.AsSpan(NonceSize + TagSize), result.AsSpan(NonceSize, TagSize));
+        aes.Encrypt(nonce, plain, result.AsSpan(NonceSize + TagSize), result.AsSpan(NonceSize, TagSize), GetAssociatedData(telegramUserId));
 
         return Convert.ToBase64String(result);
     }
 
-    public string? Unprotect(string protectedValue)
+    public string? Unprotect(string protectedValue, long telegramUserId)
     {
         try
         {
@@ -52,7 +54,12 @@ internal sealed class AesGcmAgentTokenProtector : IAgentTokenProtector
             var plain = new byte[source.Length - NonceSize - TagSize];
 
             using var aes = new AesGcm(key, TagSize);
-            aes.Decrypt(source.AsSpan(0, NonceSize), source.AsSpan(NonceSize + TagSize), source.AsSpan(NonceSize, TagSize), plain);
+            aes.Decrypt(
+                nonce: source.AsSpan(0, NonceSize),
+                ciphertext: source.AsSpan(NonceSize + TagSize),
+                tag: source.AsSpan(NonceSize, TagSize),
+                plaintext: plain,
+                associatedData: GetAssociatedData(telegramUserId));
 
             return Encoding.UTF8.GetString(plain);
         }
@@ -61,4 +68,8 @@ internal sealed class AesGcmAgentTokenProtector : IAgentTokenProtector
             return null;
         }
     }
+
+    private static byte[] GetAssociatedData(long telegramUserId)
+        =>
+        Encoding.UTF8.GetBytes("refresh-token:" + telegramUserId.ToString(CultureInfo.InvariantCulture));
 }

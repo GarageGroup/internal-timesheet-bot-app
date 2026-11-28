@@ -140,7 +140,7 @@ internal sealed class AgentSignInService(
             return null;
         }
 
-        var refreshToken = protector.Unprotect(protectedRefreshToken);
+        var refreshToken = protector.Unprotect(protectedRefreshToken, userId);
         if (string.IsNullOrEmpty(refreshToken))
         {
             logger.LogWarning("The stored refresh token of the Telegram user {userId} could not be decrypted", userId);
@@ -171,7 +171,7 @@ internal sealed class AgentSignInService(
         // Entra rotates refresh tokens, so the latest one replaces the stored value
         if (string.IsNullOrEmpty(tokenSet.RefreshToken) is false)
         {
-            await store.SaveRefreshTokenAsync(userId, protector.Protect(tokenSet.RefreshToken), cancellationToken).ConfigureAwait(false);
+            await store.SaveRefreshTokenAsync(userId, protector.Protect(tokenSet.RefreshToken, userId), cancellationToken).ConfigureAwait(false);
         }
 
         var lifetime = tokenSet.ExpiresIn - AccessTokenReserve;
