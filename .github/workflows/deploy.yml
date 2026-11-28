@@ -87,6 +87,20 @@ jobs:
           inlineScript: |
             runtime="$(az functionapp config show --resource-group "$RESOURCE_GROUP" --name "$FUNCTION_APP" --query linuxFxVersion --output tsv --only-show-errors)"
             [[ "$runtime" == 'DOTNET-ISOLATED|10.0' ]] || { echo "Unexpected Function runtime: $runtime" >&2; exit 1; }
+      # A release may need a new setting, so the settings are updated before its code starts
+      - name: Update Function App settings
+        uses: azure/cli@v3
+        env:
+          VARS_JSON: ${{ toJSON(vars) }}
+          AGENT_TOKEN_ENCRYPTION_KEY: ${{ secrets.AGENT_TOKEN_ENCRYPTION_KEY }}
+          TIMESHEET_SWAGGER_SUBSCRIPTION_KEY: ${{ secrets.TIMESHEET_SWAGGER_SUBSCRIPTION_KEY }}
+        with:
+          inlineScript: |
+            if [[ -f .infra/scripts/update-function-app-settings.sh ]]; then
+              bash .infra/scripts/update-function-app-settings.sh
+            else
+              echo "::notice::This release has no script to update the settings: they are left as they are."
+            fi
       - name: Deploy release artifact
         uses: Azure/functions-action@v1
         with:
