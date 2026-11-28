@@ -106,7 +106,12 @@ partial class AgentTimesheetHtml
             {
                 if (type.Length > 0)
                 {
-                    _ = builder.Append("<i>").Append(Encode(labels.LocalizeType?.Invoke(type) ?? type)).Append("</i>");
+                    var typeName = labels.LocalizeType?.Invoke(type) ?? type;
+                    var icon = AgentProjectTypeIcon.Find(type) ?? AgentProjectTypeIcon.Find(typeName);
+
+                    // A row of a project has only the icon; a row of a type has the name too, as the icon alone says too little
+                    _ = builder.Append(
+                        icon is null ? "<i>" + Encode(typeName) + "</i>" : name.Length > 0 ? Encode(icon) : Encode(icon + " " + typeName));
                 }
 
                 if (name.Length > 0)

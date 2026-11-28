@@ -42,14 +42,14 @@ public static class AgentToolActionPreviewTest
         Assert.Equal(
             "<p><b>Создать списание</b></p><table compact>" +
             "<tr><th align=\"left\">Дата</th><td>27 ноября 2026, пятница</td></tr>" +
-            "<tr><th align=\"left\">Проект</th><td>R&amp;D &lt;test&gt;</td></tr>" +
+            "<tr><th align=\"left\">&#128193; Проект</th><td>R&amp;D &lt;test&gt;</td></tr>" +
             "<tr><th align=\"left\">duration</th><td>2</td></tr>" +
             "<tr><th align=\"left\">description</th><td>&lt;b&gt;#Test&lt;/b&gt;</td></tr>" +
             "</table><p>Проверьте параметры.</p>",
             rich);
 
         Assert.Equal(
-            "<b>Создать списание</b>\n\n<b>Дата:</b> 27 ноября 2026, пятница\n<b>Проект:</b> R&amp;D &lt;test&gt;\n" +
+            "<b>Создать списание</b>\n\n<b>Дата:</b> 27 ноября 2026, пятница\n<b>&#128193; Проект:</b> R&amp;D &lt;test&gt;\n" +
             "<b>duration:</b> 2\n<b>description:</b> &lt;b&gt;#Test&lt;/b&gt;\n\nПроверьте параметры.",
             fallback);
     }
@@ -83,8 +83,8 @@ public static class AgentToolActionPreviewTest
 
         var (rich, fallback) = AgentToolActionPreview.Build(action, Localizer, "ru");
 
-        Assert.Contains("<table compact><tr><th align=\"left\">Лид</th><td>Test</td></tr></table>", rich);
-        Assert.Contains("\n<b>Лид:</b> Test\n", fallback);
+        Assert.Contains("<table compact><tr><th align=\"left\">&#127919; Лид</th><td>Test</td></tr></table>", rich);
+        Assert.Contains("\n<b>&#127919; Лид:</b> Test\n", fallback);
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public static class AgentToolActionPreviewTest
         var (rich, _) = AgentToolActionPreview.Build(
             CreateAction("update-timesheet", new AgentActionArgument("type", "Lead")), Localizer, "ru");
 
-        Assert.Contains("<tr><th align=\"left\">type</th><td>Лид</td></tr>", rich);
+        Assert.Contains("<tr><th align=\"left\">type</th><td>&#127919; Лид</td></tr>", rich);
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public static class AgentToolActionPreviewTest
         var (rich, _) = AgentToolActionPreview.Build(
             CreateAction("delete-timesheet", new AgentActionArgument("id", "27a82cb6-ee49-45a1-a623-75f9304ed000", display)), Localizer, "ru");
 
-        Assert.Contains("<td>27 ноября 2026, пятница · Лид Test · 2</td>".Replace("·", "&#183;"), rich);
+        Assert.Contains("<td>27 ноября 2026, пятница · &#127919; Test · 2</td>".Replace("·", "&#183;"), rich);
     }
 
     [Fact]
@@ -132,13 +132,13 @@ public static class AgentToolActionPreviewTest
         Assert.Contains(
             "<table compact>" +
             "<tr><th align=\"left\">Дата</th><td>27 ноября 2026, пятница</td></tr>" +
-            "<tr><th align=\"left\">Лид</th><td>Test</td></tr>" +
+            "<tr><th align=\"left\">&#127919; Лид</th><td>Test</td></tr>" +
             "<tr><th align=\"left\">duration</th><td>1.5</td></tr>" +
             "<tr><th align=\"left\">description</th><td>Созвон</td></tr>" +
             "</table>",
             rich);
 
-        Assert.Contains("\n<b>Дата:</b> 27 ноября 2026, пятница\n<b>Лид:</b> Test\n", fallback);
+        Assert.Contains("\n<b>Дата:</b> 27 ноября 2026, пятница\n<b>&#127919; Лид:</b> Test\n", fallback);
         Assert.DoesNotContain("timesheetId", rich);
     }
 

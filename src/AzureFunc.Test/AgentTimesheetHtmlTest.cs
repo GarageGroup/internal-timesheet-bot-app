@@ -34,8 +34,8 @@ public static class AgentTimesheetHtmlTest
                 "<h3>✅ Списание создано</h3>\n" +
                 "<p>27 ноября 2026, пятница</p>" +
                 "<table bordered compact>" +
-                "<tr><td><i>Проект</i> <b>E2E Role test</b><br>#Test</td><td align=\"right\"><b>2 ч</b></td></tr>" +
-                "<tr><td><i>Сделка</i> <b>AMBY. CRM for Real Estate</b></td><td align=\"right\"><b>1.5 ч</b></td></tr>" +
+                "<tr><td>&#128193; <b>E2E Role test</b><br>#Test</td><td align=\"right\"><b>2 ч</b></td></tr>" +
+                "<tr><td>&#129309; <b>AMBY. CRM for Real Estate</b></td><td align=\"right\"><b>1.5 ч</b></td></tr>" +
                 "<tr><td><b>Итого</b></td><td align=\"right\"><b>3.5 ч</b></td></tr>" +
                 "</table>"
             ],
@@ -64,10 +64,10 @@ public static class AgentTimesheetHtmlTest
                 "<p>23.11.2026 – 29.11.2026</p>" +
                 "<table bordered compact>" +
                 "<tr><th align=\"left\">23 ноября, понедельник</th><th align=\"right\">8.5 ч</th></tr>" +
-                "<tr><td><i>Проект</i> <b>Internal IT</b><br>b</td><td align=\"right\">8 ч</td></tr>" +
-                "<tr><td><i>Проект</i> <b>Internal IT</b></td><td align=\"right\">0.5 ч</td></tr>" +
+                "<tr><td>&#128193; <b>Internal IT</b><br>b</td><td align=\"right\">8 ч</td></tr>" +
+                "<tr><td>&#128193; <b>Internal IT</b></td><td align=\"right\">0.5 ч</td></tr>" +
                 "<tr><th align=\"left\">27 ноября, пятница</th><th align=\"right\">0.25 ч</th></tr>" +
-                "<tr><td><i>Лид</i> <b>Test</b><br>a</td><td align=\"right\">0.25 ч</td></tr>" +
+                "<tr><td>&#127919; <b>Test</b><br>a</td><td align=\"right\">0.25 ч</td></tr>" +
                 "<tr><td><b>Итого за период</b></td><td align=\"right\"><b>8.75 ч</b></td></tr>" +
                 "</table>"
             ],
@@ -98,7 +98,7 @@ public static class AgentTimesheetHtmlTest
         var actual = AgentTimesheetHtml.Expand(source, Labels, "ru");
 
         Assert.Contains(
-            "<td><i>Проект</i> <b>R&amp;D bold &amp; &quot;Co&quot;</b><br>" +
+            "<td>&#128193; <b>R&amp;D bold &amp; &quot;Co&quot;</b><br>" +
             "1 &lt; 2 &lt;script&gt;<br>#Task8137 https://example.com/a?b=1&amp;c=2</td>",
             actual[0],
             StringComparison.Ordinal);
@@ -158,7 +158,7 @@ public static class AgentTimesheetHtmlTest
             });
 
         Assert.StartsWith("<h3>Списания за период</h3><p>01.01.2026 – 31.03.2026</p><table", actual[0], StringComparison.Ordinal);
-        Assert.Equal(540, actual.Sum(static message => message.Split("<i>Проект</i>").Length - 1));
+        Assert.Equal(540, actual.Sum(static message => message.Split("&#128193;").Length - 1));
         Assert.Equal(1, actual.Sum(static message => message.Split("Итого за период").Length - 1));
         Assert.EndsWith("<b>810 ч</b></td></tr></table>Конец", actual[^1], StringComparison.Ordinal);
     }
@@ -277,8 +277,8 @@ public static class AgentTimesheetHtmlTest
             labels,
             "ru");
 
-        Assert.Contains("<i>Лид</i> <b>A</b>", Assert.Single(actual));
-        Assert.Contains("<i>Сделка</i> <b>B</b>", actual[0]);
+        Assert.Contains("&#127919; <b>A</b>", Assert.Single(actual));
+        Assert.Contains("&#129309; <b>B</b>", actual[0]);
     }
 
     private const string MonthJson =
@@ -369,8 +369,8 @@ public static class AgentTimesheetHtmlTest
         Assert.Equal(
             [
                 "<h3>Часы по проектам</h3><p>01.11.2026 – 30.11.2026</p><table bordered compact>" +
-                "<tr><td><i>Проект</i> <b>X5</b></td><td align=\"right\">12\u00A0ч</td></tr>" +
-                "<tr><td><i>Лид</i> <b>R&amp;D &lt;test&gt;</b></td><td align=\"right\">1.75\u00A0ч</td></tr>" +
+                "<tr><td>&#128193; <b>X5</b></td><td align=\"right\">12\u00A0ч</td></tr>" +
+                "<tr><td>&#127919; <b>R&amp;D &lt;test&gt;</b></td><td align=\"right\">1.75\u00A0ч</td></tr>" +
                 "<tr><td><b>Итого за период</b></td><td align=\"right\"><b>13.75\u00A0ч</b></td></tr>" +
                 "</table>"
             ],
@@ -388,5 +388,53 @@ public static class AgentTimesheetHtmlTest
         Assert.Contains($"<tr><td>{AgentDateFormat.FormatDay(new(2026, 11, 2), "ru")}</td><td align=\"right\">5.5\u00A0ч</td></tr>", actual);
         Assert.Contains($"<tr><td>{AgentDateFormat.FormatDay(new(2026, 11, 5), "ru")}</td><td align=\"right\">0.25\u00A0ч</td></tr>", actual);
         Assert.EndsWith("<tr><td><b>Итого за период</b></td><td align=\"right\"><b>13.75\u00A0ч</b></td></tr></table>", actual);
+    }
+
+    [Theory]
+    [InlineData("Project", "&#128193;")]
+    [InlineData("проект", "&#128193;")]
+    [InlineData("Opportunity", "&#129309;")]
+    [InlineData("Сделка", "&#129309;")]
+    [InlineData("Lead", "&#127919;")]
+    [InlineData("Лид", "&#127919;")]
+    [InlineData("Incident", "&#128736;\uFE0F")]
+    [InlineData("Инцидент", "&#128736;\uFE0F")]
+    public static void Expand_KnownProjectType_ExpectIconInsteadOfTypeName(string type, string expectedIcon)
+    {
+        var actual = AgentTimesheetHtml.Expand(
+            $"<timesheets><day date=\"2026-11-27\"><entry hours=\"1\" type=\"{type}\"><project>A</project></entry></day></timesheets>",
+            Labels,
+            "ru");
+
+        var message = Assert.Single(actual);
+
+        Assert.Contains($"<tr><td>{expectedIcon} <b>A</b></td>", message);
+        Assert.Equal(message, AgentRichHtml.Prepare(message).Html);
+    }
+
+    [Fact]
+    public static void Expand_UnknownProjectType_ExpectTypeTextInItalics()
+    {
+        var actual = AgentTimesheetHtml.Expand(
+            "<timesheets><day date=\"2026-11-27\"><entry hours=\"1\" type=\"Отпуск\"><project>A</project></entry></day></timesheets>",
+            Labels,
+            "ru");
+
+        Assert.Contains("<tr><td><i>Отпуск</i> <b>A</b></td>", Assert.Single(actual));
+    }
+
+    [Fact]
+    public static void Expand_SummaryByType_ExpectIconWithLocalizedTypeName()
+    {
+        var labels = Labels with { LocalizeType = static type => type is "Lead" ? "Лид" : type is "Project" ? "Проект" : type };
+
+        var restored = AgentTimesheetHtml.Restore(
+            "<summary by=\"type\" from=\"2026-11-01\" to=\"2026-11-30\"></summary>", CreateSnapshot("2026-11-01", "2026-11-30", MonthJson));
+
+        var actual = Assert.Single(AgentTimesheetHtml.Expand(restored, labels, "ru"));
+
+        Assert.Contains("<tr><td>&#128193; Проект</td><td align=\"right\">12\u00A0ч</td></tr>", actual);
+        Assert.Contains("<tr><td>&#127919; Лид</td><td align=\"right\">1.75\u00A0ч</td></tr>", actual);
+        Assert.Equal(actual, AgentRichHtml.Prepare(actual).Html);
     }
 }

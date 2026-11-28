@@ -137,7 +137,7 @@ internal static partial class AgentTimesheetHtml
 
     private const string TableClose = "</table>";
 
-    // The shared row of a time entry: the type and the name on one line, the comment on the next one, the hours on the right
+    // The shared row of a time entry: the icon of the type and the name on one line, the comment on the next one, the hours on the right
     internal static string CreateEntryRow(AgentTimesheetEntry entry, AgentTimesheetLabels labels, bool areHoursBold)
     {
         var builder = new StringBuilder("<tr><td>");
@@ -145,7 +145,7 @@ internal static partial class AgentTimesheetHtml
 
         if (entry.Type.Length > 0)
         {
-            _ = builder.Append("<i>").Append(Encode(entry.Type)).Append("</i>");
+            _ = builder.Append(CreateTypeMark(entry.Type));
             hasContent = true;
         }
 
@@ -171,6 +171,11 @@ internal static partial class AgentTimesheetHtml
             .Append("</td></tr>")
             .ToString();
     }
+
+    // A known project type is shown as its icon, any other text of the model in italics as it is
+    private static string CreateTypeMark(string type)
+        =>
+        AgentProjectTypeIcon.Find(type) is string icon ? Encode(icon) : "<i>" + Encode(type) + "</i>";
 
     // The shared row of totals: of a day list or of the whole period
     internal static string CreateTotalRow(string label, decimal hours, AgentTimesheetLabels labels)
