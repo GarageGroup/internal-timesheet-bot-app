@@ -140,6 +140,7 @@ jobs:
           TIMESHEET_USER_SETTINGS_OPERATIONS: ${{ vars.TIMESHEET_USER_SETTINGS_OPERATIONS }}
           AGENT_PROMPT_CONTAINER_NAME: ${{ vars.AGENT_PROMPT_CONTAINER_NAME }}
           AGENT_PROMPT_BLOB_NAME: ${{ vars.AGENT_PROMPT_BLOB_NAME }}
+          AGENT_EDITABLE_ACTION_CARD: ${{ vars.AGENT_EDITABLE_ACTION_CARD }}
         with:
           inlineScript: bash .infra/scripts/set-function-app-settings.sh
       - name: Grant agent access to Foundry

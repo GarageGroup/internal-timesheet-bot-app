@@ -42,4 +42,8 @@
   <data name="PreviewHintMany" xml:space="preserve"><value>Пока ничего не изменено. Проверьте действия и подтвердите их все одной кнопкой.</value></data>
   <data name="PreviewTitleMany" xml:space="preserve"><value>Подготовлено действий: {0}</value></data>
   <data name="PartiallySucceeded" xml:space="preserve"><value>⚠️ Выполнена только часть действий. Проверьте списания перед повторной попыткой.</value></data>
+  <data name="WidgetHint" xml:space="preserve"><value>Пока ничего не изменено. При необходимости поправьте дату и длительность и подтвердите действие.</value></data>
+  <data name="WidgetSending" xml:space="preserve"><value>Выполняю…</value></data>
+  <data name="WidgetConfirmed" xml:space="preserve"><value>✅ Подтверждено.</value></data>
+  <data name="WidgetFailed" xml:space="preserve"><value>Не удалось отправить. Попробуйте ещё раз.</value></data>
 </root>

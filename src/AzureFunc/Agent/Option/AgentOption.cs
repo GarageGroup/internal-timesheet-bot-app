@@ -44,6 +44,10 @@ internal sealed record class AgentMessageOption(TimeZoneInfo TimeZone, int MaxTe
 {
     // How long a prepared action waits for the user's confirmation
     public TimeSpan ActionTtl { get; init; } = TimeSpan.FromMinutes(10);
+
+    // An experiment: the confirmation of creating or changing a time entry is sent as a Telegram widget,
+    // where the user can change the date and the duration before confirming
+    public bool EditableActionCard { get; init; }
 }
 
 internal sealed record class AgentStorageOption(string ConnectionString, string ConversationTableName)

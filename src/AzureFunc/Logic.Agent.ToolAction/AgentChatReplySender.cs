@@ -39,6 +39,13 @@ internal static class AgentChatReplySender
             return;
         }
 
+        if (reply.EditableCardToday is DateOnly today &&
+            AgentActionWidget.TryBuild(reply.Action, localizer, locale, today) is AgentActionWidgetContent widget &&
+            await TrySendWidgetAsync(context, widget, cancellationToken).ConfigureAwait(false))
+        {
+            return;
+        }
+
         var (richHtml, fallbackHtml) = AgentToolActionPreview.Build(reply.Action, localizer, locale);
 
         await context.Api.SendRichHtmlOrFallbackAsync(
@@ -62,6 +69,30 @@ internal static class AgentChatReplySender
             },
             context.GetLogger<AgentChatReply>(),
             cancellationToken).ConfigureAwait(false);
+    }
+
+    // The regular card with buttons is sent when Telegram refuses the widget.
+    // After a timeout or a network error the widget may have been delivered, so the error is thrown
+    private static async Task<bool> TrySendWidgetAsync(IChatContext context, AgentActionWidgetContent widget, CancellationToken cancellationToken)
+    {
+        try
+        {
+            _ = await context.Api.SendWidgetAsync(
+                new(widget.Html)
+                {
+                    Caption = widget.Caption,
+                    ParseMode = BotParseMode.Html,
+                    AllowQueries = true
+                },
+                cancellationToken).ConfigureAwait(false);
+
+            return true;
+        }
+        catch (Failure<TelegramBotFailureCode>.Exception exception) when (exception.FailureCode is TelegramBotFailureCode.BadRequest)
+        {
+            context.GetLogger<AgentChatReply>().LogWarning(exception, "Telegram has rejected a widget. A regular card will be sent instead");
+            return false;
+        }
     }
 
     // A type name of the service has a resource; a text written by the model has none and is shown as it is

@@ -11,7 +11,13 @@ internal sealed record class AgentChatReply(string Text, AgentPendingAction? Act
 {
     // True when the user settings were changed in this turn, so the cached settings must be read again
     public bool UserSettingsChanged { get; init; }
+
+    // Today of the user when the prepared action may be shown as a card with editable fields; null otherwise
+    public DateOnly? EditableCardToday { get; init; }
 }
+
+// The values the user has changed in the confirmation card of a prepared time entry. A null value is not changed
+internal sealed record class AgentActionEdit(DateOnly? Date, decimal? Duration);
 
 internal enum AgentActionStatus
 {
@@ -55,7 +61,13 @@ internal interface IAgentChatService
     ValueTask<AgentChatReply> SendAsync(AgentChatRequest request, CancellationToken cancellationToken);
 
     // Executes the prepared tool calls in parallel. Throws AgentUserNotSignedInException if the user must sign in again
-    ValueTask<AgentActionOutcome> ConfirmActionAsync(AgentUserContext user, string actionId, string locale, CancellationToken cancellationToken);
+    ValueTask<AgentActionOutcome> ConfirmActionAsync(AgentUserContext user, string actionId, string locale, CancellationToken cancellationToken)
+        =>
+        ConfirmActionAsync(user, actionId, edit: null, locale, cancellationToken);
+
+    // The edit is applied to the prepared call before it is executed
+    ValueTask<AgentActionOutcome> ConfirmActionAsync(
+        AgentUserContext user, string actionId, AgentActionEdit? edit, string locale, CancellationToken cancellationToken);
 
     ValueTask<AgentActionOutcome> CancelActionAsync(AgentUserContext user, string actionId, CancellationToken cancellationToken);
 }
