@@ -174,4 +174,110 @@ public static class AgentTimesheetHtmlTest
         Assert.All(actual, static part => Assert.True(part.Length <= 1000));
         Assert.Equal(lines, string.Join('\n', actual).Split('\n'));
     }
+
+    private const string WeekJson =
+        """
+        {"timesheets":[
+          {"projectType":"Project","projectName":"X5","duration":6,"description":"#OutstaffWork","date":"2026-11-26T00:00:00"},
+          {"projectType":"Lead","projectName":"Test","duration":1.5,"date":"2026-11-26"},
+          {"projectType":"Project","projectName":"X5","duration":7,"description":"#OutstaffWork","date":"2026-11-27"}]}
+        """;
+
+    private const string LossyDay =
+        "<day date=\"2026-11-26\"><entry hours=\"6\" type=\"Проект\"><project>X5</project></entry></day>";
+
+    private const string RestoredDay26 =
+        "\n<day date=\"2026-11-26\">" +
+        "\n<entry hours=\"6\" type=\"Project\"><project>X5</project><comment>#OutstaffWork</comment></entry>" +
+        "\n<entry hours=\"1.5\" type=\"Lead\"><project>Test</project></entry>" +
+        "\n</day>";
+
+    private const string RestoredDay27 =
+        "\n<day date=\"2026-11-27\">" +
+        "\n<entry hours=\"7\" type=\"Project\"><project>X5</project><comment>#OutstaffWork</comment></entry>" +
+        "\n</day>";
+
+    private static AgentTimesheetSnapshot CreateSnapshot(string from, string to, string json = WeekJson)
+    {
+        var snapshot = new AgentTimesheetSnapshot();
+        snapshot.Remember([new("dateFrom", from), new("dateTo", to)], json);
+
+        return snapshot;
+    }
+
+    [Fact]
+    public static void Restore_PeriodBlockWithLostEntryAndLostDay_ExpectEntriesOfTheToolResult()
+    {
+        var actual = AgentTimesheetHtml.Restore(
+            $"Текст <timesheets from=\"2026-11-23\" to=\"2026-11-29\">{LossyDay}</timesheets> конец",
+            CreateSnapshot("2026-11-23", "2026-11-29"));
+
+        Assert.Equal(
+            $"Текст <timesheets from=\"2026-11-23\" to=\"2026-11-29\">{RestoredDay26}{RestoredDay27}\n</timesheets> конец", actual);
+    }
+
+    [Fact]
+    public static void Restore_DayBlock_ExpectOnlyTheDayOfTheBlockIsRestored()
+    {
+        var actual = AgentTimesheetHtml.Restore($"<timesheets>{LossyDay}</timesheets>", CreateSnapshot("2026-11-23", "2026-11-29"));
+
+        Assert.Equal($"<timesheets>{RestoredDay26}\n</timesheets>", actual);
+    }
+
+    [Fact]
+    public static void Restore_PartialBlock_ExpectBlockIsKept()
+    {
+        var source = $"<timesheets partial from=\"2026-11-23\" to=\"2026-11-29\">{LossyDay}</timesheets>";
+
+        Assert.Equal(source, AgentTimesheetHtml.Restore(source, CreateSnapshot("2026-11-23", "2026-11-29")));
+    }
+
+    [Fact]
+    public static void Restore_DayIsNotReturnedByTools_ExpectModelDayIsKeptNextToRestoredOne()
+    {
+        const string otherDay = "<day date=\"2026-11-20\"><entry hours=\"1\" type=\"Проект\"><project>Old</project></entry></day>";
+
+        var actual = AgentTimesheetHtml.Restore(
+            $"<timesheets from=\"2026-11-20\" to=\"2026-11-26\">{LossyDay}{otherDay}</timesheets>", CreateSnapshot("2026-11-26", "2026-11-26"));
+
+        Assert.Equal($"<timesheets from=\"2026-11-20\" to=\"2026-11-26\">\n{otherDay}{RestoredDay26}\n</timesheets>", actual);
+    }
+
+    [Theory]
+    [InlineData("2026-11-01", "2026-11-02", WeekJson)]
+    [InlineData("2026-11-23", "2026-11-29", """{"isSuccess":false}""")]
+    [InlineData("2026-11-23", "2026-11-29", "not json")]
+    [InlineData("2026-11-29", "2026-11-23", WeekJson)]
+    [InlineData("2026-11-23", "2026-11-29", """{"timesheets":[{"duration":1}]}""")]
+    public static void Restore_ToolsDoNotDescribeTheDayOfTheBlock_ExpectBlockIsKept(string from, string to, string json)
+    {
+        var source = $"<timesheets>{LossyDay}</timesheets>";
+
+        Assert.Equal(source, AgentTimesheetHtml.Restore(source, CreateSnapshot(from, to, json)));
+    }
+
+    [Fact]
+    public static void Restore_ToolsSayTheDayIsEmpty_ExpectBlockIsKept()
+    {
+        var source = $"<timesheets>{LossyDay}</timesheets>";
+
+        Assert.Equal(source, AgentTimesheetHtml.Restore(source, CreateSnapshot("2026-11-26", "2026-11-26", """{"timesheets":[]}""")));
+    }
+
+    [Fact]
+    public static void Expand_TypeNameOfTheService_ExpectLocalizedTypeAndModelTextAsItIs()
+    {
+        var labels = Labels with { LocalizeType = static type => type is "Lead" ? "Лид" : type };
+
+        var actual = AgentTimesheetHtml.Expand(
+            "<timesheets><day date=\"2026-11-27\">" +
+            "<entry hours=\"1\" type=\"Lead\"><project>A</project></entry>" +
+            "<entry hours=\"1\" type=\"Сделка\"><project>B</project></entry>" +
+            "</day></timesheets>",
+            labels,
+            "ru");
+
+        Assert.Contains("<i>Лид</i> <b>A</b>", Assert.Single(actual));
+        Assert.Contains("<i>Сделка</i> <b>B</b>", actual[0]);
+    }
 }

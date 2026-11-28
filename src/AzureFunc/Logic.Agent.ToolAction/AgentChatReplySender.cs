@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using GarageGroup.Infra.Telegram.Bot;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 
 namespace GarageGroup.Internal.Timesheet;
@@ -24,7 +25,10 @@ internal static class AgentChatReplySender
         if (reply.Action is null)
         {
             var labels = new AgentTimesheetLabels(
-                Total: localizer[TimesheetTotal], PeriodTotal: localizer[TimesheetPeriodTotal], HoursUnit: localizer[HoursUnit]);
+                Total: localizer[TimesheetTotal], PeriodTotal: localizer[TimesheetPeriodTotal], HoursUnit: localizer[HoursUnit])
+            {
+                LocalizeType = type => LocalizeType(localizer, type)
+            };
 
             // A long report of time entries comes as several messages
             foreach (var message in AgentTimesheetHtml.Expand(reply.Text, labels, locale))
@@ -58,6 +62,18 @@ internal static class AgentChatReplySender
             },
             context.GetLogger<AgentChatReply>(),
             cancellationToken).ConfigureAwait(false);
+    }
+
+    // A type name of the service has a resource; a text written by the model has none and is shown as it is
+    internal static string LocalizeType(IStringLocalizer localizer, string type)
+    {
+        if (AgentEntityCache.ValueTokenRegex().IsMatch(AgentEntityCache.CreateValueToken(type)) is false)
+        {
+            return type;
+        }
+
+        var localized = localizer[ValuePrefix + type];
+        return localized.ResourceNotFound ? type : localized.Value;
     }
 
     private static async Task SendTextAsync(IChatContext context, string text, CancellationToken cancellationToken)
