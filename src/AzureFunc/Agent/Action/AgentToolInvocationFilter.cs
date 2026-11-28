@@ -29,6 +29,14 @@ internal sealed class AgentToolInvocationFilter(
         "Too many actions were requested at once. NONE of them has been prepared or executed. " +
         "Do not call these functions again in this turn. Tell the user to split the request into smaller parts.";
 
+    // A list returned to the model is always limited: a function with the 'top' parameter gets the default value
+    // if the model has not passed one, and a larger value is reduced to the maximum
+    internal const string TopParameterName = "top";
+
+    internal const int DefaultTop = 20;
+
+    internal const int MaxTop = 50;
+
     private readonly List<AgentActionCall> capturedCalls = [];
 
     private bool isLimitExceeded;
@@ -62,7 +70,16 @@ internal sealed class AgentToolInvocationFilter(
 
         if (RequiresConfirmation(noConfirmationFunctions, function.PluginName, function.Name) is false)
         {
-            await next(context).ConfigureAwait(false);
+            if (LimitTop(context) is KernelArguments limitedArguments)
+            {
+                // The context has no arguments to change, so the function is invoked here with the limit
+                context.Result = await function.InvokeAsync(
+                    context.Kernel, limitedArguments, context.CancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await next(context).ConfigureAwait(false);
+            }
 
             var resultText = context.Result.ToString();
             entityCache.Remember(telegramUserId, resultText);
@@ -100,6 +117,28 @@ internal sealed class AgentToolInvocationFilter(
 
         // The preview is built by the bot from the captured arguments, so another model request is not needed
         context.Terminate = IsLastCall(context);
+    }
+
+    // Returns the arguments to invoke the function with if the model has passed none, otherwise changes the passed ones
+    private static KernelArguments? LimitTop(AutoFunctionInvocationContext context)
+    {
+        if (context.Function.Metadata.Parameters.Any(static parameter => parameter.Name is TopParameterName) is false)
+        {
+            return null;
+        }
+
+        if (context.Arguments is not KernelArguments arguments)
+        {
+            return new() { [TopParameterName] = DefaultTop };
+        }
+
+        var requested = arguments.TryGetValue(TopParameterName, out var value) &&
+            int.TryParse(value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var top) && top > 0
+            ? top
+            : DefaultTop;
+
+        arguments[TopParameterName] = Math.Min(requested, MaxTop);
+        return null;
     }
 
     private static bool IsLastCall(AutoFunctionInvocationContext context)

@@ -88,11 +88,11 @@ add_operations() {
 }
 
 add_operations AllowedOperations "${TIMESHEET_ALLOWED_OPERATIONS:-}"
-add_operations ExcludedOperations "${TIMESHEET_EXCLUDED_OPERATIONS:-sign-in-user sign-out-user get-projects subscribe-to-notifications}"
+add_operations ExcludedOperations "${TIMESHEET_EXCLUDED_OPERATIONS:-sign-in-user sign-out-user get-last-projects subscribe-to-notifications}"
 
 # Only these operations are executed right away. Every other operation, including one added to the API later,
 # is executed after the user presses the Confirm button.
-add_operations NoConfirmationOperations "${TIMESHEET_NO_CONFIRMATION_OPERATIONS:-get-periods get-tags get-timesheets get-last-projects search-projects get-profile get-subscriptions update-profile}"
+add_operations NoConfirmationOperations "${TIMESHEET_NO_CONFIRMATION_OPERATIONS:-get-periods get-tags get-timesheets get-projects search-projects get-profile get-subscriptions update-profile}"
 
 # After these operations the bot reads the user settings (the language) from Dataverse again.
 add_operations UserSettingsOperations "${TIMESHEET_USER_SETTINGS_OPERATIONS:-update-profile}"

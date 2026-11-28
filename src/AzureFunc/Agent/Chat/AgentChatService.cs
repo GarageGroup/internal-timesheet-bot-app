@@ -222,7 +222,41 @@ internal sealed class AgentChatService(
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             logger.LogWarning(exception, "The confirmed agent action {tool}.{function} has failed", call.ToolName, call.FunctionName);
-            return new(IsSucceeded: false, "The request has failed: " + exception.Message);
+            return new(IsSucceeded: false, DescribeFailure(exception));
+        }
+    }
+
+    // The service explains a rejected request in the 'detail' of a problem response, for example a closed period.
+    // The model gets this reason, so it can tell the user why the action has not been executed
+    internal static string DescribeFailure(Exception exception)
+    {
+        if (exception is not HttpOperationException { ResponseContent: { Length: > 0 } content } httpException)
+        {
+            return "The request has failed: " + exception.Message;
+        }
+
+        var status = httpException.StatusCode is null ? string.Empty : $" with the status {(int)httpException.StatusCode}";
+        return $"The service has rejected the request{status}. Reason: {ReadProblemDetail(content) ?? content.Trim()}";
+    }
+
+    private static string? ReadProblemDetail(string content)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(content);
+
+            if (document.RootElement.ValueKind is not JsonValueKind.Object ||
+                document.RootElement.TryGetProperty("detail", out var detail) is false ||
+                detail.ValueKind is not JsonValueKind.String)
+            {
+                return null;
+            }
+
+            return string.IsNullOrWhiteSpace(detail.GetString()) ? null : detail.GetString();
+        }
+        catch (JsonException)
+        {
+            return null;
         }
     }
 
