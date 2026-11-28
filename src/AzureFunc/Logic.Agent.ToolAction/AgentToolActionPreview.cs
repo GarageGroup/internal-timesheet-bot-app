@@ -75,14 +75,14 @@ internal static partial class AgentToolActionPreview
     }
 
     // A row of the table. The old label and the old value are set only where an update changes them
-    internal sealed record class PreviewRow(string Name, string Label, string Value, string RawValue)
+    private sealed record class PreviewRow(string Name, string Label, string Value, string RawValue)
     {
         public string? OldLabel { get; init; }
 
         public string? OldValue { get; init; }
     }
 
-    internal static IReadOnlyList<PreviewRow> GetRows(AgentActionCall action, IStringLocalizer localizer, string locale)
+    private static IReadOnlyList<PreviewRow> GetRows(AgentActionCall action, IStringLocalizer localizer, string locale)
     {
         // An action with a single reference to an object, such as deleting a time entry, shows the fields of that object.
         // So the user sees the same table as when the object is created, not one line with everything in it

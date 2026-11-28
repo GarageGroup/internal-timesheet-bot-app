@@ -75,7 +75,6 @@ agent_settings=(
 agent_settings+=(
   "Agent__Prompt__ContainerName=${AGENT_PROMPT_CONTAINER_NAME:-agent}"
   "Agent__Prompt__BlobName=${AGENT_PROMPT_BLOB_NAME:-AgentSystem.md}"
-  "Agent__Message__EditableActionCard=${AGENT_EDITABLE_ACTION_CARD:-false}"
 )
 
 # All operations of the API are available to the model except the excluded ones. The defaults exclude operations

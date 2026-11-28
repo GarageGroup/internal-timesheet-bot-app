@@ -168,36 +168,6 @@ public static class AgentActionFlowTest
     }
 
     [Fact]
-    public static async Task ConfirmActionAsync_UserHasEditedDateAndDuration_ExpectApiIsCalledWithEditedValuesAndModelIsToldThem()
-    {
-        var context = new FlowContext(
-            ToolCall("Timesheet-create-timesheet", CreateArguments),
-            Text("<b>Списание создано</b>"));
-
-        var prepared = await context.Service.SendAsync(new(User, "спиши 2 часа", "ru"), TestContext.Current.CancellationToken);
-
-        var outcome = await context.Service.ConfirmActionAsync(
-            User, prepared.Action!.Id, new AgentActionEdit(new(2026, 11, 26), 3.5m), "ru", TestContext.Current.CancellationToken);
-
-        Assert.Equal(AgentActionStatus.Succeeded, outcome.Status);
-
-        using var body = JsonDocument.Parse(context.Api.Requests[^1].Body);
-        Assert.Equal("2026-11-26", body.RootElement.GetProperty("date").GetString());
-        Assert.Equal(3.5m, body.RootElement.GetProperty("duration").GetDecimal());
-
-        // The fields the card cannot change stay as the model has prepared them
-        Assert.Equal(ProjectId, body.RootElement.GetProperty("project").GetProperty("id").GetString());
-        Assert.Equal("#Test", body.RootElement.GetProperty("description").GetString());
-
-        Assert.Contains("2026-11-26", context.Model.Requests[^1].Body);
-        Assert.Contains("3.5", context.Model.Requests[^1].Body);
-
-        Assert.Equal(
-            [new("date", "2026-11-26"), new("id", ProjectId), new("type", "Project"), new("duration", "3.5"), new("description", "#Test")],
-            outcome.Action!.Calls[0].Arguments.Select(static argument => new AgentActionArgument(argument.Name, argument.Value)));
-    }
-
-    [Fact]
     public static async Task ConfirmActionAsync_ApiFails_ExpectFailedStatusAndModelIsToldAboutTheError()
     {
         var context = new FlowContext(

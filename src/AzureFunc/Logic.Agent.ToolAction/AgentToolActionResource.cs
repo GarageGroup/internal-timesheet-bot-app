@@ -46,12 +46,4 @@ internal static class AgentToolActionResource
     public const string TimesheetPeriodTotal = "TimesheetPeriodTotal";
 
     public const string HoursUnit = "HoursUnit";
-
-    public const string WidgetHint = "WidgetHint";
-
-    public const string WidgetSending = "WidgetSending";
-
-    public const string WidgetConfirmed = "WidgetConfirmed";
-
-    public const string WidgetFailed = "WidgetFailed";
 }

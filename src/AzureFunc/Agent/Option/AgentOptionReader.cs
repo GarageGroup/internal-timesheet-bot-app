@@ -143,10 +143,7 @@ internal static partial class AgentOptionReader
         return new(
             TimeZone: TimeZoneInfo.FindSystemTimeZoneById(section["TimeZoneId"].OrNullIfWhiteSpace() ?? "Europe/Moscow"),
             MaxTextLength: maxTextLength,
-            MaxHistoryMessageCount: maxHistoryMessageCount)
-        {
-            EditableActionCard = section.GetValue("EditableActionCard", false)
-        };
+            MaxHistoryMessageCount: maxHistoryMessageCount);
     }
 
     private static AgentToolOption[] ReadTools(IConfigurationSection section)

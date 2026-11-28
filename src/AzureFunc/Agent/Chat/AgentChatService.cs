@@ -47,13 +47,8 @@ internal sealed class AgentChatService(
         return await RunTurnAsync(request.User, toolSet, text, request.Locale, cancellationToken).ConfigureAwait(false);
     }
 
-    public ValueTask<AgentActionOutcome> ConfirmActionAsync(
-        AgentUserContext user, string actionId, string locale, CancellationToken cancellationToken)
-        =>
-        ConfirmActionAsync(user, actionId, edit: null, locale, cancellationToken);
-
     public async ValueTask<AgentActionOutcome> ConfirmActionAsync(
-        AgentUserContext user, string actionId, AgentActionEdit? edit, string locale, CancellationToken cancellationToken)
+        AgentUserContext user, string actionId, string locale, CancellationToken cancellationToken)
     {
         // The tools are loaded first: if the user has to sign in again, the action stays available
         await using var toolSet = await toolLoader.LoadAsync(user, cancellationToken).ConfigureAwait(false);
@@ -63,9 +58,6 @@ internal sealed class AgentChatService(
         {
             return new(AgentActionStatus.NotFound);
         }
-
-        // The model is told about the call as it has been executed, with the values the user has changed
-        action = AgentActionEditor.Apply(action, edit);
 
         // The calls do not depend on each other, so they run in parallel and a failed one does not stop the rest
         var results = await Task.WhenAll(
@@ -190,10 +182,7 @@ internal sealed class AgentChatService(
 
             return new(string.Empty, action)
             {
-                UserSettingsChanged = filter.UserSettingsChanged,
-                EditableCardToday = option.Message.EditableActionCard
-                    ? DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), option.Message.TimeZone).DateTime)
-                    : null
+                UserSettingsChanged = filter.UserSettingsChanged
             };
         }
 
